@@ -15,13 +15,17 @@ export default function Signup() {
   const [companyName, setCompanyName] = useState('')
   const [selectedLanguage, setSelectedLanguage] = useState<'tr' | 'en'>(language)
   const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const [message, setMessage] = useState<string | null>(null)
+  const [messageType, setMessageType] = useState<'success' | 'error'>('error')
   const navigate = useNavigate()
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
-    setError(null)
+    setMessage(null)
+    
+    // Set language before processing to ensure messages are in the correct language
+    setLanguage(selectedLanguage)
 
     // Sign up the user (with email confirmation disabled, auto-confirm)
     const { data: authData, error: authError } = await supabase.auth.signUp({
@@ -33,7 +37,8 @@ export default function Signup() {
     })
 
     if (authError) {
-      setError(authError.message)
+      setMessage(t('auth.signup.error'))
+      setMessageType('error')
       setLoading(false)
       return
     }
@@ -66,7 +71,11 @@ export default function Signup() {
 
           if (!companyError) {
             companyCreated = true
-            navigate('/dashboard')
+            setMessage(t('auth.signup.success'))
+            setMessageType('success')
+            setTimeout(() => {
+              navigate('/dashboard')
+            }, 1500)
             return
           } else {
             console.error('Company creation error:', companyError)
@@ -75,7 +84,8 @@ export default function Signup() {
               retries--
               continue
             } else {
-              setError(`Failed to create company profile: ${companyError.message}`)
+              setMessage(t('auth.signup.companyCreationFailed').replace('{message}', companyError.message))
+              setMessageType('error')
               setLoading(false)
               return
             }
@@ -100,16 +110,22 @@ export default function Signup() {
             } as any) as any
           
           if (!companyError) {
-            navigate('/dashboard')
+            setMessage(t('auth.signup.success'))
+            setMessageType('success')
+            setTimeout(() => {
+              navigate('/dashboard')
+            }, 1500)
             return
           }
         }
         
-        setError('Account created! Please check your email to confirm, then log in. Or disable email confirmation in Supabase settings.')
+        setMessage(t('auth.signup.emailConfirmationRequired'))
+        setMessageType('success')
         setLoading(false)
       }
     } else {
-      setError('Failed to create account. Please try again.')
+      setMessage(t('auth.signup.error'))
+      setMessageType('error')
       setLoading(false)
     }
   }
@@ -143,9 +159,13 @@ export default function Signup() {
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSignup} className="space-y-4">
-            {error && (
-              <div className="p-3 text-sm text-red-600 bg-red-50 border border-red-200 rounded-md">
-                {error}
+            {message && (
+              <div className={`p-3 text-sm rounded-md border ${
+                messageType === 'success' 
+                  ? 'text-green-700 bg-green-50 border-green-200' 
+                  : 'text-red-600 bg-red-50 border-red-200'
+              }`}>
+                {message}
               </div>
             )}
             <div className="space-y-2">

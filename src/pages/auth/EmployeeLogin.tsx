@@ -19,18 +19,20 @@ export default function EmployeeLogin() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [message, setMessage] = useState<string | null>(null);
+  const [messageType, setMessageType] = useState<'success' | 'error'>('error');
   const navigate = useNavigate();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setError(null);
+    setMessage(null);
 
     const employee = await authenticateEmployee(username, password);
 
     if (!employee) {
-      setError(t("auth.employeeLogin.invalid") || "Geçersiz kullanıcı adı veya şifre");
+      setMessage(t("auth.employeeLogin.invalid") || "Geçersiz kullanıcı adı veya şifre");
+      setMessageType('error');
       setLoading(false);
       return;
     }
@@ -76,9 +78,13 @@ export default function EmployeeLogin() {
           </CardHeader>
           <CardContent>
             <form onSubmit={handleLogin} className="space-y-4">
-              {error && (
-                <div className="p-3 text-sm text-red-600 bg-red-50 border border-red-200 rounded-md">
-                  {error}
+              {message && (
+                <div className={`p-3 text-sm rounded-md border ${
+                  messageType === 'success' 
+                    ? 'text-green-700 bg-green-50 border-green-200' 
+                    : 'text-red-600 bg-red-50 border-red-200'
+                }`}>
+                  {message}
                 </div>
               )}
               <div className="space-y-2">

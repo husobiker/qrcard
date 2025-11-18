@@ -20,7 +20,8 @@ export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [message, setMessage] = useState<string | null>(null);
+  const [messageType, setMessageType] = useState<"success" | "error">("error");
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -39,7 +40,7 @@ export default function Login() {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setError(null);
+    setMessage(null);
 
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
@@ -47,7 +48,8 @@ export default function Login() {
     });
 
     if (error) {
-      setError(error.message);
+      setMessage(t("auth.login.error"));
+      setMessageType("error");
       setLoading(false);
     } else if (data.user) {
       // Load company and set language
@@ -97,9 +99,15 @@ export default function Login() {
           </CardHeader>
           <CardContent>
             <form onSubmit={handleLogin} className="space-y-4">
-              {error && (
-                <div className="p-3 text-sm text-red-600 bg-red-50 border border-red-200 rounded-md">
-                  {error}
+              {message && (
+                <div
+                  className={`p-3 text-sm rounded-md border ${
+                    messageType === "success"
+                      ? "text-green-700 bg-green-50 border-green-200"
+                      : "text-red-600 bg-red-50 border-red-200"
+                  }`}
+                >
+                  {message}
                 </div>
               )}
               <div className="space-y-2">

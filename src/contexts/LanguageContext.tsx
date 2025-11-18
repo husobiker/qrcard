@@ -23,6 +23,8 @@ const translations = {
     'auth.login.noAccount': "Hesabınız yok mu?",
     'auth.login.signup': 'Kayıt ol',
     'auth.login.employeeLogin': 'Çalışan Girişi',
+    'auth.login.error': 'Geçersiz e-posta veya şifre',
+    'auth.login.errorGeneric': 'Bir hata oluştu. Lütfen tekrar deneyin.',
     
     'auth.employeeLogin.subtitle': 'Çalışan hesabınıza giriş yapın',
     'auth.employeeLogin.username': 'Kullanıcı Adı',
@@ -43,6 +45,10 @@ const translations = {
     'auth.signup.loading': 'Hesap oluşturuluyor...',
     'auth.signup.hasAccount': 'Zaten hesabınız var mı?',
     'auth.signup.signin': 'Giriş yap',
+    'auth.signup.success': 'Hesabınız başarıyla oluşturuldu! Yönlendiriliyorsunuz...',
+    'auth.signup.error': 'Hesap oluşturulamadı. Lütfen tekrar deneyin.',
+    'auth.signup.emailConfirmationRequired': 'Hesap oluşturuldu! E-postanızı kontrol edip onaylayın, ardından giriş yapın. Veya Supabase ayarlarında e-posta onayını devre dışı bırakın.',
+    'auth.signup.companyCreationFailed': 'Şirket profili oluşturulamadı: {message}',
     
     'auth.forgot.title': 'Şifre Sıfırlama',
     'auth.forgot.subtitle': 'E-posta adresinizi girin, şifre sıfırlama bağlantısı gönderilecek',
@@ -330,6 +336,8 @@ const translations = {
     'auth.login.noAccount': "Don't have an account?",
     'auth.login.signup': 'Sign up',
     'auth.login.employeeLogin': 'Employee Login',
+    'auth.login.error': 'Invalid email or password',
+    'auth.login.errorGeneric': 'An error occurred. Please try again.',
     
     'auth.employeeLogin.subtitle': 'Sign in to your employee account',
     'auth.employeeLogin.username': 'Username',
@@ -350,6 +358,10 @@ const translations = {
     'auth.signup.loading': 'Creating account...',
     'auth.signup.hasAccount': 'Already have an account?',
     'auth.signup.signin': 'Sign in',
+    'auth.signup.success': 'Account created successfully! Redirecting...',
+    'auth.signup.error': 'Failed to create account. Please try again.',
+    'auth.signup.emailConfirmationRequired': 'Account created! Please check your email to confirm, then log in. Or disable email confirmation in Supabase settings.',
+    'auth.signup.companyCreationFailed': 'Failed to create company profile: {message}',
     
     'auth.forgot.title': 'Reset Password',
     'auth.forgot.subtitle': 'Enter your email to receive a password reset link',
