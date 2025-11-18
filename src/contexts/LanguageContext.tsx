@@ -47,7 +47,7 @@ const translations = {
     'auth.signup.signin': 'Giriş yap',
     'auth.signup.success': 'Hesabınız başarıyla oluşturuldu! Yönlendiriliyorsunuz...',
     'auth.signup.error': 'Hesap oluşturulamadı. Lütfen tekrar deneyin.',
-    'auth.signup.emailConfirmationRequired': 'Hesap oluşturuldu! E-postanızı kontrol edip onaylayın, ardından giriş yapın. Veya Supabase ayarlarında e-posta onayını devre dışı bırakın.',
+    'auth.signup.emailConfirmationRequired': 'Hesap oluşturuldu! E-postanızı kontrol edip onaylayın, ardından giriş yapın.',
     'auth.signup.companyCreationFailed': 'Şirket profili oluşturulamadı: {message}',
     
     'auth.forgot.title': 'Şifre Sıfırlama',
@@ -360,7 +360,7 @@ const translations = {
     'auth.signup.signin': 'Sign in',
     'auth.signup.success': 'Account created successfully! Redirecting...',
     'auth.signup.error': 'Failed to create account. Please try again.',
-    'auth.signup.emailConfirmationRequired': 'Account created! Please check your email to confirm, then log in. Or disable email confirmation in Supabase settings.',
+    'auth.signup.emailConfirmationRequired': 'Account created! Please check your email to confirm, then log in.',
     'auth.signup.companyCreationFailed': 'Failed to create company profile: {message}',
     
     'auth.forgot.title': 'Reset Password',
