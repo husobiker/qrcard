@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader } from '@/components/ui/card'
 import Footer from '@/components/Footer'
+import { getBaseUrl } from '@/utils/url'
 
 export default function Signup() {
   const { t, language, setLanguage } = useLanguage()
@@ -28,11 +29,12 @@ export default function Signup() {
     setLanguage(selectedLanguage)
 
     // Sign up the user (with email confirmation disabled, auto-confirm)
+    const baseUrl = getBaseUrl()
     const { data: authData, error: authError } = await supabase.auth.signUp({
       email,
       password,
       options: {
-        emailRedirectTo: `${window.location.origin}/dashboard`,
+        emailRedirectTo: `${baseUrl}/dashboard`,
       },
     })
 

@@ -12,6 +12,7 @@ import {
   CardHeader,
 } from "@/components/ui/card";
 import Footer from "@/components/Footer";
+import { getBaseUrl } from "@/utils/url";
 
 export default function ForgotPassword() {
   const { language, setLanguage } = useLanguage();
@@ -26,8 +27,9 @@ export default function ForgotPassword() {
     setError(null);
     setMessage(null);
 
+    const baseUrl = getBaseUrl();
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/reset-password`,
+      redirectTo: `${baseUrl}/reset-password`,
     });
 
     if (error) {
