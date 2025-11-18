@@ -1,0 +1,212 @@
+import { useState } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
+import { supabase } from '@/supabase/client'
+import { useLanguage } from '@/contexts/LanguageContext'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import Footer from '@/components/Footer'
+
+export default function Signup() {
+  const { t, language, setLanguage } = useLanguage()
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [companyName, setCompanyName] = useState('')
+  const [selectedLanguage, setSelectedLanguage] = useState<'tr' | 'en'>(language)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const navigate = useNavigate()
+
+  const handleSignup = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setLoading(true)
+    setError(null)
+
+    // Sign up the user (with email confirmation disabled, auto-confirm)
+    const { data: authData, error: authError } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        emailRedirectTo: `${window.location.origin}/dashboard`,
+      },
+    })
+
+    if (authError) {
+      setError(authError.message)
+      setLoading(false)
+      return
+    }
+
+    if (authData.user) {
+      // Try to create company record immediately
+      // If email confirmation is enabled, we'll need to handle it differently
+      let retries = 3
+      let companyCreated = false
+      
+      while (retries > 0 && !companyCreated) {
+        // Wait a bit for session to be established
+        await new Promise(resolve => setTimeout(resolve, 1000))
+        
+        // Get the current session
+        const { data: { session } } = await supabase.auth.getSession()
+        
+        if (session) {
+          // Set language in context
+          setLanguage(selectedLanguage)
+          
+          // Create company record using the user's ID
+          const { error: companyError } = await supabase
+            .from('companies')
+            .insert({
+              id: authData.user.id,
+              name: companyName,
+              language: selectedLanguage,
+            })
+
+          if (!companyError) {
+            companyCreated = true
+            navigate('/dashboard')
+            return
+          } else {
+            console.error('Company creation error:', companyError)
+            // If RLS error, try again
+            if (companyError.message.includes('row-level security')) {
+              retries--
+              continue
+            } else {
+              setError(`Failed to create company profile: ${companyError.message}`)
+              setLoading(false)
+              return
+            }
+          }
+        } else {
+          retries--
+        }
+      }
+      
+      // If we get here and no session, email confirmation is probably required
+      if (!companyCreated) {
+        // Check if email confirmation is required
+        const { data: { user } } = await supabase.auth.getUser()
+        if (user && user.email_confirmed_at) {
+          // User is confirmed, try one more time
+          const { error: companyError } = await supabase
+            .from('companies')
+            .insert({
+              id: authData.user.id,
+              name: companyName,
+            })
+          
+          if (!companyError) {
+            navigate('/dashboard')
+            return
+          }
+        }
+        
+        setError('Account created! Please check your email to confirm, then log in. Or disable email confirmation in Supabase settings.')
+        setLoading(false)
+      }
+    } else {
+      setError('Failed to create account. Please try again.')
+      setLoading(false)
+    }
+  }
+
+  return (
+    <div className="min-h-screen flex flex-col bg-gradient-to-br from-blue-50 to-indigo-100 relative">
+      {/* Language Selector */}
+      <div className="absolute top-4 right-4 z-10">
+        <select
+          value={language}
+          onChange={(e) => {
+            const newLang = e.target.value as "tr" | "en";
+            setLanguage(newLang);
+            setSelectedLanguage(newLang);
+          }}
+          className="px-3 py-1.5 text-sm border border-gray-300 rounded-lg bg-white shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
+        >
+          <option value="tr">🇹🇷 TR</option>
+          <option value="en">🇬🇧 EN</option>
+        </select>
+      </div>
+      <div className="flex-1 flex items-center justify-center p-4">
+        <Card className="w-full max-w-md">
+        <CardHeader className="space-y-1">
+          <div className="flex justify-center mb-4">
+            <img src="/logo.png" alt="QR Card" className="h-28 w-auto" />
+          </div>
+          <CardDescription className="text-center">
+            {t('auth.signup.subtitle')}
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleSignup} className="space-y-4">
+            {error && (
+              <div className="p-3 text-sm text-red-600 bg-red-50 border border-red-200 rounded-md">
+                {error}
+              </div>
+            )}
+            <div className="space-y-2">
+              <Label htmlFor="companyName">{t('auth.signup.companyName')}</Label>
+              <Input
+                id="companyName"
+                type="text"
+                placeholder="Acme Inc."
+                value={companyName}
+                onChange={(e) => setCompanyName(e.target.value)}
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="email">{t('auth.signup.email')}</Label>
+              <Input
+                id="email"
+                type="email"
+                placeholder="company@example.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="password">{t('auth.signup.password')}</Label>
+              <Input
+                id="password"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                minLength={6}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="language">{t('auth.signup.language')}</Label>
+              <select
+                id="language"
+                value={selectedLanguage}
+                onChange={(e) => setSelectedLanguage(e.target.value as 'tr' | 'en')}
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              >
+                <option value="tr">Türkçe</option>
+                <option value="en">English</option>
+              </select>
+            </div>
+            <Button type="submit" className="w-full" disabled={loading}>
+              {loading ? t('auth.signup.loading') : t('auth.signup.submit')}
+            </Button>
+            <div className="text-center text-sm">
+              {t('auth.signup.hasAccount')}{' '}
+              <Link to="/login" className="text-primary hover:underline">
+                {t('auth.signup.signin')}
+              </Link>
+            </div>
+          </form>
+        </CardContent>
+      </Card>
+      </div>
+      <Footer />
+    </div>
+  )
+}
+

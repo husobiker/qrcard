@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kartvizit</title>
+    <link rel="stylesheet" href="card.css">
+</head>
+<body>
+    <div class="card-container">
+        <div class="card" id="businessCard">
+            <div class="card-header">
+                <div class="avatar">
+                    <span id="avatarInitial">?</span>
+                </div>
+                <h1 id="cardName">Yükleniyor...</h1>
+                <p id="cardTitle" class="title"></p>
+            </div>
+            
+            <div class="card-body">
+                <div class="contact-item" id="phoneItem" style="display: none;">
+                    <div class="icon">📱</div>
+                    <a href="#" id="phoneLink" class="contact-link"></a>
+                </div>
+                
+                <div class="contact-item" id="emailItem" style="display: none;">
+                    <div class="icon">✉️</div>
+                    <a href="#" id="emailLink" class="contact-link"></a>
+                </div>
+                
+                <div class="contact-item" id="companyItem" style="display: none;">
+                    <div class="icon">🏢</div>
+                    <span id="companyText"></span>
+                </div>
+                
+                <div class="contact-item" id="websiteItem" style="display: none;">
+                    <div class="icon">🌐</div>
+                    <a href="#" id="websiteLink" target="_blank" class="contact-link"></a>
+                </div>
+                
+                <div class="contact-item" id="addressItem" style="display: none;">
+                    <div class="icon">📍</div>
+                    <span id="addressText"></span>
+                </div>
+            </div>
+            
+            <div class="card-footer">
+                <button id="saveContactBtn" class="btn-save">
+                    📥 Rehbere Kaydet
+                </button>
+            </div>
+        </div>
+        
+        <div class="error-message" id="errorMessage" style="display: none;">
+            <p>Kartvizit bilgileri yüklenemedi. Lütfen QR kodu tekrar okutun.</p>
+        </div>
+    </div>
+    
+    <script src="card.js"></script>
+</body>
+</html>
+
+
