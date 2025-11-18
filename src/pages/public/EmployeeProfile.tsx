@@ -851,12 +851,12 @@ export default function EmployeeProfile() {
           onClose={() => setAppointmentDialogOpen(false)}
           className="max-h-[90vh] overflow-y-auto"
         >
-          <DialogHeader>
-            <DialogTitle>
+          <DialogHeader className="mb-3 sm:mb-4">
+            <DialogTitle className="text-lg sm:text-xl pr-6">
               {t("profile.appointment.title")} - {employee?.first_name}{" "}
               {employee?.last_name}
             </DialogTitle>
-            <DialogDescription>
+            <DialogDescription className="text-xs sm:text-sm">
               {t("profile.appointment.subtitle")}
             </DialogDescription>
           </DialogHeader>
@@ -888,11 +888,11 @@ export default function EmployeeProfile() {
                 // Handle timezone issues on mobile browsers
                 const dateStr = selectedDate;
                 const timeStr = selectedTime;
-                
+
                 // Create date string in local timezone, then convert to ISO
-                const [year, month, day] = dateStr.split('-');
-                const [hours, minutes] = timeStr.split(':');
-                
+                const [year, month, day] = dateStr.split("-");
+                const [hours, minutes] = timeStr.split(":");
+
                 // Create date in local timezone
                 const localDate = new Date(
                   parseInt(year),
@@ -903,7 +903,15 @@ export default function EmployeeProfile() {
                 );
 
                 if (isNaN(localDate.getTime())) {
-                  console.error('Invalid date created:', { dateStr, timeStr, year, month, day, hours, minutes });
+                  console.error("Invalid date created:", {
+                    dateStr,
+                    timeStr,
+                    year,
+                    month,
+                    day,
+                    hours,
+                    minutes,
+                  });
                   alert(
                     t("profile.appointment.invalidDateTime") ||
                       "Invalid date or time"
@@ -912,7 +920,7 @@ export default function EmployeeProfile() {
                   return;
                 }
 
-                console.log('Creating appointment with:', {
+                console.log("Creating appointment with:", {
                   dateStr,
                   timeStr,
                   localDate: localDate.toString(),
@@ -926,7 +934,8 @@ export default function EmployeeProfile() {
                   company_id: employee.company_id,
                   customer_name: appointmentForm.customer_name.trim(),
                   customer_email: appointmentForm.customer_email.trim(),
-                  customer_phone: appointmentForm.customer_phone?.trim() || undefined,
+                  customer_phone:
+                    appointmentForm.customer_phone?.trim() || undefined,
                   appointment_date: localDate.toISOString(),
                   duration_minutes: employee.default_duration_minutes || 30,
                   notes: appointmentForm.notes?.trim() || undefined,
@@ -960,11 +969,11 @@ export default function EmployeeProfile() {
                 setSubmitting(false);
               }
             }}
-            className="space-y-4"
+            className="space-y-3 sm:space-y-4"
           >
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2 w-full">
-                <label className="text-sm font-medium block">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
+              <div className="space-y-1.5 sm:space-y-2 w-full">
+                <label className="text-sm font-medium block mb-1">
                   {t("profile.appointment.date")}
                 </label>
                 <input
@@ -984,30 +993,30 @@ export default function EmployeeProfile() {
                       setLoadingSlots(false);
                     }
                   }}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 box-border"
-                  style={{ maxWidth: '100%' }}
+                  className="w-full px-3 py-2.5 text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 box-border appearance-none"
+                  style={{ maxWidth: "100%", WebkitAppearance: "none" }}
                   required
                 />
               </div>
 
-              <div className="space-y-2 w-full">
-                <label className="text-sm font-medium block">
+              <div className="space-y-1.5 sm:space-y-2 w-full">
+                <label className="text-sm font-medium block mb-1">
                   {t("profile.appointment.time")}
                 </label>
                 {loadingSlots ? (
-                  <div className="px-3 py-2 text-sm text-gray-500 w-full">
+                  <div className="px-3 py-2.5 text-sm text-gray-500 w-full border border-gray-200 rounded-lg bg-gray-50">
                     {t("profile.appointment.loadingTimes")}
                   </div>
                 ) : availableSlots.length === 0 && selectedDate ? (
-                  <div className="px-3 py-2 text-sm text-red-500 w-full">
+                  <div className="px-3 py-2.5 text-sm text-red-500 w-full border border-red-200 rounded-lg bg-red-50">
                     {t("profile.appointment.noTimes")}
                   </div>
                 ) : (
                   <select
                     value={selectedTime}
                     onChange={(e) => setSelectedTime(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 box-border"
-                    style={{ maxWidth: '100%' }}
+                    className="w-full px-3 py-2.5 text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 box-border bg-white"
+                    style={{ maxWidth: "100%" }}
                     required
                     disabled={!selectedDate || availableSlots.length === 0}
                   >
@@ -1032,8 +1041,8 @@ export default function EmployeeProfile() {
               </div>
             </div>
 
-            <div className="space-y-2 w-full">
-              <label className="text-sm font-medium block">
+            <div className="space-y-1.5 sm:space-y-2 w-full">
+              <label className="text-sm font-medium block mb-1">
                 {t("profile.appointment.name")}
               </label>
               <input
@@ -1045,14 +1054,14 @@ export default function EmployeeProfile() {
                     customer_name: e.target.value,
                   })
                 }
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 box-border"
-                style={{ maxWidth: '100%' }}
+                className="w-full px-3 py-2.5 text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 box-border"
+                style={{ maxWidth: "100%" }}
                 required
               />
             </div>
 
-            <div className="space-y-2 w-full">
-              <label className="text-sm font-medium block">
+            <div className="space-y-1.5 sm:space-y-2 w-full">
+              <label className="text-sm font-medium block mb-1">
                 {t("profile.appointment.email")}
               </label>
               <input
@@ -1064,14 +1073,14 @@ export default function EmployeeProfile() {
                     customer_email: e.target.value,
                   })
                 }
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 box-border"
-                style={{ maxWidth: '100%' }}
+                className="w-full px-3 py-2.5 text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 box-border"
+                style={{ maxWidth: "100%" }}
                 required
               />
             </div>
 
-            <div className="space-y-2 w-full">
-              <label className="text-sm font-medium block">
+            <div className="space-y-1.5 sm:space-y-2 w-full">
+              <label className="text-sm font-medium block mb-1">
                 {t("profile.appointment.phone")}
               </label>
               <input
@@ -1083,13 +1092,13 @@ export default function EmployeeProfile() {
                     customer_phone: e.target.value,
                   })
                 }
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 box-border"
-                style={{ maxWidth: '100%' }}
+                className="w-full px-3 py-2.5 text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 box-border"
+                style={{ maxWidth: "100%" }}
               />
             </div>
 
-            <div className="space-y-2 w-full">
-              <label className="text-sm font-medium block">
+            <div className="space-y-1.5 sm:space-y-2 w-full">
+              <label className="text-sm font-medium block mb-1">
                 {t("profile.appointment.notes")}
               </label>
               <textarea
@@ -1101,8 +1110,8 @@ export default function EmployeeProfile() {
                   })
                 }
                 rows={3}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 box-border resize-none"
-                style={{ maxWidth: '100%' }}
+                className="w-full px-3 py-2.5 text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 box-border resize-none"
+                style={{ maxWidth: "100%" }}
               />
             </div>
 
