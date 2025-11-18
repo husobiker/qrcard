@@ -159,6 +159,8 @@ const translations = {
     'profile.appointment.booking': 'Alınıyor...',
     'profile.appointment.success': 'Randevu başarıyla alındı! Onay e-postası gönderilecek.',
     'profile.appointment.error': 'Randevu alınamadı. Lütfen tekrar deneyin.',
+    'profile.appointment.fillAllFields': 'Lütfen tüm gerekli alanları doldurun.',
+    'profile.appointment.invalidDateTime': 'Geçersiz tarih veya saat.',
     
     // Common
     'common.logout': 'Çıkış Yap',
@@ -464,6 +466,8 @@ const translations = {
     'profile.appointment.booking': 'Booking...',
     'profile.appointment.success': 'Appointment booked successfully! You will receive a confirmation email.',
     'profile.appointment.error': 'Failed to book appointment. Please try again.',
+    'profile.appointment.fillAllFields': 'Please fill in all required fields.',
+    'profile.appointment.invalidDateTime': 'Invalid date or time.',
     
     // Common
     'common.logout': 'Logout',

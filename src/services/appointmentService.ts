@@ -12,6 +12,15 @@ export async function createAppointment(appointment: {
   notes?: string
 }): Promise<Appointment | null> {
   try {
+    console.log('Creating appointment with data:', {
+      employee_id: appointment.employee_id,
+      company_id: appointment.company_id,
+      customer_name: appointment.customer_name,
+      customer_email: appointment.customer_email,
+      appointment_date: appointment.appointment_date,
+    });
+
+    // @ts-ignore - Supabase types not properly inferred
     const { data, error } = await supabase
       .from('appointments')
       .insert(appointment as any)
@@ -20,12 +29,18 @@ export async function createAppointment(appointment: {
 
     if (error) {
       console.error('Error creating appointment:', error)
+      console.error('Error details:', JSON.stringify(error, null, 2))
+      console.error('Error code:', error.code)
+      console.error('Error message:', error.message)
+      console.error('Error hint:', error.hint)
       return null
     }
 
+    console.log('Appointment created successfully:', data)
     return data
-  } catch (error) {
-    console.error('Error creating appointment:', error)
+  } catch (error: any) {
+    console.error('Error creating appointment (catch):', error)
+    console.error('Error stack:', error?.stack)
     return null
   }
 }

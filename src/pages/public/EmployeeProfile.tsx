@@ -864,39 +864,59 @@ export default function EmployeeProfile() {
           <form
             onSubmit={async (e) => {
               e.preventDefault();
-              if (!employee || !selectedDate || !selectedTime) return;
+              if (!employee || !selectedDate || !selectedTime) {
+                alert(t("profile.appointment.fillAllFields") || "Please fill in all required fields");
+                return;
+              }
+
+              if (!appointmentForm.customer_name || !appointmentForm.customer_email) {
+                alert(t("profile.appointment.fillAllFields") || "Please fill in customer name and email");
+                return;
+              }
 
               setSubmitting(true);
-              const appointmentDateTime = new Date(
-                `${selectedDate}T${selectedTime}`
-              );
+              try {
+                const appointmentDateTime = new Date(
+                  `${selectedDate}T${selectedTime}`
+                );
 
-              const appointment = await createAppointment({
-                employee_id: employee.id,
-                company_id: employee.company_id,
-                customer_name: appointmentForm.customer_name,
-                customer_email: appointmentForm.customer_email,
-                customer_phone: appointmentForm.customer_phone || undefined,
-                appointment_date: appointmentDateTime.toISOString(),
-                duration_minutes: employee.default_duration_minutes || 30,
-                notes: appointmentForm.notes || undefined,
-              });
+                if (isNaN(appointmentDateTime.getTime())) {
+                  alert(t("profile.appointment.invalidDateTime") || "Invalid date or time");
+                  setSubmitting(false);
+                  return;
+                }
 
-              if (appointment) {
-                alert(t("profile.appointment.success"));
-                setAppointmentDialogOpen(false);
-                setAppointmentForm({
-                  customer_name: "",
-                  customer_email: "",
-                  customer_phone: "",
-                  notes: "",
+                const appointment = await createAppointment({
+                  employee_id: employee.id,
+                  company_id: employee.company_id,
+                  customer_name: appointmentForm.customer_name,
+                  customer_email: appointmentForm.customer_email,
+                  customer_phone: appointmentForm.customer_phone || undefined,
+                  appointment_date: appointmentDateTime.toISOString(),
+                  duration_minutes: employee.default_duration_minutes || 30,
+                  notes: appointmentForm.notes || undefined,
                 });
-                setSelectedDate("");
-                setSelectedTime("");
-              } else {
-                alert(t("profile.appointment.error"));
+
+                if (appointment) {
+                  alert(t("profile.appointment.success"));
+                  setAppointmentDialogOpen(false);
+                  setAppointmentForm({
+                    customer_name: "",
+                    customer_email: "",
+                    customer_phone: "",
+                    notes: "",
+                  });
+                  setSelectedDate("");
+                  setSelectedTime("");
+                } else {
+                  alert(t("profile.appointment.error") || "Failed to create appointment. Please try again.");
+                }
+              } catch (error: any) {
+                console.error("Error creating appointment:", error);
+                alert(error?.message || t("profile.appointment.error") || "Failed to create appointment. Please try again.");
+              } finally {
+                setSubmitting(false);
               }
-              setSubmitting(false);
             }}
             className="space-y-4"
           >
