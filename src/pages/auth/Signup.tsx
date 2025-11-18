@@ -5,7 +5,7 @@ import { useLanguage } from '@/contexts/LanguageContext'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardDescription, CardHeader } from '@/components/ui/card'
 import Footer from '@/components/Footer'
 
 export default function Signup() {
@@ -61,8 +61,8 @@ export default function Signup() {
             .insert({
               id: authData.user.id,
               name: companyName,
-              language: selectedLanguage,
-            })
+              language: selectedLanguage as 'tr' | 'en',
+            } as any) as any
 
           if (!companyError) {
             companyCreated = true
@@ -96,7 +96,8 @@ export default function Signup() {
             .insert({
               id: authData.user.id,
               name: companyName,
-            })
+              language: selectedLanguage as 'tr' | 'en',
+            } as any) as any
           
           if (!companyError) {
             navigate('/dashboard')

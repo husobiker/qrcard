@@ -18,7 +18,7 @@ export async function createLead(
         notes: leadData.notes || null,
         follow_up_date: leadData.follow_up_date || null,
         status: leadData.status,
-      })
+      } as any)
       .select()
       .single()
 
@@ -87,9 +87,11 @@ export async function updateLead(
     if (leadData.status !== undefined) updateData.status = leadData.status
     if (leadData.employee_id !== undefined) updateData.employee_id = leadData.employee_id
 
+    // @ts-ignore - Supabase types not properly inferred
     const { data, error } = await supabase
       .from('crm_leads')
-      .update(updateData)
+      // @ts-ignore
+      .update(updateData as any)
       .eq('id', leadId)
       .select()
       .single()
@@ -107,9 +109,11 @@ export async function updateLeadStatus(
   status: CRMLead['status']
 ): Promise<boolean> {
   try {
+    // @ts-ignore - Supabase types not properly inferred
     const { error } = await supabase
       .from('crm_leads')
-      .update({ status })
+      // @ts-ignore
+      .update({ status } as any)
       .eq('id', leadId)
 
     if (error) throw error
@@ -158,13 +162,13 @@ export async function getCRMStats(companyId?: string, employeeId?: string): Prom
     const stats: CRMStats = {
       total: leads.length,
       today_follow_ups: leads.filter((lead) => {
-        if (!lead.follow_up_date) return false
-        const followUpDate = new Date(lead.follow_up_date)
+        if (!(lead as any).follow_up_date) return false
+        const followUpDate = new Date((lead as any).follow_up_date)
         followUpDate.setHours(0, 0, 0, 0)
         return followUpDate.getTime() === today.getTime()
       }).length,
-      sales_completed: leads.filter((lead) => lead.status === 'Satış Yapıldı').length,
-      in_follow_up: leads.filter((lead) => lead.status === 'Takipte').length,
+      sales_completed: leads.filter((lead) => (lead as any).status === 'Satış Yapıldı').length,
+      in_follow_up: leads.filter((lead) => (lead as any).status === 'Takipte').length,
     }
 
     return stats

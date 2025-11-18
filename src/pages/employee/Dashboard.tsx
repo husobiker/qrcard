@@ -13,13 +13,10 @@ import {
   Youtube,
   MessageCircle,
   Building2,
-  Download,
   Share2,
   MapPin,
   Globe,
-  Navigation,
   ExternalLink,
-  Calendar,
 } from "lucide-react";
 import QRCode from "react-qr-code";
 import { useLanguage } from "@/contexts/LanguageContext";

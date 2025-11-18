@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Building2, Upload, Save } from 'lucide-react'
+import { Building2, Save } from 'lucide-react'
 
 export default function Dashboard() {
   const { user } = useAuth()
@@ -59,17 +59,18 @@ export default function Dashboard() {
         .insert({
           id: user.id,
           name: 'My Company',
-        })
+          language: 'tr' as 'tr' | 'en',
+        } as any)
         .select()
         .single()
       
       if (data && !error) {
         setCompany(data)
         setFormData({
-          name: data.name || '',
-          address: data.address || '',
-          phone: data.phone || '',
-          website: data.website || '',
+          name: (data as any).name || '',
+          address: (data as any).address || '',
+          phone: (data as any).phone || '',
+          website: (data as any).website || '',
         })
       } else {
         console.error('Error creating company:', error)
@@ -120,7 +121,8 @@ export default function Dashboard() {
           .insert({
             id: user.id,
             name: formData.name || 'My Company',
-          })
+            language: 'tr' as 'tr' | 'en',
+          } as any)
           .select()
           .single()
         

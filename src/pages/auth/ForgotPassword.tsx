@@ -10,12 +10,11 @@ import {
   CardContent,
   CardDescription,
   CardHeader,
-  CardTitle,
 } from "@/components/ui/card";
 import Footer from "@/components/Footer";
 
 export default function ForgotPassword() {
-  const { t, language, setLanguage } = useLanguage();
+  const { language, setLanguage } = useLanguage();
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);

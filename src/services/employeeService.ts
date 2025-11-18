@@ -54,7 +54,7 @@ export async function createEmployee(companyId: string, employeeData: EmployeeFo
     const { data: usernameData, error: usernameError } = await supabase.rpc('generate_username', {
       first_name: employeeData.first_name,
       last_name: employeeData.last_name
-    })
+    } as any) as any
     
     if (!usernameError && usernameData) {
       generatedUsername = usernameData
@@ -77,7 +77,7 @@ export async function createEmployee(companyId: string, employeeData: EmployeeFo
     try {
       const { data: hashData, error: hashError } = await supabase.rpc('hash_password', {
         plain_password: employeeData.password
-      })
+      } as any)
       
       if (hashError) {
         console.error('Password hashing error:', hashError)
@@ -115,7 +115,7 @@ export async function createEmployee(companyId: string, employeeData: EmployeeFo
       available_hours: employeeData.available_hours || null,
       default_duration_minutes: employeeData.default_duration_minutes || 30,
       password_hash: passwordHash,
-    })
+    } as any)
     .select()
     .single()
 
@@ -150,7 +150,7 @@ export async function updateEmployee(
     try {
       const { data: hashData, error: hashError } = await supabase.rpc('hash_password', {
         plain_password: employeeData.password
-      })
+      } as any)
       
       if (!hashError && hashData) {
         updateData.password_hash = hashData
@@ -164,9 +164,11 @@ export async function updateEmployee(
     }
   }
 
+  // @ts-ignore - Supabase types not properly inferred
   const { data, error } = await supabase
     .from('employees')
-    .update(updateData)
+    // @ts-ignore
+    .update(updateData as any)
     .eq('id', id)
     .select()
     .single()

@@ -20,12 +20,14 @@
 ### 🌟 Özellikler
 
 #### 🏢 Şirket Yönetimi
+
 - ✅ Güvenli şirket kaydı ve girişi (Supabase Auth)
 - ✅ Şirket profil yönetimi (logo, arka plan görseli, iletişim bilgileri)
 - ✅ Çoklu dil desteği (Türkçe/İngilizce)
 - ✅ Şirket dashboard'u
 
 #### 👥 Çalışan Yönetimi
+
 - ✅ Çalışan ekleme, düzenleme, silme
 - ✅ Profil fotoğrafı yükleme
 - ✅ Sosyal medya linkleri (Instagram, LinkedIn, Facebook, YouTube, WhatsApp)
@@ -33,6 +35,7 @@
 - ✅ Çalışan bazlı kullanıcı adı ve şifre sistemi
 
 #### 📅 Randevu Sistemi
+
 - ✅ Çalışan bazlı müsait saat yönetimi
 - ✅ Müşteri randevu rezervasyonu
 - ✅ Randevu onaylama, iptal etme, tamamlama
@@ -40,6 +43,7 @@
 - ✅ Randevu bildirimleri
 
 #### 📊 CRM & Satış Takibi
+
 - ✅ Lead yönetimi (Yeni, Görüşüldü, Satış Yapıldı, Reddedildi, Takipte)
 - ✅ Kanban board görünümü (drag & drop)
 - ✅ Liste görünümü
@@ -48,6 +52,7 @@
 - ✅ CRM istatistikleri
 
 #### 📈 Raporlar & Analitik
+
 - ✅ CRM istatistikleri (toplam lead, satış, takip)
 - ✅ Randevu istatistikleri (toplam, onaylanan, beklemede)
 - ✅ QR kod görüntülenme ve tıklama takibi
@@ -55,6 +60,7 @@
 - ✅ Çalışan performans raporları
 
 #### 🌐 Public Profil Sayfaları
+
 - ✅ SEO optimizasyonu (meta tags, OG tags)
 - ✅ Responsive tasarım
 - ✅ Sosyal medya entegrasyonu
@@ -68,6 +74,7 @@
 - ✅ Geri bildirim ve değerlendirme sistemi
 
 #### 📱 Mobil Uygulama
+
 - ✅ React Native ile cross-platform mobil uygulama
 - ✅ Şirket ve çalışan girişi
 - ✅ Dashboard ve takvim görünümü
@@ -79,26 +86,29 @@
 
 ### Gereksinimler
 
-- Node.js 18+ 
+- Node.js 18+
 - npm veya yarn
 - Supabase hesabı (ücretsiz tier yeterli)
 
 ### Kurulum
 
 1. **Repository'yi klonlayın**
+
    ```bash
    git clone https://github.com/husobiker/qrcard.git
    cd qrcard
    ```
 
 2. **Bağımlılıkları yükleyin**
+
    ```bash
    npm install
    ```
 
 3. **Environment değişkenlerini ayarlayın**
-   
+
    `.env` dosyası oluşturun:
+
    ```env
    VITE_SUPABASE_URL=your_supabase_project_url
    VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
@@ -106,17 +116,18 @@
    ```
 
 4. **Supabase'i yapılandırın**
-   
+
    - [Supabase](https://supabase.com) hesabı oluşturun
    - Yeni proje oluşturun
    - SQL Editor'de `supabase/migrations/` klasöründeki migration dosyalarını sırayla çalıştırın
    - Storage'da `company-assets` bucket'ı oluşturun (public)
 
 5. **Geliştirme sunucusunu başlatın**
+
    ```bash
    npm run dev
    ```
-   
+
    Uygulama `http://localhost:5173` adresinde çalışacaktır.
 
 ---
@@ -151,20 +162,25 @@ qrcard/
 ## 🗄️ Veritabanı Şeması
 
 ### Companies
+
 - Şirket bilgileri, logo, arka plan görseli, dil tercihi
 
 ### Employees
+
 - Çalışan bilgileri, profil fotoğrafı, sosyal medya linkleri
 - Müsait saatler, varsayılan randevu süresi
 - Kullanıcı adı ve şifre (hash'lenmiş)
 
 ### Appointments
+
 - Randevu bilgileri, müşteri detayları, durum takibi
 
 ### CRM Leads
+
 - Lead bilgileri, durum, takip tarihi, atanan çalışan
 
 ### Analytics
+
 - QR kod görüntülenme ve tıklama istatistikleri
 
 Detaylı şema için `supabase/migrations/` klasörüne bakın.
@@ -176,6 +192,7 @@ Detaylı şema için `supabase/migrations/` klasörüne bakın.
 ### PM2 ile Deployment
 
 1. **Build oluşturun**
+
    ```bash
    npm run build
    ```
@@ -231,6 +248,7 @@ VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
 ### Public Profil
 
 Her çalışan için benzersiz bir public URL:
+
 ```
 https://qrcard.gozcu.tech/{companyId}/{employeeId}
 ```

@@ -1,6 +1,5 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { LanguageProvider } from '@/contexts/LanguageContext'
-import { useAuth } from '@/hooks/useAuth'
 import ProtectedRoute from '@/components/ProtectedRoute'
 import EmployeeProtectedRoute from '@/components/EmployeeProtectedRoute'
 import Layout from '@/components/Layout'

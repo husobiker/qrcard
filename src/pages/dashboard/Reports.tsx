@@ -4,12 +4,12 @@ import { useLanguage } from '@/contexts/LanguageContext'
 import { getCompanyByUserId } from '@/services/companyService'
 import { getCompanyReports, type ReportsData } from '@/services/reportsService'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { TrendingUp, Calendar, Eye, MousePointerClick, Users, BarChart3, Clock, CheckCircle, XCircle, AlertCircle } from 'lucide-react'
+import { TrendingUp, Calendar, Eye, MousePointerClick, Users, BarChart3, Clock, CheckCircle, AlertCircle } from 'lucide-react'
 
 export default function Reports() {
   const { user } = useAuth()
   const { t } = useLanguage()
-  const [companyId, setCompanyId] = useState<string | null>(null)
+  const [, setCompanyId] = useState<string | null>(null)
   const [reports, setReports] = useState<ReportsData | null>(null)
   const [loading, setLoading] = useState(true)
 

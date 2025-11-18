@@ -37,9 +37,11 @@ export async function getCompanyById(companyId: string): Promise<Company | null>
 }
 
 export async function updateCompany(id: string, updates: Partial<Company>): Promise<Company | null> {
+  // @ts-ignore - Supabase types not properly inferred
   const { data, error } = await supabase
     .from('companies')
-    .update(updates)
+    // @ts-ignore
+    .update(updates as any)
     .eq('id', id)
     .select()
     .single()

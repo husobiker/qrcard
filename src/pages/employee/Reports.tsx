@@ -180,7 +180,7 @@ export default function EmployeeReports() {
       </div>
 
       {/* Monthly Trends */}
-      {reports.monthly_crm_trend && reports.monthly_crm_trend.length > 0 && (
+      {displayReports.monthly_crm_trend && displayReports.monthly_crm_trend.length > 0 && (
         <Card>
           <CardHeader>
             <CardTitle>{t('reports.trends.crm') || 'CRM Trendi (Son 6 Ay)'}</CardTitle>
@@ -190,7 +190,7 @@ export default function EmployeeReports() {
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
-              {reports.monthly_crm_trend.map((item, index) => (
+              {displayReports.monthly_crm_trend.map((item, index) => (
                 <div key={index} className="flex items-center justify-between">
                   <span className="text-sm text-muted-foreground">{item.month}</span>
                   <div className="flex items-center gap-2">
@@ -198,7 +198,7 @@ export default function EmployeeReports() {
                       <div
                         className="bg-blue-600 h-2 rounded-full"
                         style={{
-                          width: `${Math.min((item.count / Math.max(...reports.monthly_crm_trend!.map(m => m.count), 1)) * 100, 100)}%`,
+                          width: `${Math.min((item.count / Math.max(...displayReports.monthly_crm_trend!.map(m => m.count), 1)) * 100, 100)}%`,
                         }}
                       />
                     </div>
@@ -211,7 +211,7 @@ export default function EmployeeReports() {
         </Card>
       )}
 
-      {reports.monthly_appointments_trend && reports.monthly_appointments_trend.length > 0 && (
+      {displayReports.monthly_appointments_trend && displayReports.monthly_appointments_trend.length > 0 && (
         <Card>
           <CardHeader>
             <CardTitle>{t('reports.trends.appointments') || 'Randevu Trendi (Son 6 Ay)'}</CardTitle>
@@ -221,7 +221,7 @@ export default function EmployeeReports() {
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
-              {reports.monthly_appointments_trend.map((item, index) => (
+              {displayReports.monthly_appointments_trend.map((item, index) => (
                 <div key={index} className="flex items-center justify-between">
                   <span className="text-sm text-muted-foreground">{item.month}</span>
                   <div className="flex items-center gap-2">
@@ -229,7 +229,7 @@ export default function EmployeeReports() {
                       <div
                         className="bg-green-600 h-2 rounded-full"
                         style={{
-                          width: `${Math.min((item.count / Math.max(...reports.monthly_appointments_trend!.map(m => m.count), 1)) * 100, 100)}%`,
+                          width: `${Math.min((item.count / Math.max(...displayReports.monthly_appointments_trend!.map(m => m.count), 1)) * 100, 100)}%`,
                         }}
                       />
                     </div>

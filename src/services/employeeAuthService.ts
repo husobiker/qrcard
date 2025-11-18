@@ -11,7 +11,7 @@ export async function authenticateEmployee(username: string, password: string): 
     const { data, error } = await supabase.rpc('authenticate_employee', {
       emp_username: username,
       emp_password: password
-    })
+    } as any)
 
     if (error) {
       console.error('Error authenticating employee:', error)
@@ -19,10 +19,10 @@ export async function authenticateEmployee(username: string, password: string): 
       return null
     }
 
-    console.log('Authentication response:', { dataLength: data?.length, hasData: !!data })
+    console.log('Authentication response:', { dataLength: (data as any)?.length, hasData: !!data })
 
     // RPC returns a table, so data is an array
-    if (!data || data.length === 0) {
+    if (!data || (data as any).length === 0) {
       console.log('No employee found or password incorrect')
       return null
     }

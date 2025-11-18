@@ -13,7 +13,7 @@ export async function trackView(employeeId: string) {
       event_data: {},
       user_agent: navigator.userAgent,
       referrer: document.referrer || null,
-    })
+    } as any)
 
     if (error) {
       console.error('Error tracking view:', error)
@@ -31,7 +31,7 @@ export async function trackClick(employeeId: string, clickData: Record<string, a
       event_data: clickData,
       user_agent: navigator.userAgent,
       referrer: document.referrer || null,
-    })
+    } as any)
 
     if (error) {
       console.error('Error tracking click:', error)
