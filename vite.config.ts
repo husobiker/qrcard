@@ -14,5 +14,15 @@ export default defineConfig({
     host: '0.0.0.0', // Allow access from network
     port: 5173,
   },
+  preview: {
+    host: '0.0.0.0',
+    port: 3040,
+    allowedHosts: [
+      'qrcard.gozcu.tech',
+      'localhost',
+      '127.0.0.1',
+      '178.157.15.26',
+    ],
+  },
 })
 
