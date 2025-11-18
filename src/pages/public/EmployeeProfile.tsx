@@ -849,7 +849,7 @@ export default function EmployeeProfile() {
       >
         <DialogContent
           onClose={() => setAppointmentDialogOpen(false)}
-          className="max-w-2xl max-h-[90vh] overflow-y-auto"
+          className="max-h-[90vh] overflow-y-auto"
         >
           <DialogHeader>
             <DialogTitle>
@@ -885,11 +885,25 @@ export default function EmployeeProfile() {
 
               setSubmitting(true);
               try {
-                const appointmentDateTime = new Date(
-                  `${selectedDate}T${selectedTime}`
+                // Handle timezone issues on mobile browsers
+                const dateStr = selectedDate;
+                const timeStr = selectedTime;
+                
+                // Create date string in local timezone, then convert to ISO
+                const [year, month, day] = dateStr.split('-');
+                const [hours, minutes] = timeStr.split(':');
+                
+                // Create date in local timezone
+                const localDate = new Date(
+                  parseInt(year),
+                  parseInt(month) - 1,
+                  parseInt(day),
+                  parseInt(hours),
+                  parseInt(minutes)
                 );
 
-                if (isNaN(appointmentDateTime.getTime())) {
+                if (isNaN(localDate.getTime())) {
+                  console.error('Invalid date created:', { dateStr, timeStr, year, month, day, hours, minutes });
                   alert(
                     t("profile.appointment.invalidDateTime") ||
                       "Invalid date or time"
@@ -898,15 +912,24 @@ export default function EmployeeProfile() {
                   return;
                 }
 
+                console.log('Creating appointment with:', {
+                  dateStr,
+                  timeStr,
+                  localDate: localDate.toString(),
+                  isoString: localDate.toISOString(),
+                  employee_id: employee.id,
+                  company_id: employee.company_id,
+                });
+
                 const appointment = await createAppointment({
                   employee_id: employee.id,
                   company_id: employee.company_id,
-                  customer_name: appointmentForm.customer_name,
-                  customer_email: appointmentForm.customer_email,
-                  customer_phone: appointmentForm.customer_phone || undefined,
-                  appointment_date: appointmentDateTime.toISOString(),
+                  customer_name: appointmentForm.customer_name.trim(),
+                  customer_email: appointmentForm.customer_email.trim(),
+                  customer_phone: appointmentForm.customer_phone?.trim() || undefined,
+                  appointment_date: localDate.toISOString(),
                   duration_minutes: employee.default_duration_minutes || 30,
-                  notes: appointmentForm.notes || undefined,
+                  notes: appointmentForm.notes?.trim() || undefined,
                 });
 
                 if (appointment) {
