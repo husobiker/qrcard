@@ -1115,18 +1115,18 @@ export default function EmployeeProfile() {
               />
             </div>
 
-            <div className="flex justify-end gap-2 pt-4">
+            <div className="flex flex-col sm:flex-row justify-end gap-2 sm:gap-2 pt-4">
               <button
                 type="button"
                 onClick={() => setAppointmentDialogOpen(false)}
-                className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+                className="w-full sm:w-auto px-4 py-2.5 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors text-base font-medium"
               >
                 {t("profile.appointment.cancel")}
               </button>
               <button
                 type="submit"
                 disabled={submitting || !selectedDate || !selectedTime}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full sm:w-auto px-4 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-base font-medium"
               >
                 {submitting
                   ? t("profile.appointment.booking")
