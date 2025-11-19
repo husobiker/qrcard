@@ -21,6 +21,8 @@ export default function Dashboard() {
     address: '',
     phone: '',
     website: '',
+    tax_number: '',
+    tax_office: '',
   })
   const [logoFile, setLogoFile] = useState<File | null>(null)
   const [logoPreview, setLogoPreview] = useState<string | null>(null)
@@ -48,6 +50,8 @@ export default function Dashboard() {
         address: companyData.address || '',
         phone: companyData.phone || '',
         website: companyData.website || '',
+        tax_number: companyData.tax_number || '',
+        tax_office: companyData.tax_office || '',
       })
       setLogoPreview(companyData.logo_url)
       setBackgroundImagePreview(companyData.background_image_url)
@@ -71,6 +75,8 @@ export default function Dashboard() {
           address: (data as any).address || '',
           phone: (data as any).phone || '',
           website: (data as any).website || '',
+          tax_number: (data as any).tax_number || '',
+          tax_office: (data as any).tax_office || '',
         })
       } else {
         console.error('Error creating company:', error)
@@ -305,6 +311,30 @@ export default function Dashboard() {
                 onChange={(e) => setFormData({ ...formData, website: e.target.value })}
                 placeholder="https://example.com"
               />
+            </div>
+
+            <div className="border-t pt-4">
+              <h3 className="text-lg font-semibold mb-4">{t('dashboard.company.taxInfo')}</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="tax_number">{t('dashboard.company.taxNumber')}</Label>
+                  <Input
+                    id="tax_number"
+                    value={formData.tax_number}
+                    onChange={(e) => setFormData({ ...formData, tax_number: e.target.value })}
+                    placeholder="1234567890"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="tax_office">{t('dashboard.company.taxOffice')}</Label>
+                  <Input
+                    id="tax_office"
+                    value={formData.tax_office}
+                    onChange={(e) => setFormData({ ...formData, tax_office: e.target.value })}
+                    placeholder="Kadıköy Vergi Dairesi"
+                  />
+                </div>
+              </div>
             </div>
 
             <Button type="submit" disabled={saving}>

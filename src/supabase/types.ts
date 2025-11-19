@@ -16,6 +16,8 @@ export interface Database {
           address: string | null
           phone: string | null
           website: string | null
+          tax_number: string | null
+          tax_office: string | null
           logo_url: string | null
           background_image_url: string | null
           language: 'tr' | 'en'
@@ -27,6 +29,8 @@ export interface Database {
           address?: string | null
           phone?: string | null
           website?: string | null
+          tax_number?: string | null
+          tax_office?: string | null
           logo_url?: string | null
           background_image_url?: string | null
           language?: 'tr' | 'en'
@@ -38,6 +42,8 @@ export interface Database {
           address?: string | null
           phone?: string | null
           website?: string | null
+          tax_number?: string | null
+          tax_office?: string | null
           logo_url?: string | null
           background_image_url?: string | null
           language?: 'tr' | 'en'
