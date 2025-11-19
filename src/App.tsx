@@ -1,5 +1,6 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
-import { LanguageProvider } from '@/contexts/LanguageContext'
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom'
+import { useEffect } from 'react'
+import { LanguageProvider, useLanguage } from '@/contexts/LanguageContext'
 import ProtectedRoute from '@/components/ProtectedRoute'
 import EmployeeProtectedRoute from '@/components/EmployeeProtectedRoute'
 import Layout from '@/components/Layout'
@@ -19,11 +20,35 @@ import EmployeeCRM from '@/pages/employee/CRM'
 import EmployeeReports from '@/pages/employee/Reports'
 import EmployeeProfile from '@/pages/public/EmployeeProfile'
 
-function App() {
+// Component to handle URL hash errors (e.g., from email links)
+function ErrorHandler() {
+  const location = useLocation()
+  const { t } = useLanguage()
+
+  useEffect(() => {
+    // Check for error in URL hash
+    const hash = location.hash
+    if (hash && hash.includes('error=')) {
+      const params = new URLSearchParams(hash.substring(1))
+      const errorCode = params.get('error_code')
+      const errorDescription = params.get('error_description')
+      
+      if (errorCode === 'otp_expired' || errorDescription?.includes('expired')) {
+        alert(t('auth.signup.otpExpired'))
+        // Clean up URL
+        window.history.replaceState(null, '', location.pathname)
+      }
+    }
+  }, [location, t])
+
+  return null
+}
+
+function AppRoutes() {
   return (
-    <LanguageProvider>
-      <BrowserRouter>
-        <Routes>
+    <>
+      <ErrorHandler />
+      <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/employee-login" element={<EmployeeLogin />} />
         <Route path="/signup" element={<Signup />} />
@@ -123,11 +148,19 @@ function App() {
           }
         />
         <Route path="/" element={<Navigate to="/dashboard" replace />} />
-        </Routes>
+      </Routes>
+    </>
+  )
+}
+
+function App() {
+  return (
+    <LanguageProvider>
+      <BrowserRouter>
+        <AppRoutes />
       </BrowserRouter>
     </LanguageProvider>
   )
 }
 
 export default App
-

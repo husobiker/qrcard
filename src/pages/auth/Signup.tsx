@@ -30,27 +30,40 @@ export default function Signup() {
 
     // Sign up the user (with email confirmation disabled, auto-confirm)
     const baseUrl = getBaseUrl()
+    // Ensure no whitespace in redirect URL
+    const redirectUrl = `${baseUrl}/dashboard`.trim()
     const { data: authData, error: authError } = await supabase.auth.signUp({
       email,
       password,
       options: {
-        emailRedirectTo: `${baseUrl}/dashboard`,
+        emailRedirectTo: redirectUrl,
       },
     })
 
     if (authError) {
-      // Check for rate limit error (429)
-      // Supabase returns 429 in status code or message
+      // Check for specific error types
       const errorMessage = authError.message?.toLowerCase() || ''
+      const errorCode = (authError as any).code || ''
+      
+      // Check for rate limit error (429)
       const isRateLimit = 
         authError.status === 429 || 
-        (authError as any).code === '429' ||
+        errorCode === '429' ||
         errorMessage.includes('429') ||
         errorMessage.includes('rate limit') ||
         errorMessage.includes('too many requests')
       
+      // Check for OTP expired error
+      const isOtpExpired = 
+        errorCode === 'otp_expired' ||
+        errorMessage.includes('otp_expired') ||
+        errorMessage.includes('expired') ||
+        errorMessage.includes('invalid or has expired')
+      
       if (isRateLimit) {
         setMessage(t('auth.signup.rateLimit'))
+      } else if (isOtpExpired) {
+        setMessage(t('auth.signup.otpExpired'))
       } else {
         setMessage(t('auth.signup.error'))
       }

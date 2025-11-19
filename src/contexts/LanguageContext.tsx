@@ -48,6 +48,7 @@ const translations = {
     'auth.signup.success': 'Hesabınız başarıyla oluşturuldu! Yönlendiriliyorsunuz...',
     'auth.signup.error': 'Hesap oluşturulamadı. Lütfen tekrar deneyin.',
     'auth.signup.rateLimit': 'Çok fazla deneme yapıldı. Lütfen birkaç dakika bekleyip tekrar deneyin.',
+    'auth.signup.otpExpired': 'E-posta linki geçersiz veya süresi dolmuş. Lütfen yeni bir kayıt denemesi yapın.',
     'auth.signup.emailConfirmationRequired': 'Hesap oluşturuldu! E-postanızı kontrol edip onaylayın, ardından giriş yapın.',
     'auth.signup.companyCreationFailed': 'Şirket profili oluşturulamadı: {message}',
     
@@ -362,6 +363,7 @@ const translations = {
     'auth.signup.success': 'Account created successfully! Redirecting...',
     'auth.signup.error': 'Failed to create account. Please try again.',
     'auth.signup.rateLimit': 'Too many attempts. Please wait a few minutes and try again.',
+    'auth.signup.otpExpired': 'Email link is invalid or has expired. Please try signing up again.',
     'auth.signup.emailConfirmationRequired': 'Account created! Please check your email to confirm, then log in.',
     'auth.signup.companyCreationFailed': 'Failed to create company profile: {message}',
     

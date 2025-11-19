@@ -5,7 +5,8 @@
 export function getBaseUrl(): string {
   // In production, use the environment variable
   if (import.meta.env.VITE_PUBLIC_URL) {
-    return import.meta.env.VITE_PUBLIC_URL;
+    // Trim whitespace and remove trailing slashes
+    return import.meta.env.VITE_PUBLIC_URL.trim().replace(/\/+$/, '');
   }
 
   // In development, use current origin
