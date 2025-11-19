@@ -23,6 +23,13 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
     return <Navigate to="/login" replace />
   }
 
+  // Check if email is confirmed
+  // If email confirmation is enabled in Supabase, check email_confirmed_at
+  // If it's null, redirect to a confirmation page
+  if (user && !user.email_confirmed_at) {
+    return <Navigate to="/verify-email" replace />
+  }
+
   return <>{children}</>
 }
 

@@ -100,11 +100,21 @@ export default function Signup() {
 
           if (!companyError) {
             companyCreated = true
-            setMessage(t('auth.signup.success'))
-            setMessageType('success')
-            setTimeout(() => {
-              navigate('/dashboard')
-            }, 1500)
+            // Check if email is confirmed
+            if (authData.user.email_confirmed_at) {
+              setMessage(t('auth.signup.success'))
+              setMessageType('success')
+              setTimeout(() => {
+                navigate('/dashboard')
+              }, 1500)
+            } else {
+              // Email confirmation required
+              setMessage(t('auth.signup.emailConfirmationRequired'))
+              setMessageType('success')
+              setTimeout(() => {
+                navigate('/verify-email')
+              }, 2000)
+            }
             return
           } else {
             console.error('Company creation error:', companyError)

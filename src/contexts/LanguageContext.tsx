@@ -59,6 +59,17 @@ const translations = {
     'auth.forgot.loading': 'Gönderiliyor...',
     'auth.forgot.back': 'Girişe dön',
     
+    'auth.verify.title': 'E-posta Onayı Gerekli',
+    'auth.verify.description': 'Hesabınızı kullanmaya başlamak için e-posta adresinizi onaylamanız gerekiyor.',
+    'auth.verify.resend': 'E-postayı Tekrar Gönder',
+    'auth.verify.sending': 'Gönderiliyor...',
+    'auth.verify.check': 'Durumu Kontrol Et',
+    'auth.verify.resendSuccess': 'Onay e-postası tekrar gönderildi. Lütfen e-postanızı kontrol edin.',
+    'auth.verify.resendError': 'E-posta gönderilemedi. Lütfen tekrar deneyin.',
+    'auth.verify.notConfirmed': 'E-posta henüz onaylanmadı. Lütfen e-postanızı kontrol edin.',
+    'auth.verify.checkError': 'Durum kontrol edilemedi. Lütfen tekrar deneyin.',
+    'auth.verify.backToLogin': 'Giriş sayfasına dön',
+    
     // Dashboard
     'dashboard.company.title': 'Şirket Profili',
     'dashboard.company.subtitle': 'Şirket bilgilerinizi yönetin',
@@ -373,6 +384,17 @@ const translations = {
     'auth.forgot.submit': 'Send Reset Link',
     'auth.forgot.loading': 'Sending...',
     'auth.forgot.back': 'Back to login',
+    
+    'auth.verify.title': 'Email Verification Required',
+    'auth.verify.description': 'You need to verify your email address to start using your account.',
+    'auth.verify.resend': 'Resend Email',
+    'auth.verify.sending': 'Sending...',
+    'auth.verify.check': 'Check Status',
+    'auth.verify.resendSuccess': 'Verification email has been resent. Please check your email.',
+    'auth.verify.resendError': 'Failed to send email. Please try again.',
+    'auth.verify.notConfirmed': 'Email has not been confirmed yet. Please check your email.',
+    'auth.verify.checkError': 'Failed to check status. Please try again.',
+    'auth.verify.backToLogin': 'Back to login',
     
     // Dashboard
     'dashboard.company.title': 'Company Profile',

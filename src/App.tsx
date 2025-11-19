@@ -9,6 +9,7 @@ import Login from '@/pages/auth/Login'
 import EmployeeLogin from '@/pages/auth/EmployeeLogin'
 import Signup from '@/pages/auth/Signup'
 import ForgotPassword from '@/pages/auth/ForgotPassword'
+import VerifyEmail from '@/pages/auth/VerifyEmail'
 import Dashboard from '@/pages/dashboard/Dashboard'
 import Employees from '@/pages/dashboard/Employees'
 import Calendar from '@/pages/dashboard/Calendar'
@@ -53,6 +54,7 @@ function AppRoutes() {
         <Route path="/employee-login" element={<EmployeeLogin />} />
         <Route path="/signup" element={<Signup />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/verify-email" element={<VerifyEmail />} />
         <Route
           path="/:companyId/:employeeId"
           element={<EmployeeProfile />}
