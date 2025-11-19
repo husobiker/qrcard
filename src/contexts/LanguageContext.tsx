@@ -47,6 +47,7 @@ const translations = {
     'auth.signup.signin': 'Giriş yap',
     'auth.signup.success': 'Hesabınız başarıyla oluşturuldu! Yönlendiriliyorsunuz...',
     'auth.signup.error': 'Hesap oluşturulamadı. Lütfen tekrar deneyin.',
+    'auth.signup.rateLimit': 'Çok fazla deneme yapıldı. Lütfen birkaç dakika bekleyip tekrar deneyin.',
     'auth.signup.emailConfirmationRequired': 'Hesap oluşturuldu! E-postanızı kontrol edip onaylayın, ardından giriş yapın.',
     'auth.signup.companyCreationFailed': 'Şirket profili oluşturulamadı: {message}',
     
@@ -360,6 +361,7 @@ const translations = {
     'auth.signup.signin': 'Sign in',
     'auth.signup.success': 'Account created successfully! Redirecting...',
     'auth.signup.error': 'Failed to create account. Please try again.',
+    'auth.signup.rateLimit': 'Too many attempts. Please wait a few minutes and try again.',
     'auth.signup.emailConfirmationRequired': 'Account created! Please check your email to confirm, then log in.',
     'auth.signup.companyCreationFailed': 'Failed to create company profile: {message}',
     

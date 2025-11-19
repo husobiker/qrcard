@@ -39,7 +39,21 @@ export default function Signup() {
     })
 
     if (authError) {
-      setMessage(t('auth.signup.error'))
+      // Check for rate limit error (429)
+      // Supabase returns 429 in status code or message
+      const errorMessage = authError.message?.toLowerCase() || ''
+      const isRateLimit = 
+        authError.status === 429 || 
+        (authError as any).code === '429' ||
+        errorMessage.includes('429') ||
+        errorMessage.includes('rate limit') ||
+        errorMessage.includes('too many requests')
+      
+      if (isRateLimit) {
+        setMessage(t('auth.signup.rateLimit'))
+      } else {
+        setMessage(t('auth.signup.error'))
+      }
       setMessageType('error')
       setLoading(false)
       return
