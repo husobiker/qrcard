@@ -1,5 +1,6 @@
 import { supabase } from '@/supabase/client'
 import type { Appointment } from '@/types'
+import { createLead } from './crmService'
 
 export async function createAppointment(appointment: {
   employee_id: string
@@ -37,6 +38,32 @@ export async function createAppointment(appointment: {
     }
 
     console.log('Appointment created successfully:', data)
+
+    // Automatically create a CRM lead with "Yeni" status
+    if (data) {
+      try {
+        const appointmentDate = new Date(appointment.appointment_date)
+        const notesText = appointment.notes 
+          ? `Randevu notu: ${appointment.notes}\nRandevu tarihi: ${appointmentDate.toLocaleString('tr-TR', { dateStyle: 'long', timeStyle: 'short' })}`
+          : `Randevu tarihi: ${appointmentDate.toLocaleString('tr-TR', { dateStyle: 'long', timeStyle: 'short' })}`
+
+        await createLead(appointment.company_id, {
+          employee_id: appointment.employee_id,
+          customer_name: appointment.customer_name,
+          contact_name: appointment.customer_name,
+          phone: appointment.customer_phone || undefined,
+          email: appointment.customer_email,
+          notes: notesText,
+          follow_up_date: appointment.appointment_date,
+          status: 'Yeni',
+        })
+        console.log('CRM lead created automatically for appointment')
+      } catch (leadError) {
+        // Don't fail the appointment creation if lead creation fails
+        console.error('Error creating CRM lead for appointment:', leadError)
+      }
+    }
+
     return data
   } catch (error: any) {
     console.error('Error creating appointment (catch):', error)
