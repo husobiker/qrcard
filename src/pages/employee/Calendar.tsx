@@ -77,7 +77,17 @@ export default function EmployeeCalendar() {
   const handleAddAppointment = async () => {
     if (!employee || !company) return
 
+    if (!newAppointment.customer_name || !newAppointment.customer_email || !newAppointment.appointment_date || !newAppointment.appointment_time) {
+      alert(t('employee.calendar.fillAllFields') || 'Please fill in all required fields')
+      return
+    }
+
     const dateTime = new Date(`${newAppointment.appointment_date}T${newAppointment.appointment_time}`)
+    
+    if (isNaN(dateTime.getTime())) {
+      alert(t('employee.calendar.invalidDateTime') || 'Invalid date or time')
+      return
+    }
     
     const appointment = await createAppointment({
       employee_id: employee.id,
@@ -91,7 +101,8 @@ export default function EmployeeCalendar() {
     })
 
     if (appointment) {
-      setAppointments([...appointments, appointment])
+      // Reload appointments from server to ensure consistency
+      await loadAppointments()
       setAddDialogOpen(false)
       setNewAppointment({
         customer_name: '',
@@ -102,14 +113,28 @@ export default function EmployeeCalendar() {
         duration_minutes: 30,
         notes: '',
       })
+    } else {
+      alert(t('employee.calendar.createError') || 'Failed to create appointment. Please try again.')
     }
   }
 
   const handleUpdateStatus = async (appointmentId: string, status: 'pending' | 'confirmed' | 'cancelled' | 'completed') => {
     const success = await updateAppointmentStatus(appointmentId, status)
     if (success) {
-      loadAppointments()
+      // Update local state immediately for better UX
+      setAppointments(prev => prev.map(apt => 
+        apt.id === appointmentId ? { ...apt, status } : apt
+      ))
+      // Also update selected appointment if it's the one being updated
+      if (selectedAppointment?.id === appointmentId) {
+        setSelectedAppointment({ ...selectedAppointment, status })
+      }
+      // Reload from server to ensure consistency
+      await loadAppointments()
+      // Close dialog after successful update
       setDialogOpen(false)
+    } else {
+      alert(t('employee.calendar.updateError') || 'Failed to update appointment status. Please try again.')
     }
   }
 

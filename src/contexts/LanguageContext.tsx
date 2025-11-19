@@ -294,6 +294,10 @@ const translations = {
     'employee.calendar.date': 'Tarih',
     'employee.calendar.time': 'Saat',
     'employee.calendar.add': 'Ekle',
+    'employee.calendar.updateError': 'Randevu durumu güncellenemedi. Lütfen tekrar deneyin.',
+    'employee.calendar.createError': 'Randevu oluşturulamadı. Lütfen tekrar deneyin.',
+    'employee.calendar.fillAllFields': 'Lütfen tüm gerekli alanları doldurun.',
+    'employee.calendar.invalidDateTime': 'Geçersiz tarih veya saat.',
     
     // Employee Credentials
     'employee.credentials.title': 'Çalışan Giriş Bilgileri',
@@ -620,6 +624,10 @@ const translations = {
     'employee.calendar.date': 'Date',
     'employee.calendar.time': 'Time',
     'employee.calendar.add': 'Add',
+    'employee.calendar.updateError': 'Failed to update appointment status. Please try again.',
+    'employee.calendar.createError': 'Failed to create appointment. Please try again.',
+    'employee.calendar.fillAllFields': 'Please fill in all required fields.',
+    'employee.calendar.invalidDateTime': 'Invalid date or time.',
     
     // Employee Credentials
     'employee.credentials.title': 'Employee Login Credentials',
