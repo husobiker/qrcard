@@ -87,9 +87,27 @@ export async function getAppointmentsByCompany(companyId: string): Promise<Appoi
 
 export async function updateAppointmentStatus(
   appointmentId: string,
-  status: 'pending' | 'confirmed' | 'cancelled' | 'completed'
+  status: 'pending' | 'confirmed' | 'cancelled' | 'completed',
+  employeeId?: string
 ): Promise<boolean> {
   try {
+    // If employeeId is provided, use RPC function (for employee updates)
+    if (employeeId) {
+      const { data, error } = await supabase.rpc('update_appointment_status_by_employee', {
+        appointment_id: appointmentId,
+        employee_id_param: employeeId,
+        new_status: status
+      } as any)
+
+      if (error) {
+        console.error('Error updating appointment via RPC:', error)
+        return false
+      }
+
+      return data === true
+    }
+
+    // Otherwise, use direct update (for company updates)
     // @ts-ignore - Supabase types not properly inferred
     const { error } = await supabase
       .from('appointments')

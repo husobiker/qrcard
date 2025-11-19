@@ -119,7 +119,12 @@ export default function EmployeeCalendar() {
   }
 
   const handleUpdateStatus = async (appointmentId: string, status: 'pending' | 'confirmed' | 'cancelled' | 'completed') => {
-    const success = await updateAppointmentStatus(appointmentId, status)
+    if (!employee) {
+      alert(t('employee.calendar.updateError') || 'Employee information not available.')
+      return
+    }
+
+    const success = await updateAppointmentStatus(appointmentId, status, employee.id)
     if (success) {
       // Update local state immediately for better UX
       setAppointments(prev => prev.map(apt => 
