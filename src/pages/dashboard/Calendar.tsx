@@ -70,10 +70,19 @@ export default function Calendar() {
   }
 
   const getAppointmentsForDate = (date: Date) => {
-    const dateStr = date.toISOString().split('T')[0]
+    // Use local date string to avoid timezone issues
+    const year = date.getFullYear()
+    const month = date.getMonth()
+    const day = date.getDate()
+    const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`
+    
     return appointments.filter((apt) => {
       const aptDate = new Date(apt.appointment_date)
-      const aptDateStr = aptDate.toISOString().split('T')[0]
+      // Convert to local date string
+      const aptYear = aptDate.getFullYear()
+      const aptMonth = aptDate.getMonth()
+      const aptDay = aptDate.getDate()
+      const aptDateStr = `${aptYear}-${String(aptMonth + 1).padStart(2, '0')}-${String(aptDay).padStart(2, '0')}`
       return aptDateStr === dateStr
     })
   }
