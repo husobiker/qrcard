@@ -1,6 +1,7 @@
 # Deployment Guide - QR Card Web Application
 
 ## Sunucu Bilgileri
+
 - **Domain**: qrcard.gozcu.tech
 - **IP**: 178.157.15.26
 - **Port**: 3040
@@ -15,7 +16,44 @@
 
 ## Deployment Adımları
 
-### 1. GitHub'a Push
+### Hızlı Deployment (Önerilen)
+
+Otomatik deployment script'i kullanarak:
+
+```bash
+# 1. GitHub'a push edin
+git add .
+git commit -m "Production ready"
+git push origin main
+
+# 2. Sunucuya SSH ile bağlanın
+ssh user@178.157.15.26
+
+# 3. Proje dizinine gidin
+cd /var/www/qrcard  # veya projenizin bulunduğu dizin
+
+# 4. Güncellemeleri çekin (ilk kurulumda: git clone ...)
+git pull origin main
+
+# 5. Deploy script'ini çalıştırılabilir yapın
+chmod +x deploy.sh
+
+# 6. Deploy script'ini çalıştırın
+./deploy.sh
+```
+
+Script otomatik olarak:
+
+- ✅ Ön kontrolleri yapar
+- ✅ Dependencies yükler
+- ✅ Production build oluşturur
+- ✅ PM2 ile uygulamayı başlatır/yeniden başlatır
+
+### Manuel Deployment
+
+Eğer script kullanmak istemiyorsanız:
+
+#### 1. GitHub'a Push
 
 ```bash
 # Projeyi GitHub'a push edin
@@ -24,19 +62,19 @@ git commit -m "Production ready"
 git push origin main
 ```
 
-### 2. Sunucuda Projeyi Çekme
+#### 2. Sunucuda Projeyi Çekme
 
 ```bash
 # Sunucuya SSH ile bağlanın
 ssh user@178.157.15.26
 
 # Proje dizinine gidin (veya oluşturun)
-cd /path/to/projects
+cd /var/www/qrcard  # veya projenizin bulunduğu dizin
 git clone https://github.com/your-username/gozcuqr.git
 cd gozcuqr
 ```
 
-### 3. Environment Variables Ayarlama
+#### 3. Environment Variables Ayarlama
 
 ```bash
 # .env dosyası oluşturun
@@ -47,19 +85,20 @@ nano .env
 ```
 
 `.env` dosyası şu şekilde olmalı:
+
 ```env
 VITE_PUBLIC_URL=https://qrcard.gozcu.tech
 VITE_SUPABASE_URL=your_supabase_url
 VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
 ```
 
-### 4. Dependencies Yükleme
+#### 4. Dependencies Yükleme
 
 ```bash
 npm install
 ```
 
-### 5. Production Build
+#### 5. Production Build
 
 ```bash
 npm run build
@@ -67,26 +106,27 @@ npm run build
 
 Bu komut `dist/` klasörü oluşturacak.
 
-### 6. PM2 Configuration
+#### 6. PM2 Configuration
 
 ```bash
-# ecosystem.config.js dosyasını düzenleyin
-nano ecosystem.config.js
+# ecosystem.config.cjs dosyasını düzenleyin
+nano ecosystem.config.cjs
 ```
 
 `cwd` değerini proje dizininize göre güncelleyin:
+
 ```javascript
-cwd: '/path/to/gozcuqr',
+cwd: '/var/www/qrcard',  // veya projenizin tam yolu
 ```
 
-### 7. PM2 ile Başlatma
+#### 7. PM2 ile Başlatma
 
 ```bash
 # Logs klasörü oluşturun
 mkdir -p logs
 
 # PM2 ile uygulamayı başlatın
-pm2 start ecosystem.config.js
+pm2 start ecosystem.config.cjs
 
 # PM2'yi sistem başlangıcında otomatik başlatmak için
 pm2 startup
@@ -136,6 +176,7 @@ server {
 ```
 
 SSL için Let's Encrypt:
+
 ```bash
 sudo certbot --nginx -d qrcard.gozcu.tech
 ```
@@ -144,9 +185,19 @@ sudo certbot --nginx -d qrcard.gozcu.tech
 
 Yeni bir güncelleme geldiğinde:
 
+### Otomatik (Önerilen)
+
+```bash
+cd /var/www/qrcard  # veya projenizin dizini
+git pull origin main
+./deploy.sh
+```
+
+### Manuel
+
 ```bash
 # Proje dizinine gidin
-cd /path/to/gozcuqr
+cd /var/www/qrcard  # veya projenizin dizini
 
 # Değişiklikleri çekin
 git pull origin main
@@ -164,6 +215,7 @@ pm2 restart qrcard-web
 ## Sorun Giderme
 
 ### Port 3040 kullanımda
+
 ```bash
 # Port'u kullanan process'i bulun
 lsof -i :3040
@@ -173,11 +225,13 @@ kill -9 <PID>
 ```
 
 ### PM2 logları kontrol
+
 ```bash
 pm2 logs qrcard-web --lines 100
 ```
 
 ### Build hatası
+
 ```bash
 # Node modules'ü temizleyip yeniden yükleyin
 rm -rf node_modules package-lock.json
@@ -190,4 +244,3 @@ npm run build
 - Production build'de `VITE_PUBLIC_URL` environment variable'ı kullanılır
 - Eğer bu değişken set edilmemişse, `window.location.origin` kullanılır
 - QR kodlar ve public URL'ler otomatik olarak `qrcard.gozcu.tech` domain'ini kullanır
-

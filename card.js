@@ -162,3 +162,5 @@ function loadCardData() {
 window.addEventListener('DOMContentLoaded', loadCardData);
 
 
+
+

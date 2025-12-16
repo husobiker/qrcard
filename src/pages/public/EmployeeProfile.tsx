@@ -767,7 +767,11 @@ export default function EmployeeProfile() {
               </div>
 
               {company &&
-                (company.address || company.phone || company.website || company.tax_number || company.tax_office) && (
+                (company.address ||
+                  company.phone ||
+                  company.website ||
+                  company.tax_number ||
+                  company.tax_office) && (
                   <div>
                     <h2 className="text-2xl font-bold text-gray-900 mb-4 pb-2 border-b border-gray-200">
                       {t("profile.companyInfo")}
@@ -842,8 +846,12 @@ export default function EmployeeProfile() {
                             <div className="flex items-center space-x-3">
                               <Building2 className="h-5 w-5 text-gray-400 flex-shrink-0" />
                               <div>
-                                <span className="text-sm text-gray-500">{t("profile.taxNumber")}: </span>
-                                <span className="font-medium">{company.tax_number}</span>
+                                <span className="text-sm text-gray-500">
+                                  {t("profile.taxNumber")}:{" "}
+                                </span>
+                                <span className="font-medium">
+                                  {company.tax_number}
+                                </span>
                               </div>
                             </div>
                           )}
@@ -851,8 +859,12 @@ export default function EmployeeProfile() {
                             <div className="flex items-center space-x-3 mt-2">
                               <Building2 className="h-5 w-5 text-gray-400 flex-shrink-0" />
                               <div>
-                                <span className="text-sm text-gray-500">{t("profile.taxOffice")}: </span>
-                                <span className="font-medium">{company.tax_office}</span>
+                                <span className="text-sm text-gray-500">
+                                  {t("profile.taxOffice")}:{" "}
+                                </span>
+                                <span className="font-medium">
+                                  {company.tax_office}
+                                </span>
                               </div>
                             </div>
                           )}

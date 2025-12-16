@@ -32,57 +32,67 @@ export default function Dashboard() {
   useEffect(() => {
     if (user) {
       loadCompany()
+    } else {
+      setLoading(false)
     }
   }, [user])
 
   const loadCompany = async () => {
-    if (!user) return
-
-    const companyData = await getCompanyByUserId(user.id)
-    if (companyData) {
-      setCompany(companyData)
-      // Set language from company data
-      if (companyData.language) {
-        setLanguage(companyData.language)
-      }
-      setFormData({
-        name: companyData.name || '',
-        address: companyData.address || '',
-        phone: companyData.phone || '',
-        website: companyData.website || '',
-        tax_number: companyData.tax_number || '',
-        tax_office: companyData.tax_office || '',
-      })
-      setLogoPreview(companyData.logo_url)
-      setBackgroundImagePreview(companyData.background_image_url)
-    } else {
-      // Company doesn't exist, create it
-      console.log('Company not found, creating new company...')
-      const { data, error } = await supabase
-        .from('companies')
-        .insert({
-          id: user.id,
-          name: 'My Company',
-          language: 'tr' as 'tr' | 'en',
-        } as any)
-        .select()
-        .single()
-      
-      if (data && !error) {
-        setCompany(data)
-        setFormData({
-          name: (data as any).name || '',
-          address: (data as any).address || '',
-          phone: (data as any).phone || '',
-          website: (data as any).website || '',
-          tax_number: (data as any).tax_number || '',
-          tax_office: (data as any).tax_office || '',
-        })
-      } else {
-        console.error('Error creating company:', error)
-      }
+    if (!user) {
+      setLoading(false)
+      return
     }
-    setLoading(false)
+
+    try {
+      const companyData = await getCompanyByUserId(user.id)
+      if (companyData) {
+        setCompany(companyData)
+        // Set language from company data
+        if (companyData.language) {
+          setLanguage(companyData.language)
+        }
+        setFormData({
+          name: companyData.name || '',
+          address: companyData.address || '',
+          phone: companyData.phone || '',
+          website: companyData.website || '',
+          tax_number: companyData.tax_number || '',
+          tax_office: companyData.tax_office || '',
+        })
+        setLogoPreview(companyData.logo_url)
+        setBackgroundImagePreview(companyData.background_image_url)
+      } else {
+        // Company doesn't exist, create it
+        console.log('Company not found, creating new company...')
+        const { data, error } = await supabase
+          .from('companies')
+          .insert({
+            id: user.id,
+            name: 'My Company',
+            language: 'tr' as 'tr' | 'en',
+          } as any)
+          .select()
+          .single()
+        
+        if (data && !error) {
+          setCompany(data)
+          setFormData({
+            name: (data as any).name || '',
+            address: (data as any).address || '',
+            phone: (data as any).phone || '',
+            website: (data as any).website || '',
+            tax_number: (data as any).tax_number || '',
+            tax_office: (data as any).tax_office || '',
+          })
+        } else {
+          console.error('Error creating company:', error)
+        }
+      }
+    } catch (error) {
+      console.error('Error loading company:', error)
+    } finally {
+      setLoading(false)
+    }
   }
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {

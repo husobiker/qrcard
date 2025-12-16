@@ -6,3 +6,5 @@ ADD COLUMN IF NOT EXISTS tax_office TEXT;
 COMMENT ON COLUMN companies.tax_number IS 'Vergi numarası';
 COMMENT ON COLUMN companies.tax_office IS 'Vergi dairesi';
 
+
+
