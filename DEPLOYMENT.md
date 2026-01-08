@@ -1,160 +1,67 @@
-# Deployment Guide - QR Card Web Application
+# Deployment Guide - qrcard.gozcu.tech
 
 ## Sunucu Bilgileri
-
+- **IP**: 46.101.111.170
 - **Domain**: qrcard.gozcu.tech
-- **IP**: 178.157.15.26
-- **Port**: 3040
-- **PM2**: Process Manager
+- **Port**: 3040 (production)
 
-## Ön Gereksinimler
+## Sunucuda Kurulum Adımları
 
-1. Node.js 18+ yüklü olmalı
-2. PM2 global olarak yüklü olmalı: `npm install -g pm2`
-3. Git yüklü olmalı
-4. Nginx veya benzeri reverse proxy (opsiyonel, domain için)
-
-## Deployment Adımları
-
-### Hızlı Deployment (Önerilen)
-
-Otomatik deployment script'i kullanarak:
-
+### 1. Gerekli Paketleri Yükleyin
 ```bash
-# 1. GitHub'a push edin
-git add .
-git commit -m "Production ready"
-git push origin main
+# Node.js ve npm yüklü olmalı (v18+ önerilir)
+node --version
+npm --version
 
-# 2. Sunucuya SSH ile bağlanın
-ssh user@178.157.15.26
-
-# 3. Proje dizinine gidin
-cd /var/www/qrcard  # veya projenizin bulunduğu dizin
-
-# 4. Güncellemeleri çekin (ilk kurulumda: git clone ...)
-git pull origin main
-
-# 5. Deploy script'ini çalıştırılabilir yapın
-chmod +x deploy.sh
-
-# 6. Deploy script'ini çalıştırın
-./deploy.sh
+# PM2 (process manager) yükleyin
+npm install -g pm2
 ```
 
-Script otomatik olarak:
-
-- ✅ Ön kontrolleri yapar
-- ✅ Dependencies yükler
-- ✅ Production build oluşturur
-- ✅ PM2 ile uygulamayı başlatır/yeniden başlatır
-
-### Manuel Deployment
-
-Eğer script kullanmak istemiyorsanız:
-
-#### 1. GitHub'a Push
-
+### 2. Projeyi Clone Edin
 ```bash
-# Projeyi GitHub'a push edin
-git add .
-git commit -m "Production ready"
-git push origin main
+cd /var/www  # veya uygun bir dizin
+git clone https://github.com/husobiker/qrcard.git
+cd qrcard
 ```
 
-#### 2. Sunucuda Projeyi Çekme
-
-```bash
-# Sunucuya SSH ile bağlanın
-ssh user@178.157.15.26
-
-# Proje dizinine gidin (veya oluşturun)
-cd /var/www/qrcard  # veya projenizin bulunduğu dizin
-git clone https://github.com/your-username/gozcuqr.git
-cd gozcuqr
-```
-
-#### 3. Environment Variables Ayarlama
-
-```bash
-# .env dosyası oluşturun
-cp .env.production .env
-
-# .env dosyasını düzenleyin ve Supabase bilgilerini ekleyin
-nano .env
-```
-
-`.env` dosyası şu şekilde olmalı:
-
-```env
-VITE_PUBLIC_URL=https://qrcard.gozcu.tech
-VITE_SUPABASE_URL=your_supabase_url
-VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
-```
-
-#### 4. Dependencies Yükleme
-
+### 3. Bağımlılıkları Yükleyin
 ```bash
 npm install
 ```
 
-#### 5. Production Build
+### 4. Environment Variables
+`.env` dosyası oluşturun (varsa `.env.example` dosyasından kopyalayın):
+```bash
+cp .env.example .env
+# .env dosyasını düzenleyin ve Supabase bilgilerini ekleyin
+```
 
+### 5. Production Build
 ```bash
 npm run build
 ```
 
-Bu komut `dist/` klasörü oluşturacak.
-
-#### 6. PM2 Configuration
-
+### 6. PM2 ile Çalıştırın
 ```bash
-# ecosystem.config.cjs dosyasını düzenleyin
-nano ecosystem.config.cjs
-```
+# PM2 ile başlat
+pm2 start npm --name "qrcard" -- start
 
-`cwd` değerini proje dizininize göre güncelleyin:
+# Veya direkt olarak
+pm2 start "npm run preview" --name "qrcard"
 
-```javascript
-cwd: '/var/www/qrcard',  // veya projenizin tam yolu
-```
+# PM2 loglarını görüntüle
+pm2 logs qrcard
 
-#### 7. PM2 ile Başlatma
+# PM2 durumunu kontrol et
+pm2 status
 
-```bash
-# Logs klasörü oluşturun
-mkdir -p logs
-
-# PM2 ile uygulamayı başlatın
-pm2 start ecosystem.config.cjs
-
-# PM2'yi sistem başlangıcında otomatik başlatmak için
+# PM2'yi sistem başlangıcında otomatik başlat
 pm2 startup
 pm2 save
 ```
 
-### 8. PM2 Komutları
-
-```bash
-# Durumu kontrol et
-pm2 status
-
-# Logları görüntüle
-pm2 logs qrcard-web
-
-# Yeniden başlat
-pm2 restart qrcard-web
-
-# Durdur
-pm2 stop qrcard-web
-
-# Sil
-pm2 delete qrcard-web
-```
-
-### 9. Nginx Configuration (Opsiyonel - Domain için)
-
-Eğer domain kullanacaksanız, Nginx reverse proxy ayarları:
+### 7. Nginx Yapılandırması (Opsiyonel)
+Eğer Nginx reverse proxy kullanıyorsanız:
 
 ```nginx
 server {
@@ -175,72 +82,64 @@ server {
 }
 ```
 
-SSL için Let's Encrypt:
-
+### 8. SSL Sertifikası (Let's Encrypt)
 ```bash
 sudo certbot --nginx -d qrcard.gozcu.tech
 ```
 
-## Güncelleme İşlemi
-
-Yeni bir güncelleme geldiğinde:
-
-### Otomatik (Önerilen)
+## Güncelleme Adımları
 
 ```bash
-cd /var/www/qrcard  # veya projenizin dizini
+cd /var/www/qrcard  # veya proje dizininiz
 git pull origin main
-./deploy.sh
-```
-
-### Manuel
-
-```bash
-# Proje dizinine gidin
-cd /var/www/qrcard  # veya projenizin dizini
-
-# Değişiklikleri çekin
-git pull origin main
-
-# Dependencies güncelleyin (gerekirse)
 npm install
-
-# Yeni build oluşturun
 npm run build
-
-# PM2'yi yeniden başlatın
-pm2 restart qrcard-web
+pm2 restart qrcard
 ```
 
-## Sorun Giderme
+## Supabase Migrations
 
-### Port 3040 kullanımda
-
+Sunucuda Supabase CLI yüklüyse:
 ```bash
-# Port'u kullanan process'i bulun
-lsof -i :3040
+# Supabase migrations'ları çalıştır
+supabase db push
+```
 
-# Process'i sonlandırın
+Veya Supabase Dashboard üzerinden migration dosyalarını manuel olarak çalıştırabilirsiniz.
+
+## Troubleshooting
+
+### Port Zaten Kullanılıyor
+```bash
+# Port 3040'ı kullanan process'i bul
+lsof -i :3040
+# Process'i sonlandır
 kill -9 <PID>
 ```
 
-### PM2 logları kontrol
-
+### PM2 Logları
 ```bash
-pm2 logs qrcard-web --lines 100
+pm2 logs qrcard --lines 100
 ```
 
-### Build hatası
-
+### PM2 Yeniden Başlatma
 ```bash
-# Node modules'ü temizleyip yeniden yükleyin
+pm2 restart qrcard
+```
+
+### Build Hataları
+```bash
+# Node modules'ı temizle ve yeniden yükle
 rm -rf node_modules package-lock.json
 npm install
 npm run build
 ```
 
-## Notlar
+## Firewall Ayarları
 
-- Production build'de `VITE_PUBLIC_URL` environment variable'ı kullanılır
-- Eğer bu değişken set edilmemişse, `window.location.origin` kullanılır
-- QR kodlar ve public URL'ler otomatik olarak `qrcard.gozcu.tech` domain'ini kullanır
+```bash
+# Port 3040'ı aç (eğer firewall aktifse)
+sudo ufw allow 3040/tcp
+sudo ufw allow 80/tcp
+sudo ufw allow 443/tcp
+```
