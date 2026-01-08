@@ -15,11 +15,25 @@ import Employees from '@/pages/dashboard/Employees'
 import Calendar from '@/pages/dashboard/Calendar'
 import CRM from '@/pages/dashboard/CRM'
 import Reports from '@/pages/dashboard/Reports'
+import Tasks from '@/pages/dashboard/Tasks'
+import Goals from '@/pages/dashboard/Goals'
+import Transactions from '@/pages/dashboard/Transactions'
+import Communications from '@/pages/dashboard/Communications'
+import Commissions from '@/pages/dashboard/Commissions'
+import CallLogs from '@/pages/dashboard/CallLogs'
+import VehicleTracking from '@/pages/dashboard/VehicleTracking'
 import EmployeeDashboard from '@/pages/employee/Dashboard'
 import EmployeeCalendar from '@/pages/employee/Calendar'
 import EmployeeCRM from '@/pages/employee/CRM'
 import EmployeeReports from '@/pages/employee/Reports'
+import EmployeeTasks from '@/pages/employee/Tasks'
+import EmployeeGoals from '@/pages/employee/Goals'
+import EmployeeTransactions from '@/pages/employee/Transactions'
+import EmployeeCommunications from '@/pages/employee/Communications'
+import EmployeeCommissions from '@/pages/employee/Commissions'
+import EmployeeCallLogs from '@/pages/employee/CallLogs'
 import EmployeeProfile from '@/pages/public/EmployeeProfile'
+import Landing from '@/pages/Landing'
 
 // Component to handle URL hash errors (e.g., from email links)
 function ErrorHandler() {
@@ -50,6 +64,7 @@ function AppRoutes() {
     <>
       <ErrorHandler />
       <Routes>
+        <Route path="/" element={<Landing />} />
         <Route path="/login" element={<Login />} />
         <Route path="/employee-login" element={<EmployeeLogin />} />
         <Route path="/signup" element={<Signup />} />
@@ -110,6 +125,76 @@ function AppRoutes() {
           }
         />
         <Route
+          path="/dashboard/tasks"
+          element={
+            <ProtectedRoute>
+              <Layout>
+                <Tasks />
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/dashboard/goals"
+          element={
+            <ProtectedRoute>
+              <Layout>
+                <Goals />
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/dashboard/transactions"
+          element={
+            <ProtectedRoute>
+              <Layout>
+                <Transactions />
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/dashboard/communications"
+          element={
+            <ProtectedRoute>
+              <Layout>
+                <Communications />
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/dashboard/commissions"
+          element={
+            <ProtectedRoute>
+              <Layout>
+                <Commissions />
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/dashboard/call-logs"
+          element={
+            <ProtectedRoute>
+              <Layout>
+                <CallLogs />
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/dashboard/vehicles"
+          element={
+            <ProtectedRoute>
+              <Layout>
+                <VehicleTracking />
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
           path="/employee/dashboard"
           element={
             <EmployeeProtectedRoute>
@@ -149,7 +234,66 @@ function AppRoutes() {
             </EmployeeProtectedRoute>
           }
         />
-        <Route path="/" element={<Navigate to="/dashboard" replace />} />
+        <Route
+          path="/employee/tasks"
+          element={
+            <EmployeeProtectedRoute>
+              <EmployeeLayout>
+                <EmployeeTasks />
+              </EmployeeLayout>
+            </EmployeeProtectedRoute>
+          }
+        />
+        <Route
+          path="/employee/goals"
+          element={
+            <EmployeeProtectedRoute>
+              <EmployeeLayout>
+                <EmployeeGoals />
+              </EmployeeLayout>
+            </EmployeeProtectedRoute>
+          }
+        />
+        <Route
+          path="/employee/transactions"
+          element={
+            <EmployeeProtectedRoute>
+              <EmployeeLayout>
+                <EmployeeTransactions />
+              </EmployeeLayout>
+            </EmployeeProtectedRoute>
+          }
+        />
+        <Route
+          path="/employee/communications"
+          element={
+            <EmployeeProtectedRoute>
+              <EmployeeLayout>
+                <EmployeeCommunications />
+              </EmployeeLayout>
+            </EmployeeProtectedRoute>
+          }
+        />
+        <Route
+          path="/employee/commissions"
+          element={
+            <EmployeeProtectedRoute>
+              <EmployeeLayout>
+                <EmployeeCommissions />
+              </EmployeeLayout>
+            </EmployeeProtectedRoute>
+          }
+        />
+        <Route
+          path="/employee/call-logs"
+          element={
+            <EmployeeProtectedRoute>
+              <EmployeeLayout>
+                <EmployeeCallLogs />
+              </EmployeeLayout>
+            </EmployeeProtectedRoute>
+          }
+        />
       </Routes>
     </>
   )

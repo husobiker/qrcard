@@ -58,3 +58,50 @@
   }
 }
 
+/* Spline Viewer Styles - Remove all backgrounds */
+spline-viewer {
+  background: transparent !important;
+  background-color: transparent !important;
+}
+
+spline-viewer canvas {
+  background: transparent !important;
+  background-color: transparent !important;
+}
+
+spline-viewer::part(canvas) {
+  background: transparent !important;
+}
+
+/* Remove any default Spline viewer background */
+spline-viewer > * {
+  background: transparent !important;
+  background-color: transparent !important;
+}
+
+/* Target shadow DOM elements if accessible */
+spline-viewer::shadow canvas,
+spline-viewer /deep/ canvas {
+  background: transparent !important;
+  background-color: transparent !important;
+}
+
+/* Remove any wrapper divs */
+spline-viewer div {
+  background: transparent !important;
+  background-color: transparent !important;
+}
+
+/* Hide "Built with Spline" badge */
+spline-viewer::part(badge),
+spline-viewer::shadow .spline-badge,
+spline-viewer /deep/ .spline-badge,
+spline-viewer a[href*="spline"],
+spline-viewer::shadow a[href*="spline"],
+spline-viewer /deep/ a[href*="spline"] {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+

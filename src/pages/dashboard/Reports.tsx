@@ -4,7 +4,7 @@ import { useLanguage } from '@/contexts/LanguageContext'
 import { getCompanyByUserId } from '@/services/companyService'
 import { getCompanyReports, type ReportsData } from '@/services/reportsService'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { TrendingUp, Calendar, Eye, MousePointerClick, Users, BarChart3, Clock, CheckCircle, AlertCircle } from 'lucide-react'
+import { TrendingUp, Calendar, Eye, MousePointerClick, Users, BarChart3, Clock, CheckCircle, AlertCircle, CheckSquare, DollarSign, MessageSquare, Percent, Target } from 'lucide-react'
 
 export default function Reports() {
   const { user } = useAuth()
@@ -55,6 +55,10 @@ export default function Reports() {
     employee_performance: [],
     monthly_crm_trend: [],
     monthly_appointments_trend: [],
+    task_stats: { total: 0, pending: 0, in_progress: 0, completed: 0, overdue: 0 },
+    transaction_stats: { total_income: 0, total_expense: 0, net_amount: 0, income_count: 0, expense_count: 0 },
+    communication_stats: { total: 0, email: 0, phone: 0, meeting: 0, sms: 0 },
+    commission_stats: { total_commission: 0, paid_commission: 0, pending_commission: 0, payment_count: 0 },
   }
 
   return (
@@ -257,6 +261,162 @@ export default function Reports() {
                   </div>
                 </div>
               ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Task Stats */}
+      {displayReports.task_stats && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <CheckSquare className="h-5 w-5" />
+              Görev İstatistikleri
+            </CardTitle>
+            <CardDescription>Görev durumları ve özet bilgiler</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+              <div>
+                <div className="text-sm text-muted-foreground">Toplam</div>
+                <div className="text-2xl font-bold">{displayReports.task_stats.total}</div>
+              </div>
+              <div>
+                <div className="text-sm text-muted-foreground">Beklemede</div>
+                <div className="text-2xl font-bold text-yellow-600">{displayReports.task_stats.pending}</div>
+              </div>
+              <div>
+                <div className="text-sm text-muted-foreground">Devam Ediyor</div>
+                <div className="text-2xl font-bold text-blue-600">{displayReports.task_stats.in_progress}</div>
+              </div>
+              <div>
+                <div className="text-sm text-muted-foreground">Tamamlandı</div>
+                <div className="text-2xl font-bold text-green-600">{displayReports.task_stats.completed}</div>
+              </div>
+              <div>
+                <div className="text-sm text-muted-foreground">Gecikmiş</div>
+                <div className="text-2xl font-bold text-red-600">{displayReports.task_stats.overdue}</div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Transaction Stats */}
+      {displayReports.transaction_stats && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <DollarSign className="h-5 w-5" />
+              Finansal İstatistikler
+            </CardTitle>
+            <CardDescription>Gelir ve gider özeti</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+              <div>
+                <div className="text-sm text-muted-foreground">Toplam Gelir</div>
+                <div className="text-2xl font-bold text-green-600">
+                  {displayReports.transaction_stats.total_income.toLocaleString('tr-TR')} ₺
+                </div>
+                <div className="text-xs text-muted-foreground mt-1">
+                  {displayReports.transaction_stats.income_count} işlem
+                </div>
+              </div>
+              <div>
+                <div className="text-sm text-muted-foreground">Toplam Gider</div>
+                <div className="text-2xl font-bold text-red-600">
+                  {displayReports.transaction_stats.total_expense.toLocaleString('tr-TR')} ₺
+                </div>
+                <div className="text-xs text-muted-foreground mt-1">
+                  {displayReports.transaction_stats.expense_count} işlem
+                </div>
+              </div>
+              <div>
+                <div className="text-sm text-muted-foreground">Net Tutar</div>
+                <div className={`text-2xl font-bold ${
+                  displayReports.transaction_stats.net_amount >= 0 ? 'text-green-600' : 'text-red-600'
+                }`}>
+                  {displayReports.transaction_stats.net_amount.toLocaleString('tr-TR')} ₺
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Communication Stats */}
+      {displayReports.communication_stats && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <MessageSquare className="h-5 w-5" />
+              İletişim İstatistikleri
+            </CardTitle>
+            <CardDescription>Müşteri iletişim özeti</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+              <div>
+                <div className="text-sm text-muted-foreground">Toplam</div>
+                <div className="text-2xl font-bold">{displayReports.communication_stats.total}</div>
+              </div>
+              <div>
+                <div className="text-sm text-muted-foreground">E-posta</div>
+                <div className="text-2xl font-bold">{displayReports.communication_stats.email}</div>
+              </div>
+              <div>
+                <div className="text-sm text-muted-foreground">Telefon</div>
+                <div className="text-2xl font-bold">{displayReports.communication_stats.phone}</div>
+              </div>
+              <div>
+                <div className="text-sm text-muted-foreground">Toplantı</div>
+                <div className="text-2xl font-bold">{displayReports.communication_stats.meeting}</div>
+              </div>
+              <div>
+                <div className="text-sm text-muted-foreground">SMS</div>
+                <div className="text-2xl font-bold">{displayReports.communication_stats.sms}</div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Commission Stats */}
+      {displayReports.commission_stats && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Percent className="h-5 w-5" />
+              Komisyon İstatistikleri
+            </CardTitle>
+            <CardDescription>Komisyon ödemeleri özeti</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div>
+                <div className="text-sm text-muted-foreground">Toplam Komisyon</div>
+                <div className="text-2xl font-bold">
+                  {displayReports.commission_stats.total_commission.toLocaleString('tr-TR')} ₺
+                </div>
+              </div>
+              <div>
+                <div className="text-sm text-muted-foreground">Ödenen</div>
+                <div className="text-2xl font-bold text-green-600">
+                  {displayReports.commission_stats.paid_commission.toLocaleString('tr-TR')} ₺
+                </div>
+              </div>
+              <div>
+                <div className="text-sm text-muted-foreground">Bekleyen</div>
+                <div className="text-2xl font-bold text-yellow-600">
+                  {displayReports.commission_stats.pending_commission.toLocaleString('tr-TR')} ₺
+                </div>
+              </div>
+              <div>
+                <div className="text-sm text-muted-foreground">Ödeme Sayısı</div>
+                <div className="text-2xl font-bold">{displayReports.commission_stats.payment_count}</div>
+              </div>
             </div>
           </CardContent>
         </Card>

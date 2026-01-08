@@ -10,6 +10,12 @@ export default defineConfig({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  optimizeDeps: {
+    include: ["sip.js"],
+    esbuildOptions: {
+      target: "es2020",
+    },
+  },
   server: {
     host: "0.0.0.0", // Allow access from network
     port: 5173,
@@ -21,8 +27,15 @@ export default defineConfig({
       "qrcard.gozcu.tech",
       "localhost",
       "127.0.0.1",
+      "46.101.111.170",
       "178.157.15.26",
       "72.62.44.200",
     ],
+  },
+  build: {
+    outDir: "dist",
+    assetsDir: "assets",
+    sourcemap: false,
+    minify: "terser",
   },
 });

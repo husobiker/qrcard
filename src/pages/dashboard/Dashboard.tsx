@@ -23,6 +23,10 @@ export default function Dashboard() {
     website: '',
     tax_number: '',
     tax_office: '',
+    api_endpoint: '',
+    santral_id: '',
+    api_key: '',
+    api_secret: '',
   })
   const [logoFile, setLogoFile] = useState<File | null>(null)
   const [logoPreview, setLogoPreview] = useState<string | null>(null)
@@ -58,6 +62,10 @@ export default function Dashboard() {
           website: companyData.website || '',
           tax_number: companyData.tax_number || '',
           tax_office: companyData.tax_office || '',
+          api_endpoint: companyData.api_endpoint || '',
+          santral_id: companyData.santral_id || '',
+          api_key: companyData.api_key || '',
+          api_secret: companyData.api_secret || '',
         })
         setLogoPreview(companyData.logo_url)
         setBackgroundImagePreview(companyData.background_image_url)
@@ -354,6 +362,83 @@ export default function Dashboard() {
           </form>
         </CardContent>
       </Card>
+
+      {/* Sanal Santral API Ayarları */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center space-x-2">
+            <Building2 className="h-5 w-5" />
+            <span>Sanal Santral API Ayarları</span>
+          </CardTitle>
+          <CardDescription>
+            Sanalsantral.com gibi üçüncü parti sanal santral servisleri için API bilgileri. 
+            Bu ayarlar şirket genelinde geçerlidir ve tüm çalışanlar tarafından kullanılır.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleSave} className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="api_endpoint">API Endpoint (Base URL)</Label>
+                <Input
+                  id="api_endpoint"
+                  value={formData.api_endpoint}
+                  onChange={(e) => setFormData({ ...formData, api_endpoint: e.target.value })}
+                  placeholder="https://api.sanal.link"
+                />
+                <p className="text-xs text-muted-foreground">
+                  API base URL'i. Genellikle <strong>https://api.sanal.link</strong> olur. 
+                  API dokümantasyonu: <a href="https://api.sanal.link" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">https://api.sanal.link</a>
+                </p>
+                <p className="text-xs text-blue-600 bg-blue-50 p-2 rounded border border-blue-200">
+                  💡 <strong>Not:</strong> API endpoint'i, sanalsantral.com panelinizde "API İşlemleri" bölümünden veya API dokümantasyonundan öğrenebilirsiniz. 
+                  Genellikle <code>https://api.sanal.link</code> formatındadır.
+                </p>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="santral_id">Santral ID</Label>
+                <Input
+                  id="santral_id"
+                  value={formData.santral_id}
+                  onChange={(e) => setFormData({ ...formData, santral_id: e.target.value })}
+                  placeholder="8390"
+                />
+                <p className="text-xs text-muted-foreground">
+                  Sanalsantral.com panelinden alacağınız Santral ID (örn: 8390)
+                </p>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="api_key">API Key</Label>
+                <Input
+                  id="api_key"
+                  type="password"
+                  value={formData.api_key}
+                  onChange={(e) => setFormData({ ...formData, api_key: e.target.value })}
+                  placeholder="uOeFcPRDyYzPgQEkAS8wjZjR6i6vsOqt"
+                />
+                <p className="text-xs text-muted-foreground">
+                  Sanalsantral.com panelinden alacağınız API Key
+                </p>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="api_secret">API Secret (Opsiyonel)</Label>
+                <Input
+                  id="api_secret"
+                  type="password"
+                  value={formData.api_secret}
+                  onChange={(e) => setFormData({ ...formData, api_secret: e.target.value })}
+                  placeholder="API secret (opsiyonel)"
+                />
+              </div>
+            </div>
+            <Button type="submit" disabled={saving}>
+              <Save className="h-4 w-4 mr-2" />
+              {saving ? 'Kaydediliyor...' : 'API Ayarlarını Kaydet'}
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
+
     </div>
   )
 }

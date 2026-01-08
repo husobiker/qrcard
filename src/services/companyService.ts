@@ -37,27 +37,60 @@ export async function getCompanyById(companyId: string): Promise<Company | null>
 }
 
 export async function updateCompany(id: string, updates: Partial<Company>): Promise<Company | null> {
-  // @ts-ignore - Supabase types not properly inferred
-  const { data, error } = await supabase
-    .from('companies')
-    // @ts-ignore
-    .update(updates as any)
-    .eq('id', id)
-    .select()
-    .single()
-
-  if (error) {
-    console.error('Error updating company:', error)
-    console.error('Error details:', {
-      code: error.code,
-      message: error.message,
-      details: error.details,
-      hint: error.hint,
+  try {
+    // Fields that should not be updated (read-only or system fields)
+    const readonlyFields = ['id', 'created_at']
+    
+    // Filter out undefined values, readonly fields, and convert empty strings to null for optional fields
+    const cleanUpdates: any = {}
+    Object.keys(updates).forEach((key) => {
+      // Skip readonly fields
+      if (readonlyFields.includes(key)) {
+        return
+      }
+      
+      const value = (updates as any)[key]
+      if (value !== undefined) {
+        // For optional text fields, convert empty strings to null
+        if (value === '' && (key === 'api_endpoint' || key === 'santral_id' || key === 'api_key' || key === 'api_secret' || 
+            key === 'address' || key === 'phone' || key === 'website' || key === 'tax_number' || key === 'tax_office' ||
+            key === 'logo_url' || key === 'background_image_url')) {
+          cleanUpdates[key] = null
+        } else {
+          cleanUpdates[key] = value
+        }
+      }
     })
+
+    console.log('Updating company with data:', JSON.stringify(cleanUpdates, null, 2))
+
+    // @ts-ignore - Supabase types not properly inferred
+    const { data, error } = await supabase
+      .from('companies')
+      // @ts-ignore
+      .update(cleanUpdates)
+      .eq('id', id)
+      .select()
+      .single()
+
+    if (error) {
+      console.error('Error updating company:', JSON.stringify(error, null, 2))
+      console.error('Error details:', JSON.stringify({
+        code: error.code,
+        message: error.message,
+        details: error.details,
+        hint: error.hint,
+      }, null, 2))
+      console.error('Update data that was sent:', JSON.stringify(cleanUpdates, null, 2))
+      console.error('Company ID:', id)
+      return null
+    }
+
+    return data
+  } catch (error) {
+    console.error('Exception in updateCompany:', error)
     return null
   }
-
-  return data
 }
 
 export async function uploadCompanyLogo(file: File, companyId: string): Promise<string | null> {

@@ -3,6 +3,10 @@ import { getCRMStats } from './crmService'
 import { getAppointmentsByCompany, getAppointmentsByEmployee } from './appointmentService'
 import { getEmployeeAnalytics } from './analyticsService'
 import { getEmployeesByCompany } from './employeeService'
+import { getTaskStats } from './taskService'
+import { getTransactionStats } from './transactionService'
+import { getCommunicationStats } from './communicationService'
+import { getCommissionStats } from './commissionService'
 
 export interface AppointmentStats {
   total: number
@@ -41,6 +45,33 @@ export interface ReportsData {
   employee_performance?: EmployeePerformance[]
   monthly_crm_trend?: { month: string; count: number }[]
   monthly_appointments_trend?: { month: string; count: number }[]
+  task_stats?: {
+    total: number
+    pending: number
+    in_progress: number
+    completed: number
+    overdue: number
+  }
+  transaction_stats?: {
+    total_income: number
+    total_expense: number
+    net_amount: number
+    income_count: number
+    expense_count: number
+  }
+  communication_stats?: {
+    total: number
+    email: number
+    phone: number
+    meeting: number
+    sms: number
+  }
+  commission_stats?: {
+    total_commission: number
+    paid_commission: number
+    pending_commission: number
+    payment_count: number
+  }
 }
 
 export async function getCompanyReports(companyId: string): Promise<ReportsData> {
@@ -154,6 +185,12 @@ export async function getCompanyReports(companyId: string): Promise<ReportsData>
       })
     }
 
+    // Get additional stats
+    const task_stats = await getTaskStats(companyId)
+    const transaction_stats = await getTransactionStats(companyId)
+    const communication_stats = await getCommunicationStats(companyId)
+    const commission_stats = await getCommissionStats(companyId)
+
     return {
       crm_stats,
       appointment_stats,
@@ -161,6 +198,10 @@ export async function getCompanyReports(companyId: string): Promise<ReportsData>
       employee_performance,
       monthly_crm_trend,
       monthly_appointments_trend,
+      task_stats,
+      transaction_stats,
+      communication_stats,
+      commission_stats,
     }
   } catch (error) {
     console.error('Error fetching company reports:', error)
@@ -171,6 +212,10 @@ export async function getCompanyReports(companyId: string): Promise<ReportsData>
       employee_performance: [],
       monthly_crm_trend: [],
       monthly_appointments_trend: [],
+      task_stats: { total: 0, pending: 0, in_progress: 0, completed: 0, overdue: 0 },
+      transaction_stats: { total_income: 0, total_expense: 0, net_amount: 0, income_count: 0, expense_count: 0 },
+      communication_stats: { total: 0, email: 0, phone: 0, meeting: 0, sms: 0 },
+      commission_stats: { total_commission: 0, paid_commission: 0, pending_commission: 0, payment_count: 0 },
     }
   }
 }
@@ -212,6 +257,12 @@ export async function getEmployeeReports(employeeId: string, companyId: string):
       total_clicks: analytics.click_count,
       employees_with_views: analytics.view_count > 0 ? 1 : 0,
     }
+
+    // Get additional stats for employee
+    const task_stats = await getTaskStats(undefined, employeeId)
+    const transaction_stats = await getTransactionStats(undefined, employeeId)
+    const communication_stats = await getCommunicationStats(undefined, employeeId)
+    const commission_stats = await getCommissionStats(undefined, employeeId)
 
     // Monthly CRM trend (last 6 months)
     const monthly_crm_trend: { month: string; count: number }[] = []
@@ -260,6 +311,10 @@ export async function getEmployeeReports(employeeId: string, companyId: string):
       analytics_stats,
       monthly_crm_trend,
       monthly_appointments_trend,
+      task_stats,
+      transaction_stats,
+      communication_stats,
+      commission_stats,
     }
   } catch (error) {
     console.error('Error fetching employee reports:', error)
@@ -269,6 +324,10 @@ export async function getEmployeeReports(employeeId: string, companyId: string):
       analytics_stats: { total_views: 0, total_clicks: 0, employees_with_views: 0 },
       monthly_crm_trend: [],
       monthly_appointments_trend: [],
+      task_stats: { total: 0, pending: 0, in_progress: 0, completed: 0, overdue: 0 },
+      transaction_stats: { total_income: 0, total_expense: 0, net_amount: 0, income_count: 0, expense_count: 0 },
+      communication_stats: { total: 0, email: 0, phone: 0, meeting: 0, sms: 0 },
+      commission_stats: { total_commission: 0, paid_commission: 0, pending_commission: 0, payment_count: 0 },
     }
   }
 }

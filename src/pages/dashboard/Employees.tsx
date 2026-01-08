@@ -9,6 +9,11 @@ import {
   deleteEmployee,
   uploadEmployeePhoto,
 } from "@/services/employeeService";
+import {
+  getEmployeeSipSettings,
+  createEmployeeSipSettings,
+  updateEmployeeSipSettings,
+} from "@/services/sipSettingsService";
 import type {
   Employee,
   EmployeeFormData,
@@ -97,6 +102,14 @@ export default function Employees() {
     username: string;
     password: string;
   } | null>(null);
+  const [sipSettings, setSipSettings] = useState({
+    sip_username: "",
+    sip_password: "",
+    extension: "",
+    sip_server: "",
+    sip_port: 5060,
+    webrtc_enabled: false,
+  });
 
   useEffect(() => {
     if (user) {
@@ -133,9 +146,17 @@ export default function Employees() {
     setPhotoFile(null);
     setPhotoPreview(null);
     setEditingEmployee(null);
+    setSipSettings({
+      sip_username: "",
+      sip_password: "",
+      extension: "",
+      sip_server: "",
+      sip_port: 5060,
+      webrtc_enabled: false,
+    });
   };
 
-  const handleOpenDialog = (employee?: Employee) => {
+  const handleOpenDialog = async (employee?: Employee) => {
     if (employee) {
       setEditingEmployee(employee);
       setFormData({
@@ -153,6 +174,28 @@ export default function Employees() {
         password: "", // Don't populate password field for security
       });
       setPhotoPreview(employee.profile_image_url);
+      
+      // Load SIP settings
+      const sip = await getEmployeeSipSettings(employee.id);
+      if (sip) {
+        setSipSettings({
+          sip_username: sip.sip_username,
+          sip_password: "", // Don't populate password for security
+          extension: sip.extension || "",
+          sip_server: sip.sip_server || "",
+          sip_port: sip.sip_port || 5060,
+          webrtc_enabled: sip.webrtc_enabled,
+        });
+      } else {
+        setSipSettings({
+          sip_username: "",
+          sip_password: "",
+          extension: "",
+          sip_server: "",
+          sip_port: 5060,
+          webrtc_enabled: false,
+        });
+      }
     } else {
       resetForm();
     }
@@ -194,6 +237,31 @@ export default function Employees() {
           profile_image_url: profileImageUrl,
         });
         if (updated) {
+          // Save/update SIP settings
+          if (sipSettings.sip_username) {
+            const existingSip = await getEmployeeSipSettings(editingEmployee.id);
+            if (existingSip) {
+              await updateEmployeeSipSettings(editingEmployee.id, {
+                employee_id: editingEmployee.id,
+                sip_username: sipSettings.sip_username,
+                sip_password: sipSettings.sip_password || existingSip.sip_password,
+                extension: sipSettings.extension,
+                sip_server: sipSettings.sip_server,
+                sip_port: sipSettings.sip_port,
+                webrtc_enabled: sipSettings.webrtc_enabled,
+              });
+            } else {
+              await createEmployeeSipSettings(companyId, {
+                employee_id: editingEmployee.id,
+                sip_username: sipSettings.sip_username,
+                sip_password: sipSettings.sip_password,
+                extension: sipSettings.extension,
+                sip_server: sipSettings.sip_server,
+                sip_port: sipSettings.sip_port,
+                webrtc_enabled: sipSettings.webrtc_enabled,
+              });
+            }
+          }
           await loadData();
           setDialogOpen(false);
           resetForm();
@@ -211,6 +279,21 @@ export default function Employees() {
                 profile_image_url: uploadedUrl,
               });
             }
+          }
+          // Save SIP settings if provided
+          if (sipSettings.sip_username) {
+            await createEmployeeSipSettings(companyId, {
+              employee_id: newEmployee.id,
+              sip_username: sipSettings.sip_username,
+              sip_password: sipSettings.sip_password,
+              extension: sipSettings.extension,
+              sip_server: sipSettings.sip_server,
+              sip_port: sipSettings.sip_port,
+              webrtc_enabled: sipSettings.webrtc_enabled,
+              api_endpoint: sipSettings.api_endpoint,
+              api_key: sipSettings.api_key,
+              api_secret: sipSettings.api_secret,
+            });
           }
           await loadData();
           setDialogOpen(false);
@@ -931,6 +1014,105 @@ export default function Employees() {
                   );
                 })}
               </div>
+            </div>
+
+            {/* SIP Settings Section */}
+            <div className="space-y-4 border-t pt-4">
+              <Label className="text-base font-semibold">
+                IP Telefon Ayarları
+              </Label>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="sip_username">SIP Kullanıcı Adı</Label>
+                  <Input
+                    id="sip_username"
+                    value={sipSettings.sip_username}
+                    onChange={(e) =>
+                      setSipSettings({
+                        ...sipSettings,
+                        sip_username: e.target.value,
+                      })
+                    }
+                    placeholder="sip_username"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="sip_password">SIP Şifre</Label>
+                  <Input
+                    id="sip_password"
+                    type="password"
+                    value={sipSettings.sip_password}
+                    onChange={(e) =>
+                      setSipSettings({
+                        ...sipSettings,
+                        sip_password: e.target.value,
+                      })
+                    }
+                    placeholder={editingEmployee ? "Değiştirmek için yeni şifre girin" : ""}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="extension">Extension</Label>
+                  <Input
+                    id="extension"
+                    value={sipSettings.extension}
+                    onChange={(e) =>
+                      setSipSettings({
+                        ...sipSettings,
+                        extension: e.target.value,
+                      })
+                    }
+                    placeholder="1001"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="sip_server">SIP Sunucu</Label>
+                  <Input
+                    id="sip_server"
+                    value={sipSettings.sip_server}
+                    onChange={(e) =>
+                      setSipSettings({
+                        ...sipSettings,
+                        sip_server: e.target.value,
+                      })
+                    }
+                    placeholder="sip.example.com"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="sip_port">SIP Port</Label>
+                  <Input
+                    id="sip_port"
+                    type="number"
+                    value={sipSettings.sip_port}
+                    onChange={(e) =>
+                      setSipSettings({
+                        ...sipSettings,
+                        sip_port: parseInt(e.target.value) || 5060,
+                      })
+                    }
+                    placeholder="5060"
+                  />
+                </div>
+                <div className="space-y-2 flex items-center">
+                  <input
+                    id="webrtc_enabled"
+                    type="checkbox"
+                    checked={sipSettings.webrtc_enabled}
+                    onChange={(e) =>
+                      setSipSettings({
+                        ...sipSettings,
+                        webrtc_enabled: e.target.checked,
+                      })
+                    }
+                    className="mr-2"
+                  />
+                  <Label htmlFor="webrtc_enabled" className="cursor-pointer">
+                    WebRTC Aktif
+                  </Label>
+                </div>
+              </div>
+              
             </div>
 
             <div className="flex justify-end space-x-2">

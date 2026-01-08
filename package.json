@@ -11,21 +11,27 @@
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0"
   },
   "dependencies": {
+    "@radix-ui/react-select": "^2.2.6",
+    "@supabase/supabase-js": "^2.38.4",
+    "@types/leaflet": "^1.9.21",
+    "class-variance-authority": "^0.7.0",
+    "clsx": "^2.0.0",
+    "html2canvas": "^1.4.1",
+    "leaflet": "^1.9.4",
+    "lucide-react": "^0.294.0",
     "react": "18.2.0",
     "react-dom": "18.2.0",
-    "react-router-dom": "^6.20.0",
-    "@supabase/supabase-js": "^2.38.4",
+    "react-leaflet": "^4.2.1",
     "react-qr-code": "^2.0.12",
-    "html2canvas": "^1.4.1",
-    "lucide-react": "^0.294.0",
-    "clsx": "^2.0.0",
+    "react-router-dom": "^6.20.0",
+    "sip.js": "^0.20.0",
     "tailwind-merge": "^2.1.0",
-    "class-variance-authority": "^0.7.0"
+    "tailwindcss-animate": "^1.0.7"
   },
   "devDependencies": {
+    "@types/html2canvas": "^1.0.0",
     "@types/react": "^18.2.43",
     "@types/react-dom": "^18.2.17",
-    "@types/html2canvas": "^1.0.0",
     "@typescript-eslint/eslint-plugin": "^6.14.0",
     "@typescript-eslint/parser": "^6.14.0",
     "@vitejs/plugin-react": "^4.2.1",
@@ -39,4 +45,3 @@
     "vite": "^5.0.8"
   }
 }
-

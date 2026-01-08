@@ -13,12 +13,12 @@ const Dialog = ({ open, onOpenChange, children }: DialogProps) => {
   if (!open) return null
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center">
       <div
-        className="fixed inset-0 bg-black/50"
+        className="fixed inset-0 bg-black/50 backdrop-blur-sm"
         onClick={() => onOpenChange(false)}
       />
-      <div className="relative z-50 w-full max-w-[95vw] sm:max-w-lg md:max-w-2xl mx-2 sm:mx-4">
+      <div className="relative z-[101] w-full max-w-[95vw] sm:max-w-lg md:max-w-2xl mx-2 sm:mx-4">
         {children}
       </div>
     </div>
