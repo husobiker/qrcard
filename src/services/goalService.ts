@@ -106,7 +106,8 @@ export async function updateGoalProgress(
   try {
     const { error } = await supabase
       .from('performance_goals')
-      .update({ current_value: currentValue } as any)
+      // @ts-ignore - Supabase type inference issue
+      .update({ current_value: currentValue })
       .eq('id', goalId)
 
     if (error) throw error
