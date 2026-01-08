@@ -81,7 +81,8 @@ spline-viewer > * {
 
 /* Target shadow DOM elements if accessible */
 spline-viewer::shadow canvas,
-spline-viewer /deep/ canvas {
+/* Removed /deep/ selector - deprecated CSS syntax */
+/* spline-viewer /deep/ canvas {
   background: transparent !important;
   background-color: transparent !important;
 }
@@ -95,10 +96,8 @@ spline-viewer div {
 /* Hide "Built with Spline" badge */
 spline-viewer::part(badge),
 spline-viewer::shadow .spline-badge,
-spline-viewer /deep/ .spline-badge,
 spline-viewer a[href*="spline"],
-spline-viewer::shadow a[href*="spline"],
-spline-viewer /deep/ a[href*="spline"] {
+spline-viewer::shadow a[href*="spline"] {
   display: none !important;
   visibility: hidden !important;
   opacity: 0 !important;
