@@ -85,7 +85,8 @@ export async function updateGoal(
 
     const { data, error } = await supabase
       .from('performance_goals')
-      .update(updateData as any)
+      // @ts-ignore - Supabase type inference issue
+      .update(updateData)
       .eq('id', goalId)
       .select()
       .single()

@@ -4,7 +4,6 @@ import type {
   CommissionSettingFormData,
   CommissionPayment,
   CommissionPaymentFormData,
-  PaymentStatus,
 } from '@/types'
 
 export async function createCommissionSetting(
@@ -115,7 +114,8 @@ export async function updateCommissionSetting(
 
     const { data, error } = await supabase
       .from('commission_settings')
-      .update(updateData as any)
+      // @ts-ignore - Supabase type inference issue
+      .update(updateData)
       .eq('id', settingId)
       .select()
       .single()
@@ -240,7 +240,8 @@ export async function updateCommissionPayment(
 
     const { data, error } = await supabase
       .from('commission_payments')
-      .update(updateData as any)
+      // @ts-ignore - Supabase type inference issue
+      .update(updateData)
       .eq('id', paymentId)
       .select()
       .single()

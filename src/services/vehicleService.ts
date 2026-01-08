@@ -106,10 +106,11 @@ export async function updateVehicle(
 ): Promise<Vehicle | null> {
   const { data, error } = await supabase
     .from('vehicles')
+    // @ts-ignore - Supabase type inference issue
     .update({
       ...vehicleData,
       updated_at: new Date().toISOString(),
-    } as any)
+    })
     .eq('id', vehicleId)
     .select()
     .single()

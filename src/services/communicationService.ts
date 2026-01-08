@@ -103,7 +103,8 @@ export async function updateCommunication(
 
     const { data, error } = await supabase
       .from('customer_communications')
-      .update(updateData as any)
+      // @ts-ignore - Supabase type inference issue
+      .update(updateData)
       .eq('id', communicationId)
       .select()
       .single()

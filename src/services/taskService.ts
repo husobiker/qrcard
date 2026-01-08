@@ -88,13 +88,14 @@ export async function updateTask(
     
     if (taskData.status === 'completed') {
       updateData.completed_at = new Date().toISOString()
-    } else if (taskData.status && taskData.status !== 'completed') {
+    } else if (taskData.status && ['pending', 'in_progress', 'cancelled'].includes(taskData.status)) {
       updateData.completed_at = null
     }
 
     const { data, error } = await supabase
       .from('tasks')
-      .update(updateData as any)
+      // @ts-ignore - Supabase type inference issue
+      .update(updateData)
       .eq('id', taskId)
       .select()
       .single()
@@ -122,7 +123,8 @@ export async function updateTaskStatus(
 
     const { error } = await supabase
       .from('tasks')
-      .update(updateData as any)
+      // @ts-ignore - Supabase type inference issue
+      .update(updateData)
       .eq('id', taskId)
 
     if (error) throw error

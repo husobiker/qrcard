@@ -97,7 +97,8 @@ export async function updateCallLog(
 
     const { data, error } = await supabase
       .from('call_logs')
-      .update(updateData as any)
+      // @ts-ignore - Supabase type inference issue
+      .update(updateData)
       .eq('id', callLogId)
       .select()
       .single()

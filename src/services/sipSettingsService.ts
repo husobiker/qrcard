@@ -82,7 +82,8 @@ export async function updateEmployeeSipSettings(
 
     const { data, error } = await supabase
       .from('employee_sip_settings')
-      .update(updateData as any)
+      // @ts-ignore - Supabase type inference issue
+      .update(updateData)
       .eq('employee_id', employeeId)
       .select()
       .single()
@@ -180,7 +181,8 @@ export async function updateCompanySipSettings(
 
     const { data, error } = await supabase
       .from('company_sip_settings')
-      .update(updateData as any)
+      // @ts-ignore - Supabase type inference issue
+      .update(updateData)
       .eq('company_id', companyId)
       .select()
       .single()

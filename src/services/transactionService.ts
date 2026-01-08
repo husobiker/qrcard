@@ -102,7 +102,8 @@ export async function updateTransaction(
 
     const { data, error } = await supabase
       .from('transactions')
-      .update(updateData as any)
+      // @ts-ignore - Supabase type inference issue
+      .update(updateData)
       .eq('id', transactionId)
       .select()
       .single()
