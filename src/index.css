@@ -80,9 +80,7 @@ spline-viewer > * {
 }
 
 /* Target shadow DOM elements if accessible */
-spline-viewer::shadow canvas,
-/* Removed /deep/ selector - deprecated CSS syntax */
-/* spline-viewer /deep/ canvas {
+spline-viewer::shadow canvas {
   background: transparent !important;
   background-color: transparent !important;
 }
