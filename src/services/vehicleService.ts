@@ -87,7 +87,7 @@ export async function createVehicle(
     .insert({
       company_id: companyId,
       ...vehicleData,
-    })
+    } as any)
     .select()
     .single()
 
@@ -109,7 +109,7 @@ export async function updateVehicle(
     .update({
       ...vehicleData,
       updated_at: new Date().toISOString(),
-    })
+    } as any)
     .eq('id', vehicleId)
     .select()
     .single()
@@ -142,7 +142,7 @@ export async function getLatestVehicleLocations(
   companyId: string
 ): Promise<VehicleWithLocation[]> {
   const { data, error } = await supabase
-    .rpc('get_latest_vehicle_locations', { p_company_id: companyId })
+    .rpc('get_latest_vehicle_locations', { p_company_id: companyId } as any)
 
   if (error) {
     console.error('Error fetching vehicle locations:', error)

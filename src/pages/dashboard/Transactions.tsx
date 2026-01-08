@@ -47,7 +47,7 @@ const paymentMethods = [
 
 export default function Transactions() {
   const { user } = useAuth()
-  const { t } = useLanguage()
+  useLanguage() // Language context
   const [companyId, setCompanyId] = useState<string | null>(null)
   const [transactions, setTransactions] = useState<Transaction[]>([])
   const [stats, setStats] = useState({

@@ -34,7 +34,7 @@ const callStatusColors: Record<CallStatus, string> = {
 }
 
 export default function EmployeeCallLogs() {
-  const { t } = useLanguage()
+  useLanguage() // Language context
   const [employee, setEmployee] = useState<{ id: string; company_id: string } | null>(null)
   const [callLogs, setCallLogs] = useState<CallLog[]>([])
   const [stats, setStats] = useState({

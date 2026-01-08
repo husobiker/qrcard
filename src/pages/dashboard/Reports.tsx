@@ -4,7 +4,7 @@ import { useLanguage } from '@/contexts/LanguageContext'
 import { getCompanyByUserId } from '@/services/companyService'
 import { getCompanyReports, type ReportsData } from '@/services/reportsService'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { TrendingUp, Calendar, Eye, MousePointerClick, Users, BarChart3, Clock, CheckCircle, AlertCircle, CheckSquare, DollarSign, MessageSquare, Percent, Target } from 'lucide-react'
+import { TrendingUp, Calendar, Eye, MousePointerClick, Users, BarChart3, Clock, CheckCircle, AlertCircle, CheckSquare, DollarSign, MessageSquare, Percent } from 'lucide-react'
 
 export default function Reports() {
   const { user } = useAuth()

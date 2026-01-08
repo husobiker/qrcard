@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { Phone, PhoneOff } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
@@ -37,8 +37,8 @@ export default function IncomingCall({
       employee_id: employeeId,
       call_type: 'missed',
       phone_number: phoneNumber,
-      customer_name: customerName || null,
-      customer_id: customerId || null,
+      customer_name: customerName || undefined,
+      customer_id: customerId || undefined,
       call_duration: 0,
       call_status: 'no_answer',
       call_start_time: callStartTime.toISOString(),

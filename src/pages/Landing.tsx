@@ -2,7 +2,6 @@ import { Link } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { useEffect, useRef, useState } from 'react'
 import { 
-  Building2, 
   Users, 
   Calendar, 
   Target, 
@@ -14,16 +13,13 @@ import {
   BarChart3,
   MessageSquare,
   DollarSign,
-  FileText,
   Shield,
   Zap,
-  Globe,
   Lock,
   EyeOff,
   Server,
   Clock,
   PieChart,
-  UserCheck,
   Briefcase,
   LineChart,
   Award,

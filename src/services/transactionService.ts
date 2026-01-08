@@ -1,5 +1,5 @@
 import { supabase } from '@/supabase/client'
-import type { Transaction, TransactionFormData, TransactionType } from '@/types'
+import type { Transaction, TransactionFormData } from '@/types'
 
 export async function createTransaction(
   companyId: string,

@@ -7,7 +7,7 @@ import {
 } from '@/services/taskService'
 import type { Task, TaskStatus } from '@/types'
 import { Card, CardContent } from '@/components/ui/card'
-import { CheckCircle, Clock, AlertCircle } from 'lucide-react'
+import { AlertCircle } from 'lucide-react'
 
 const statusColors: Record<TaskStatus, string> = {
   pending: 'bg-yellow-100 text-yellow-800 border-yellow-300',
@@ -17,7 +17,7 @@ const statusColors: Record<TaskStatus, string> = {
 }
 
 export default function EmployeeTasks() {
-  const { t } = useLanguage()
+  useLanguage() // Language context
   const [employee, setEmployee] = useState<{ id: string; company_id: string } | null>(null)
   const [tasks, setTasks] = useState<Task[]>([])
   const [loading, setLoading] = useState(true)

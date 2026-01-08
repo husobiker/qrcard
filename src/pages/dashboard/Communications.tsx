@@ -41,7 +41,7 @@ const communicationTypeLabels: Record<CommunicationType, string> = {
 
 export default function Communications() {
   const { user } = useAuth()
-  const { t } = useLanguage()
+  useLanguage() // Language context
   const [companyId, setCompanyId] = useState<string | null>(null)
   const [communications, setCommunications] = useState<CustomerCommunication[]>([])
   const [stats, setStats] = useState({

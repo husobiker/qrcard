@@ -7,7 +7,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { TrendingUp, TrendingDown } from 'lucide-react'
 
 export default function EmployeeTransactions() {
-  const { t } = useLanguage()
+  useLanguage() // Language context
   const [employee, setEmployee] = useState<{ id: string; company_id: string } | null>(null)
   const [transactions, setTransactions] = useState<Transaction[]>([])
   const [loading, setLoading] = useState(true)

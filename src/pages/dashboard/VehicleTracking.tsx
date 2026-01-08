@@ -96,7 +96,7 @@ export default function VehicleTracking() {
         .eq('id', user.id)
         .single()
 
-      if (companyData) {
+      if (companyData && companyData.id) {
         setCompanyId(companyData.id)
         await Promise.all([
           loadVehicles(companyData.id),
@@ -216,7 +216,7 @@ export default function VehicleTracking() {
     }
   }
 
-  const getVehicleTypeIcon = (type: string) => {
+  const getVehicleTypeIcon = () => {
     return <Car className="h-4 w-4" />
   }
 

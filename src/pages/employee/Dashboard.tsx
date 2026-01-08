@@ -8,7 +8,7 @@ import { getTaskStats } from "@/services/taskService";
 import { getTransactionStats } from "@/services/transactionService";
 import { getCommunicationStats } from "@/services/communicationService";
 import { getCommissionStats } from "@/services/commissionService";
-import { getEmployeeSipSettings, getCompanySipSettings } from "@/services/sipSettingsService";
+import { getEmployeeSipSettings } from "@/services/sipSettingsService";
 import CallButton from "@/components/CallButton";
 import type { Employee, Company, EmployeeSipSettings } from "@/types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -32,11 +32,6 @@ import {
   DollarSign,
   MessageSquare,
   Percent,
-  Clock,
-  CheckCircle,
-  AlertCircle,
-  Eye,
-  MousePointerClick,
 } from "lucide-react";
 import QRCode from "react-qr-code";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -176,8 +171,8 @@ export default function EmployeeDashboard() {
     );
   }
 
-  const publicUrl = getPublicUrl();
-  const socialLinks = employee.social_links || {};
+  // const publicUrl = getPublicUrl();
+  // const socialLinks = employee.social_links || {};
 
   return (
     <div className="max-w-7xl mx-auto p-6 space-y-6">

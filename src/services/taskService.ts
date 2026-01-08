@@ -88,7 +88,7 @@ export async function updateTask(
     
     if (taskData.status === 'completed') {
       updateData.completed_at = new Date().toISOString()
-    } else if (taskData.status !== 'completed') {
+    } else if (taskData.status && taskData.status !== 'completed') {
       updateData.completed_at = null
     }
 

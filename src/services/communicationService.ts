@@ -1,5 +1,5 @@
 import { supabase } from '@/supabase/client'
-import type { CustomerCommunication, CommunicationFormData, CommunicationType } from '@/types'
+import type { CustomerCommunication, CommunicationFormData } from '@/types'
 
 export async function createCommunication(
   companyId: string,

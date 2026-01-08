@@ -290,9 +290,9 @@ export default function Employees() {
               sip_server: sipSettings.sip_server,
               sip_port: sipSettings.sip_port,
               webrtc_enabled: sipSettings.webrtc_enabled,
-              api_endpoint: sipSettings.api_endpoint,
-              api_key: sipSettings.api_key,
-              api_secret: sipSettings.api_secret,
+              api_endpoint: (sipSettings as any).api_endpoint,
+              api_key: (sipSettings as any).api_key,
+              api_secret: (sipSettings as any).api_secret,
             });
           }
           await loadData();

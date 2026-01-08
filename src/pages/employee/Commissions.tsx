@@ -6,10 +6,10 @@ import {
 } from '@/services/commissionService'
 import type { CommissionPayment, PaymentStatus } from '@/types'
 import { Card, CardContent } from '@/components/ui/card'
-import { DollarSign, CheckCircle, Clock } from 'lucide-react'
+import { DollarSign } from 'lucide-react'
 
 export default function EmployeeCommissions() {
-  const { t } = useLanguage()
+  useLanguage() // Language context
   const [employee, setEmployee] = useState<{ id: string; company_id: string } | null>(null)
   const [payments, setPayments] = useState<CommissionPayment[]>([])
   const [loading, setLoading] = useState(true)

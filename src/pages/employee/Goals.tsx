@@ -10,7 +10,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Target } from 'lucide-react'
 
 export default function EmployeeGoals() {
-  const { t } = useLanguage()
+  useLanguage() // Language context
   const [employee, setEmployee] = useState<{ id: string; company_id: string } | null>(null)
   const [goals, setGoals] = useState<PerformanceGoal[]>([])
   const [loading, setLoading] = useState(true)

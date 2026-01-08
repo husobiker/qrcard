@@ -1,5 +1,5 @@
 import { supabase } from '@/supabase/client'
-import type { PerformanceGoal, GoalFormData, GoalType } from '@/types'
+import type { PerformanceGoal, GoalFormData } from '@/types'
 
 export async function createGoal(
   companyId: string,
@@ -197,7 +197,7 @@ export async function calculateGoalProgress(
           .gte('transaction_date', periodStart.toISOString().split('T')[0])
           .lte('transaction_date', periodEnd.toISOString().split('T')[0])
         
-        currentValue = revenueData?.reduce((sum, t) => sum + Number(t.amount), 0) || 0
+        currentValue = (revenueData as any)?.reduce((sum: number, t: any) => sum + Number(t.amount || 0), 0) || 0
         break
     }
 

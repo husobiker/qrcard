@@ -50,12 +50,6 @@ interface VehicleLocation {
   timestamp: string
 }
 
-interface Vehicle {
-  id: string
-  name: string
-  plate_number: string | null
-}
-
 interface VehicleMapProps {
   center: [number, number]
   zoom: number

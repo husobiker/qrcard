@@ -24,7 +24,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import { Plus, Edit, Trash2, Filter, CheckCircle, Clock, AlertCircle } from 'lucide-react'
+import { Plus, Edit, Trash2, Filter, AlertCircle } from 'lucide-react'
 
 const statusColors: Record<TaskStatus, string> = {
   pending: 'bg-yellow-100 text-yellow-800 border-yellow-300',
@@ -42,7 +42,7 @@ const priorityColors: Record<TaskPriority, string> = {
 
 export default function Tasks() {
   const { user } = useAuth()
-  const { t } = useLanguage()
+  useLanguage() // Language context
   const [companyId, setCompanyId] = useState<string | null>(null)
   const [tasks, setTasks] = useState<Task[]>([])
   const [stats, setStats] = useState({

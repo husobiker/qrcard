@@ -11,7 +11,6 @@ import {
 } from '@/services/callLogService'
 import type { CallLog, CallType, CallStatus, Employee } from '@/types'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -39,7 +38,7 @@ const callStatusColors: Record<CallStatus, string> = {
 
 export default function CallLogs() {
   const { user } = useAuth()
-  const { t } = useLanguage()
+  useLanguage() // Language context
   const [companyId, setCompanyId] = useState<string | null>(null)
   const [callLogs, setCallLogs] = useState<CallLog[]>([])
   const [stats, setStats] = useState({

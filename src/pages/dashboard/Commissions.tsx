@@ -41,7 +41,7 @@ import { Plus, Edit, Trash2, Settings, DollarSign, CheckCircle, Clock } from 'lu
 
 export default function Commissions() {
   const { user } = useAuth()
-  const { t } = useLanguage()
+  useLanguage() // Language context
   const [companyId, setCompanyId] = useState<string | null>(null)
   const [settings, setSettings] = useState<CommissionSetting[]>([])
   const [payments, setPayments] = useState<CommissionPayment[]>([])

@@ -37,7 +37,7 @@ const communicationTypeLabels: Record<CommunicationType, string> = {
 }
 
 export default function EmployeeCommunications() {
-  const { t } = useLanguage()
+  useLanguage() // Language context
   const [employee, setEmployee] = useState<{ id: string; company_id: string } | null>(null)
   const [communications, setCommunications] = useState<CustomerCommunication[]>([])
   const [loading, setLoading] = useState(true)

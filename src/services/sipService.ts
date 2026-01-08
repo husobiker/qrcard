@@ -1,5 +1,4 @@
 import { UserAgent, Registerer, Inviter, Invitation, SessionState } from 'sip.js'
-import { supabase } from '@/supabase/client'
 import type { EmployeeSipSettings, Company } from '@/types'
 
 let userAgent: UserAgent | null = null
@@ -360,7 +359,7 @@ export async function makeCall(phoneNumber: string, company?: Company | null, em
     // Set local media
     const sessionDescriptionHandler = inviter.sessionDescriptionHandler
     if (sessionDescriptionHandler && localStream) {
-      sessionDescriptionHandler.localMediaStream = localStream
+      (sessionDescriptionHandler as any).localMediaStream = localStream
     }
 
     currentSession = inviter
@@ -495,8 +494,8 @@ function handleSessionStateChange(state: SessionState, session: Inviter | Invita
 function handleRemoteStream(session: Inviter | Invitation) {
   try {
     const sessionDescriptionHandler = session.sessionDescriptionHandler
-    if (sessionDescriptionHandler && sessionDescriptionHandler.remoteMediaStream) {
-      const remoteStream = sessionDescriptionHandler.remoteMediaStream
+    if (sessionDescriptionHandler && (sessionDescriptionHandler as any).remoteMediaStream) {
+      const remoteStream = (sessionDescriptionHandler as any).remoteMediaStream
       callState.remoteStream = remoteStream
 
       // Create audio element for remote audio

@@ -6,7 +6,6 @@ import type {
   CommissionPaymentFormData,
   PaymentStatus,
 } from '@/types'
-import { getTransactionById } from './transactionService'
 
 export async function createCommissionSetting(
   companyId: string,

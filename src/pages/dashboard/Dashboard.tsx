@@ -91,6 +91,10 @@ export default function Dashboard() {
             website: (data as any).website || '',
             tax_number: (data as any).tax_number || '',
             tax_office: (data as any).tax_office || '',
+            api_endpoint: (data as any).api_endpoint || '',
+            santral_id: (data as any).santral_id || '',
+            api_key: (data as any).api_key || '',
+            api_secret: (data as any).api_secret || '',
           })
         } else {
           console.error('Error creating company:', error)
