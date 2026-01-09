@@ -27,6 +27,7 @@ export default defineConfig({
       "qrcard.gozcu.tech",
       "localhost",
       "127.0.0.1",
+      "64.226.80.107",
       "46.101.111.170",
       "178.157.15.26",
       "72.62.44.200",

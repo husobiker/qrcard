@@ -1,7 +1,7 @@
 # Deployment Guide - qrcard.gozcu.tech
 
 ## Sunucu Bilgileri
-- **IP**: 46.101.111.170
+- **IP**: 64.226.80.107
 - **Domain**: qrcard.gozcu.tech
 - **Port**: 3040 (production)
 
