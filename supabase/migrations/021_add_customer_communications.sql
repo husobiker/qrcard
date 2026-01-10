@@ -105,3 +105,4 @@ COMMENT ON COLUMN customer_communications.attachments IS 'Ek dosyalar (JSON arra
 
 
 
+

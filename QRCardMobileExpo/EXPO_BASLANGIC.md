@@ -89,3 +89,4 @@ npx eas build --platform android
 2. Expo Go ile QR kodu tarayın
 3. Uygulama çalışacak!
 
+

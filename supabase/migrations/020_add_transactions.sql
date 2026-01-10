@@ -84,3 +84,4 @@ COMMENT ON COLUMN transactions.currency IS 'Para birimi (TRY, USD, EUR, vb.)';
 
 
 
+

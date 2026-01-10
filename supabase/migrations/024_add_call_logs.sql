@@ -109,3 +109,4 @@ COMMENT ON COLUMN call_logs.recording_url IS 'Arama kaydı URL (opsiyonel)';
 
 
 
+

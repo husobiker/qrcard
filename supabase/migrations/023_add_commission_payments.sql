@@ -81,3 +81,4 @@ COMMENT ON COLUMN commission_payments.transaction_id IS 'İlgili işlem (opsiyon
 
 
 
+

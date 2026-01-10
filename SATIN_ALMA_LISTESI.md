@@ -65,3 +65,4 @@
 - Uzaktan durdurma özelliği yasal düzenlemelere tabi olabilir
 - Profesyonel kurulum önerilir
 - Güvenlik testleri yapılmalı
+

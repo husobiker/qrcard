@@ -10,3 +10,4 @@ CREATE POLICY "Companies can update own data"
 
 
 
+

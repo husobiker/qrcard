@@ -76,3 +76,4 @@ npm run web
 
 Eski `mobile` klasörünü kullanmayın! Artık **QRCardMobileExpo** klasöründe çalışıyoruz.
 
+

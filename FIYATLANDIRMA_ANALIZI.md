@@ -205,3 +205,4 @@
 - Toplu alımlarda özel fiyatlandırma yapılabilir
 - Aylık abonelik minimum 12 ay sözleşme ile
 - Garanti kapsamı: Donanım hatası ve yazılım desteği
+

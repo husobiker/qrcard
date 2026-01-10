@@ -258,3 +258,4 @@ CREATE TABLE vehicle_commands (
 - Güvenlik testlerini atlamayın
 - Kullanıcı eğitimi verin
 - Acil durum prosedürleri hazırlayın
+

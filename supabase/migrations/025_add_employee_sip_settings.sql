@@ -106,3 +106,4 @@ COMMENT ON COLUMN employee_sip_settings.webrtc_enabled IS 'WebRTC desteği aktif
 
 
 
+

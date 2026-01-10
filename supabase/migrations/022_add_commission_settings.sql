@@ -94,3 +94,4 @@ COMMENT ON COLUMN commission_settings.min_sales_amount IS 'Minimum satış tutar
 
 
 
+
