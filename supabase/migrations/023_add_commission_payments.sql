@@ -80,3 +80,4 @@ COMMENT ON COLUMN commission_payments.payment_status IS 'Ödeme durumu: pending,
 COMMENT ON COLUMN commission_payments.transaction_id IS 'İlgili işlem (opsiyonel, satış işlemi ile bağlantı)';
 
 
+

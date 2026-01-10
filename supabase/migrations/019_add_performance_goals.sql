@@ -96,3 +96,4 @@ COMMENT ON COLUMN performance_goals.goal_type IS 'Hedef tipi: sales, leads, appo
 COMMENT ON COLUMN performance_goals.period_type IS 'Dönem tipi: monthly, yearly';
 
 
+

@@ -104,3 +104,4 @@ COMMENT ON COLUMN customer_communications.communication_type IS 'İletişim tipi
 COMMENT ON COLUMN customer_communications.attachments IS 'Ek dosyalar (JSON array)';
 
 
+

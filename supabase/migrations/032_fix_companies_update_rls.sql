@@ -9,3 +9,4 @@ CREATE POLICY "Companies can update own data"
   WITH CHECK (auth.uid() = id);
 
 
+

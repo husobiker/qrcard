@@ -14,3 +14,4 @@ ORDER BY column_name;
 -- If it returns 0 rows, you need to run migration 016_add_company_tax_info.sql
 
 
+

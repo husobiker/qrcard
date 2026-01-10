@@ -231,3 +231,4 @@ Sorun yaşarsanız:
 4. Supabase Dashboard → Logs bölümünden API isteklerini kontrol edin
 
 
+

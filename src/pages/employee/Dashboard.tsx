@@ -66,15 +66,15 @@ export default function EmployeeDashboard() {
     }
 
     try {
-      // Load full employee data
-      const fullEmployee = await getEmployeeById(sessionEmployee.id);
-      if (fullEmployee) {
-        setEmployee(fullEmployee);
-        
-        // Load company data
-        const companyData = await getCompanyById(fullEmployee.company_id);
-        if (companyData) {
-          setCompany(companyData);
+    // Load full employee data
+    const fullEmployee = await getEmployeeById(sessionEmployee.id);
+    if (fullEmployee) {
+      setEmployee(fullEmployee);
+      
+      // Load company data
+      const companyData = await getCompanyById(fullEmployee.company_id);
+      if (companyData) {
+        setCompany(companyData);
           
           // Load SIP settings
           const empSip = await getEmployeeSipSettings(sessionEmployee.id);
@@ -440,58 +440,58 @@ export default function EmployeeDashboard() {
                   employee.social_links.facebook ||
                   employee.social_links.youtube ||
                   employee.social_links.whatsapp) && (
-                  <div className="mt-4 flex gap-2">
+                <div className="mt-4 flex gap-2">
                     {employee.social_links.instagram && (
-                      <a
+                    <a
                         href={employee.social_links.instagram}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="p-2 bg-pink-100 text-pink-600 rounded-lg hover:bg-pink-200 transition-colors"
-                      >
-                        <Instagram className="h-5 w-5" />
-                      </a>
-                    )}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="p-2 bg-pink-100 text-pink-600 rounded-lg hover:bg-pink-200 transition-colors"
+                    >
+                      <Instagram className="h-5 w-5" />
+                    </a>
+                  )}
                     {employee.social_links.linkedin && (
-                      <a
+                    <a
                         href={employee.social_links.linkedin}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="p-2 bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-200 transition-colors"
-                      >
-                        <Linkedin className="h-5 w-5" />
-                      </a>
-                    )}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="p-2 bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-200 transition-colors"
+                    >
+                      <Linkedin className="h-5 w-5" />
+                    </a>
+                  )}
                     {employee.social_links.facebook && (
-                      <a
+                    <a
                         href={employee.social_links.facebook}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="p-2 bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-200 transition-colors"
-                      >
-                        <Facebook className="h-5 w-5" />
-                      </a>
-                    )}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="p-2 bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-200 transition-colors"
+                    >
+                      <Facebook className="h-5 w-5" />
+                    </a>
+                  )}
                     {employee.social_links.youtube && (
-                      <a
+                    <a
                         href={employee.social_links.youtube}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="p-2 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition-colors"
-                      >
-                        <Youtube className="h-5 w-5" />
-                      </a>
-                    )}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="p-2 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition-colors"
+                    >
+                      <Youtube className="h-5 w-5" />
+                    </a>
+                  )}
                     {employee.social_links.whatsapp && (
-                      <a
+                    <a
                         href={`https://wa.me/${employee.social_links.whatsapp.replace(/[^0-9]/g, "")}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="p-2 bg-green-100 text-green-600 rounded-lg hover:bg-green-200 transition-colors"
-                      >
-                        <MessageCircle className="h-5 w-5" />
-                      </a>
-                    )}
-                  </div>
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="p-2 bg-green-100 text-green-600 rounded-lg hover:bg-green-200 transition-colors"
+                    >
+                      <MessageCircle className="h-5 w-5" />
+                    </a>
+                  )}
+                </div>
                 )
               )}
             </div>
@@ -507,62 +507,62 @@ export default function EmployeeDashboard() {
 
           {/* Company Info */}
           {company && (
-            <div className="mt-6 pt-6 border-t border-gray-200">
-              <div className="flex items-center gap-2 mb-2">
-                <Building2 className="h-5 w-5 text-gray-600" />
-                <h3 className="text-lg font-semibold text-gray-900">{company.name}</h3>
-              </div>
-              {company.address && (
-                <div className="flex items-start gap-2 text-gray-600 mt-2">
-                  <MapPin className="h-4 w-4 mt-0.5" />
-                  <span>{company.address}</span>
-                </div>
-              )}
-              {company.phone && (
-                <div className="flex items-center gap-2 text-gray-600 mt-2">
-                  <Phone className="h-4 w-4" />
-                  <span>{company.phone}</span>
-                </div>
-              )}
-              {company.website && (
-                <div className="flex items-center gap-2 text-gray-600 mt-2">
-                  <Globe className="h-4 w-4" />
-                  <a
-                    href={company.website}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="hover:text-blue-600 flex items-center gap-1"
-                  >
-                    {company.website}
-                    <ExternalLink className="h-3 w-3" />
-                  </a>
-                </div>
-              )}
+          <div className="mt-6 pt-6 border-t border-gray-200">
+            <div className="flex items-center gap-2 mb-2">
+              <Building2 className="h-5 w-5 text-gray-600" />
+              <h3 className="text-lg font-semibold text-gray-900">{company.name}</h3>
             </div>
+            {company.address && (
+              <div className="flex items-start gap-2 text-gray-600 mt-2">
+                <MapPin className="h-4 w-4 mt-0.5" />
+                <span>{company.address}</span>
+              </div>
+            )}
+            {company.phone && (
+              <div className="flex items-center gap-2 text-gray-600 mt-2">
+                <Phone className="h-4 w-4" />
+                <span>{company.phone}</span>
+              </div>
+            )}
+            {company.website && (
+              <div className="flex items-center gap-2 text-gray-600 mt-2">
+                <Globe className="h-4 w-4" />
+                <a
+                  href={company.website}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hover:text-blue-600 flex items-center gap-1"
+                >
+                  {company.website}
+                  <ExternalLink className="h-3 w-3" />
+                </a>
+              </div>
+            )}
+          </div>
           )}
 
           {/* QR Code */}
           {employee && company && (
             <div className="mt-6 pt-6 border-t border-gray-200">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">QR Kodum</h3>
-              <div className="flex flex-col md:flex-row gap-6 items-center">
-                <div className="bg-white p-4 rounded-lg shadow-sm">
+          <div className="flex flex-col md:flex-row gap-6 items-center">
+            <div className="bg-white p-4 rounded-lg shadow-sm">
                   <QRCode value={getPublicUrl()} size={200} />
-                </div>
-                <div className="flex-1">
-                  <p className="text-sm text-gray-600 mb-2">
+            </div>
+            <div className="flex-1">
+              <p className="text-sm text-gray-600 mb-2">
                     QR kodunuzu paylaşarak dijital kartvizitinize erişim sağlayın
-                  </p>
-                  <div className="bg-gray-50 p-3 rounded-lg mb-4">
-                    <p className="text-xs text-gray-500 mb-1">Public URL:</p>
+              </p>
+              <div className="bg-gray-50 p-3 rounded-lg mb-4">
+                <p className="text-xs text-gray-500 mb-1">Public URL:</p>
                     <p className="text-sm text-gray-900 break-all">{getPublicUrl()}</p>
-                  </div>
-                  <Button onClick={handleShare} className="w-full md:w-auto">
-                    <Share2 className="h-4 w-4 mr-2" />
-                    Paylaş
-                  </Button>
-                </div>
               </div>
+              <Button onClick={handleShare} className="w-full md:w-auto">
+                <Share2 className="h-4 w-4 mr-2" />
+                    Paylaş
+              </Button>
+            </div>
+          </div>
             </div>
           )}
         </CardContent>

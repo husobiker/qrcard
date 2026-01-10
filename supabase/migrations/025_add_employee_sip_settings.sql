@@ -105,3 +105,4 @@ COMMENT ON COLUMN employee_sip_settings.extension IS 'SIP extension numarası';
 COMMENT ON COLUMN employee_sip_settings.webrtc_enabled IS 'WebRTC desteği aktif mi?';
 
 
+

@@ -1,0 +1,51 @@
+{
+  "expo": {
+    "name": "QR Card",
+    "slug": "qrcard-mobile",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "automatic",
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#7C3AED"
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.qrcard.mobile",
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "This app uses your location to track vehicles.",
+        "NSLocationAlwaysUsageDescription": "This app uses your location to track vehicles.",
+        "NSFaceIDUsageDescription": "Use Face ID to authenticate"
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#7C3AED"
+      },
+      "package": "com.qrcard.mobile",
+      "permissions": [
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION",
+        "USE_BIOMETRIC",
+        "USE_FINGERPRINT"
+      ]
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "expo-location",
+      "expo-local-authentication"
+    ],
+    "extra": {
+      "supabaseUrl": "https://adbxyrdctxxhcojimljw.supabase.co",
+      "supabaseAnonKey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFkYnh5cmRjdHh4aGNvamltbGp3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM0ODc3MzAsImV4cCI6MjA3OTA2MzczMH0.labagow8k-biixI6hrsCABL43XfoaP6AY6qti8lFFJw"
+    }
+  }
+}

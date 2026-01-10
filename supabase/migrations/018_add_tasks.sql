@@ -109,3 +109,4 @@ COMMENT ON COLUMN tasks.status IS 'Görev durumu: pending, in_progress, complete
 COMMENT ON COLUMN tasks.priority IS 'Görev önceliği: low, medium, high, urgent';
 
 
+

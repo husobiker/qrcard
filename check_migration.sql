@@ -14,3 +14,4 @@ ORDER BY column_name;
 -- If it returns 0 rows, the migration needs to be run
 
 
+

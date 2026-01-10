@@ -93,3 +93,4 @@ COMMENT ON COLUMN commission_settings.commission_rate IS 'Komisyon oranı (yüzd
 COMMENT ON COLUMN commission_settings.min_sales_amount IS 'Minimum satış tutarı (opsiyonel)';
 
 
+

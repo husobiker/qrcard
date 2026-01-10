@@ -26,3 +26,4 @@ CREATE POLICY "Employees can view their company SIP settings"
   USING (true); -- Allow all selects, service layer will filter by company_id
 
 
+

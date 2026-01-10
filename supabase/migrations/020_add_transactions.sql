@@ -83,3 +83,4 @@ COMMENT ON COLUMN transactions.transaction_type IS 'İşlem tipi: income (gelir)
 COMMENT ON COLUMN transactions.currency IS 'Para birimi (TRY, USD, EUR, vb.)';
 
 
+

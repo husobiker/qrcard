@@ -108,3 +108,4 @@ COMMENT ON COLUMN call_logs.call_duration IS 'Arama süresi (saniye cinsinden)';
 COMMENT ON COLUMN call_logs.recording_url IS 'Arama kaydı URL (opsiyonel)';
 
 
+
