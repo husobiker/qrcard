@@ -1,32 +1,48 @@
-import { Link, useNavigate, useLocation } from 'react-router-dom'
-import { useState, useEffect, useRef } from 'react'
-import { supabase } from '@/supabase/client'
-import { Button } from '@/components/ui/button'
-import { LogOut, Users, Building2, Calendar, TrendingUp, BarChart3, CheckSquare, Target, DollarSign, MessageSquare, Percent, Phone, ChevronDown, ChevronUp, Car } from 'lucide-react'
-import Footer from './Footer'
-import { useLanguage } from '@/contexts/LanguageContext'
+import { Link, useNavigate, useLocation } from "react-router-dom";
+import { useState, useEffect, useRef } from "react";
+import { supabase } from "@/supabase/client";
+import { Button } from "@/components/ui/button";
+import {
+  LogOut,
+  Users,
+  Building2,
+  Calendar,
+  TrendingUp,
+  BarChart3,
+  CheckSquare,
+  Target,
+  DollarSign,
+  MessageSquare,
+  Percent,
+  Phone,
+  ChevronDown,
+  ChevronUp,
+  Car,
+} from "lucide-react";
+import Footer from "./Footer";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface LayoutProps {
-  children: React.ReactNode
+  children: React.ReactNode;
 }
 
 export default function Layout({ children }: LayoutProps) {
-  const navigate = useNavigate()
-  const location = useLocation()
-  const { language, setLanguage, t } = useLanguage()
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { language, setLanguage, t } = useLanguage();
   const [openMenus, setOpenMenus] = useState<{ [key: string]: boolean }>({
     sales: false,
     tasks: false,
     financial: false,
-  })
-  const menuRefs = useRef<{ [key: string]: HTMLDivElement | null }>({})
+  });
+  const menuRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
 
   const toggleMenu = (menuKey: string) => {
     setOpenMenus((prev) => ({
       ...prev,
       [menuKey]: !prev[menuKey],
-    }))
-  }
+    }));
+  };
 
   // Close menus when clicking outside
   useEffect(() => {
@@ -39,23 +55,23 @@ export default function Layout({ children }: LayoutProps) {
           setOpenMenus((prev) => ({
             ...prev,
             [key]: false,
-          }))
+          }));
         }
-      })
-    }
+      });
+    };
 
-    document.addEventListener('mousedown', handleClickOutside)
+    document.addEventListener("mousedown", handleClickOutside);
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside)
-    }
-  }, [])
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   const handleLogout = async () => {
-    await supabase.auth.signOut()
-    navigate('/login')
-  }
+    await supabase.auth.signOut();
+    navigate("/login");
+  };
 
-  const isActive = (path: string) => location.pathname === path
+  const isActive = (path: string) => location.pathname === path;
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
@@ -64,7 +80,7 @@ export default function Layout({ children }: LayoutProps) {
           <div className="flex h-24 items-center justify-between">
             <div className="flex items-center space-x-12">
               <Link to="/dashboard" className="flex items-center">
-                <img src="/logo.png" alt="QR Card" className="h-24 w-auto" />
+                <img src="/crew.png" alt="QR Card" className="h-24 w-auto" />
               </Link>
               <div className="flex items-center space-x-2">
                 {/* Genel */}
@@ -77,7 +93,7 @@ export default function Layout({ children }: LayoutProps) {
                   }`}
                 >
                   <Building2 className="h-4 w-4" />
-                  <span>{t('common.company')}</span>
+                  <span>{t("common.company")}</span>
                 </Link>
                 <Link
                   to="/dashboard/employees"
@@ -88,7 +104,7 @@ export default function Layout({ children }: LayoutProps) {
                   }`}
                 >
                   <Users className="h-4 w-4" />
-                  <span>{t('common.employees')}</span>
+                  <span>{t("common.employees")}</span>
                 </Link>
                 <Link
                   to="/dashboard/calendar"
@@ -99,7 +115,7 @@ export default function Layout({ children }: LayoutProps) {
                   }`}
                 >
                   <Calendar className="h-4 w-4" />
-                  <span>{t('common.calendar')}</span>
+                  <span>{t("common.calendar")}</span>
                 </Link>
                 <Link
                   to="/dashboard/vehicles"
@@ -115,15 +131,17 @@ export default function Layout({ children }: LayoutProps) {
 
                 {/* Satış & Müşteri */}
                 <div
-                  ref={(el) => (menuRefs.current['sales'] = el)}
+                  ref={(el) => (menuRefs.current["sales"] = el)}
                   className="relative group"
                 >
                   <button
-                    onClick={() => toggleMenu('sales')}
+                    onClick={() => toggleMenu("sales")}
                     className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                      isActive('/dashboard/crm') || isActive('/dashboard/communications') || isActive('/dashboard/call-logs')
-                        ? 'bg-primary text-primary-foreground'
-                        : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+                      isActive("/dashboard/crm") ||
+                      isActive("/dashboard/communications") ||
+                      isActive("/dashboard/call-logs")
+                        ? "bg-primary text-primary-foreground"
+                        : "text-muted-foreground hover:text-foreground hover:bg-muted"
                     }`}
                   >
                     <TrendingUp className="h-4 w-4" />
@@ -145,7 +163,7 @@ export default function Layout({ children }: LayoutProps) {
                         }`}
                       >
                         <TrendingUp className="h-4 w-4" />
-                        <span>{t('common.crm') || 'Satış Takibi'}</span>
+                        <span>{t("common.crm") || "Satış Takibi"}</span>
                       </Link>
                       <Link
                         to="/dashboard/communications"
@@ -175,15 +193,16 @@ export default function Layout({ children }: LayoutProps) {
 
                 {/* Görevler & Hedefler */}
                 <div
-                  ref={(el) => (menuRefs.current['tasks'] = el)}
+                  ref={(el) => (menuRefs.current["tasks"] = el)}
                   className="relative group"
                 >
                   <button
-                    onClick={() => toggleMenu('tasks')}
+                    onClick={() => toggleMenu("tasks")}
                     className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                      isActive('/dashboard/tasks') || isActive('/dashboard/goals')
-                        ? 'bg-primary text-primary-foreground'
-                        : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+                      isActive("/dashboard/tasks") ||
+                      isActive("/dashboard/goals")
+                        ? "bg-primary text-primary-foreground"
+                        : "text-muted-foreground hover:text-foreground hover:bg-muted"
                     }`}
                   >
                     <CheckSquare className="h-4 w-4" />
@@ -224,15 +243,16 @@ export default function Layout({ children }: LayoutProps) {
 
                 {/* Finansal */}
                 <div
-                  ref={(el) => (menuRefs.current['financial'] = el)}
+                  ref={(el) => (menuRefs.current["financial"] = el)}
                   className="relative group"
                 >
                   <button
-                    onClick={() => toggleMenu('financial')}
+                    onClick={() => toggleMenu("financial")}
                     className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                      isActive('/dashboard/transactions') || isActive('/dashboard/commissions')
-                        ? 'bg-primary text-primary-foreground'
-                        : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+                      isActive("/dashboard/transactions") ||
+                      isActive("/dashboard/commissions")
+                        ? "bg-primary text-primary-foreground"
+                        : "text-muted-foreground hover:text-foreground hover:bg-muted"
                     }`}
                   >
                     <DollarSign className="h-4 w-4" />
@@ -281,7 +301,7 @@ export default function Layout({ children }: LayoutProps) {
                   }`}
                 >
                   <BarChart3 className="h-4 w-4" />
-                  <span>{t('common.reports') || 'Raporlar'}</span>
+                  <span>{t("common.reports") || "Raporlar"}</span>
                 </Link>
               </div>
             </div>
@@ -299,7 +319,7 @@ export default function Layout({ children }: LayoutProps) {
               </select>
               <Button variant="ghost" onClick={handleLogout}>
                 <LogOut className="h-4 w-4 mr-2" />
-                {t('common.logout')}
+                {t("common.logout")}
               </Button>
             </div>
           </div>
@@ -308,6 +328,5 @@ export default function Layout({ children }: LayoutProps) {
       <main className="container mx-auto px-4 py-8 flex-1">{children}</main>
       <Footer />
     </div>
-  )
+  );
 }
-

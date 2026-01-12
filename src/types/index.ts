@@ -371,4 +371,3 @@ export interface CompanySipSettingsFormData {
   sip_protocol?: 'udp' | 'tcp' | 'tls' | 'wss'
   webrtc_gateway_url?: string
 }
-

@@ -8,12 +8,14 @@ import {
   TextInput,
   RefreshControl,
   Alert,
+  StatusBar,
 } from 'react-native';
+import {SafeAreaView} from 'react-native-safe-area-context';
 import {useAuth} from '../../contexts/AuthContext';
 import {useTheme} from '../../contexts/ThemeContext';
 import {getLeads, deleteLead} from '../../services/crmService';
 import type {CRMLead} from '../../types';
-import Icon from 'react-native-vector-icons/MaterialIcons';
+import {MaterialIcons as Icon} from '@expo/vector-icons';
 
 export default function CRMScreen() {
   const {user, userType} = useAuth();
@@ -114,7 +116,8 @@ export default function CRMScreen() {
   );
 
   return (
-    <View style={[styles.container, {backgroundColor: theme.colors.background}]}>
+    <SafeAreaView style={[styles.container, {backgroundColor: theme.colors.background}]}>
+      <StatusBar barStyle={theme.isDark ? 'light-content' : 'dark-content'} />
       <View style={[styles.searchContainer, {backgroundColor: theme.colors.surface}]}>
         <Icon name="search" size={20} color={theme.colors.gray500} style={styles.searchIcon} />
         <TextInput
@@ -135,7 +138,7 @@ export default function CRMScreen() {
         }
         contentContainerStyle={styles.listContent}
       />
-    </View>
+    </SafeAreaView>
   );
 }
 

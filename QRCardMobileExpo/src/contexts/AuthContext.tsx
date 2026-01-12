@@ -1,6 +1,7 @@
 import React, {createContext, useContext, useState, useEffect} from 'react';
 import {supabase} from '../services/supabase';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import {getCompanyByUserId} from '../services/companyService';
 import type {Company, Employee} from '../types';
 
 interface AuthContextType {
@@ -18,7 +19,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({children}: {children: React.ReactNode}) {
   const [user, setUser] = useState<Company | Employee | null>(null);
   const [userType, setUserType] = useState<'company' | 'employee' | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
     // Check for existing session
@@ -51,7 +52,7 @@ export function AuthProvider({children}: {children: React.ReactNode}) {
     } catch (error) {
       console.error('Error checking session:', error);
     } finally {
-      setLoading(false);
+      setLoading(false as boolean);
     }
   };
 
@@ -60,14 +61,15 @@ export function AuthProvider({children}: {children: React.ReactNode}) {
       const storedUserType = await AsyncStorage.getItem('userType');
       
       if (storedUserType === 'company') {
-        const {data, error} = await supabase
-          .from('companies')
-          .select('*')
-          .eq('id', userId)
-          .single();
-
-        if (data && !error) {
-          setUser(data as Company);
+        // Use companyService to load company data (same as web)
+        const companyData = await getCompanyByUserId(userId);
+        if (companyData) {
+          setUser(companyData as Company);
+          setUserType('company');
+        } else {
+          // Company doesn't exist yet, but user is authenticated
+          // Set user as company with basic info
+          setUser({id: userId} as Company);
           setUserType('company');
         }
       } else if (storedUserType === 'employee') {
@@ -145,16 +147,20 @@ export function AuthProvider({children}: {children: React.ReactNode}) {
     }
   };
 
+  const isAuthenticated = Boolean(user);
+  const loadingValue = typeof loading === 'boolean' ? loading : Boolean(loading);
+  const isAuthenticatedValue = typeof isAuthenticated === 'boolean' ? isAuthenticated : Boolean(isAuthenticated);
+
   return (
     <AuthContext.Provider
       value={{
         user,
         userType,
-        loading,
+        loading: loadingValue,
         signIn,
         signInEmployee,
         signOut,
-        isAuthenticated: !!user,
+        isAuthenticated: isAuthenticatedValue,
       }}>
       {children}
     </AuthContext.Provider>

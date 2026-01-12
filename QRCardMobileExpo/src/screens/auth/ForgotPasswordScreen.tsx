@@ -12,7 +12,7 @@ import {
 import {supabase} from '../../services/supabase';
 import {useTheme} from '../../contexts/ThemeContext';
 import {useLanguage} from '../../contexts/LanguageContext';
-import Icon from 'react-native-vector-icons/MaterialIcons';
+import {MaterialIcons as Icon} from '@expo/vector-icons';
 
 export default function ForgotPasswordScreen({navigation}: any) {
   const [email, setEmail] = useState('');
@@ -75,7 +75,7 @@ export default function ForgotPasswordScreen({navigation}: any) {
         </View>
 
         <TouchableOpacity
-          style={[styles.button, {backgroundColor: theme.colors.primary}]}
+          style={[styles.button, {backgroundColor: theme.colors.primaryDark}]}
           onPress={handleResetPassword}
           disabled={loading}>
           <Text style={styles.buttonText}>

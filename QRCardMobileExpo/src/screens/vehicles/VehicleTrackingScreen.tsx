@@ -7,13 +7,15 @@ import {
   Alert,
   RefreshControl,
   ScrollView,
+  StatusBar,
 } from 'react-native';
-import MapView, {Marker, Polyline} from 'react-native-maps';
+import {SafeAreaView} from 'react-native-safe-area-context';
+// import MapView, {Marker, Polyline} from 'react-native-maps'; // Temporarily disabled for Expo Go
 import {useAuth} from '../../contexts/AuthContext';
 import {useTheme} from '../../contexts/ThemeContext';
 import {getVehicles, getLatestVehicleLocations, sendVehicleCommand} from '../../services/vehicleService';
 import type {Vehicle, VehicleLocation} from '../../types';
-import Icon from 'react-native-vector-icons/MaterialIcons';
+import {MaterialIcons as Icon} from '@expo/vector-icons';
 
 export default function VehicleTrackingScreen() {
   const {user, userType} = useAuth();
@@ -110,33 +112,17 @@ export default function VehicleTrackingScreen() {
   };
 
   return (
-    <View style={[styles.container, {backgroundColor: theme.colors.background}]}>
-      <MapView
-        style={styles.map}
-        region={mapRegion}
-        onRegionChangeComplete={setMapRegion}>
-        {vehicles.map(vehicle => {
-          const location = getVehicleLocation(vehicle.id);
-          if (!location) return null;
-
-          return (
-            <Marker
-              key={vehicle.id}
-              coordinate={{
-                latitude: location.latitude,
-                longitude: location.longitude,
-              }}
-              title={vehicle.name}
-              description={`Speed: ${location.speed || 0} km/h`}>
-              <Icon
-                name={getVehicleTypeIcon(vehicle.vehicle_type)}
-                size={32}
-                color={theme.colors.primary}
-              />
-            </Marker>
-          );
-        })}
-      </MapView>
+    <SafeAreaView style={[styles.container, {backgroundColor: theme.colors.background}]}>
+      <StatusBar barStyle={theme.isDark ? 'light-content' : 'dark-content'} />
+      <View style={styles.mapPlaceholder}>
+        <Icon name="map" size={48} color={theme.colors.gray400} />
+        <Text style={[styles.mapPlaceholderText, {color: theme.colors.textSecondary}]}>
+          Map view requires development build
+        </Text>
+        <Text style={[styles.mapPlaceholderSubtext, {color: theme.colors.textSecondary}]}>
+          Run: npx expo prebuild && npx expo run:ios
+        </Text>
+      </View>
 
       <ScrollView
         style={styles.vehicleList}
@@ -190,7 +176,7 @@ export default function VehicleTrackingScreen() {
           );
         })}
       </ScrollView>
-    </View>
+    </SafeAreaView>
   );
 }
 
@@ -198,8 +184,20 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  map: {
+  mapPlaceholder: {
     flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#f5f5f5',
+  },
+  mapPlaceholderText: {
+    marginTop: 16,
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  mapPlaceholderSubtext: {
+    marginTop: 8,
+    fontSize: 12,
   },
   vehicleList: {
     maxHeight: 300,

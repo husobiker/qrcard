@@ -91,7 +91,7 @@ export default function Login() {
         <Card className="w-full max-w-md">
           <CardHeader className="space-y-1">
             <div className="flex justify-center mb-4">
-              <img src="/logo.png" alt="QR Card" className="h-28 w-auto" />
+              <img src="/crew.png" alt="QR Card" className="h-28 w-auto" />
             </div>
             <CardDescription className="text-center">
               {t("auth.login.subtitle")}

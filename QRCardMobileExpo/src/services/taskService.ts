@@ -101,3 +101,78 @@ export async function deleteTask(taskId: string): Promise<boolean> {
   }
 }
 
+
+export async function updateTaskStatus(
+  taskId: string,
+  status: TaskStatus,
+): Promise<boolean> {
+  try {
+    const updateData: any = {status};
+    if (status === 'completed') {
+      updateData.completed_at = new Date().toISOString();
+    } else {
+      updateData.completed_at = null;
+    }
+
+    const {error} = await supabase
+      .from('tasks')
+      .update(updateData)
+      .eq('id', taskId);
+
+    if (error) throw error;
+    return true;
+  } catch (error) {
+    console.error('Error updating task status:', error);
+    return false;
+  }
+}
+
+export async function getTaskStats(
+  companyId?: string,
+  employeeId?: string,
+): Promise<{
+  total: number;
+  pending: number;
+  in_progress: number;
+  completed: number;
+  overdue: number;
+}> {
+  try {
+    let query = supabase.from('tasks').select('status, due_date');
+
+    if (companyId) {
+      query = query.eq('company_id', companyId);
+    }
+
+    if (employeeId) {
+      query = query.eq('employee_id', employeeId);
+    }
+
+    const {data, error} = await query;
+
+    if (error) throw error;
+
+    const tasks = data || [];
+    const now = new Date();
+
+    return {
+      total: tasks.length,
+      pending: tasks.filter((t: any) => t.status === 'pending').length,
+      in_progress: tasks.filter((t: any) => t.status === 'in_progress').length,
+      completed: tasks.filter((t: any) => t.status === 'completed').length,
+      overdue: tasks.filter((t: any) => {
+        if (!t.due_date || t.status === 'completed') return false;
+        return new Date(t.due_date) < now;
+      }).length,
+    };
+  } catch (error) {
+    console.error('Error fetching task stats:', error);
+    return {
+      total: 0,
+      pending: 0,
+      in_progress: 0,
+      completed: 0,
+      overdue: 0,
+    };
+  }
+}

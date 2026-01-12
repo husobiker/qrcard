@@ -72,7 +72,7 @@ export default function EmployeeLayout({ children }: EmployeeLayoutProps) {
           <div className="flex h-24 items-center justify-between">
             <div className="flex items-center space-x-12">
               <Link to="/employee/dashboard" className="flex items-center">
-                <img src="/logo.png" alt="QR Card" className="h-24 w-auto" />
+                <img src="/crew.png" alt="QR Card" className="h-24 w-auto" />
               </Link>
               <div className="flex items-center space-x-2">
                 {/* Genel */}

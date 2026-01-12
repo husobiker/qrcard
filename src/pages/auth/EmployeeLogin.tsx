@@ -1,7 +1,10 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { authenticateEmployee, setEmployeeSession } from "@/services/employeeAuthService";
+import {
+  authenticateEmployee,
+  setEmployeeSession,
+} from "@/services/employeeAuthService";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -20,7 +23,7 @@ export default function EmployeeLogin() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
-  const [messageType, setMessageType] = useState<'success' | 'error'>('error');
+  const [messageType, setMessageType] = useState<"success" | "error">("error");
   const navigate = useNavigate();
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -31,15 +34,17 @@ export default function EmployeeLogin() {
     const employee = await authenticateEmployee(username, password);
 
     if (!employee) {
-      setMessage(t("auth.employeeLogin.invalid") || "Geçersiz kullanıcı adı veya şifre");
-      setMessageType('error');
+      setMessage(
+        t("auth.employeeLogin.invalid") || "Geçersiz kullanıcı adı veya şifre"
+      );
+      setMessageType("error");
       setLoading(false);
       return;
     }
 
     // Store employee session
     setEmployeeSession(employee);
-    
+
     // Navigate to employee dashboard
     navigate("/employee/dashboard");
   };
@@ -49,7 +54,11 @@ export default function EmployeeLogin() {
       {/* Language Selector and Company Login Button */}
       <div className="absolute top-4 right-4 z-10 flex gap-2">
         <Link to="/login">
-          <Button variant="outline" size="sm" className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            className="flex items-center gap-2"
+          >
             <Building2 className="h-4 w-4" />
             {t("auth.employeeLogin.companyLogin") || "Şirket Girişi"}
           </Button>
@@ -70,25 +79,30 @@ export default function EmployeeLogin() {
         <Card className="w-full max-w-md">
           <CardHeader className="space-y-1">
             <div className="flex justify-center mb-4">
-              <img src="/logo.png" alt="QR Card" className="h-28 w-auto" />
+              <img src="/crew.png" alt="QR Card" className="h-28 w-auto" />
             </div>
             <CardDescription className="text-center">
-              {t("auth.employeeLogin.subtitle") || "Çalışan hesabınıza giriş yapın"}
+              {t("auth.employeeLogin.subtitle") ||
+                "Çalışan hesabınıza giriş yapın"}
             </CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleLogin} className="space-y-4">
               {message && (
-                <div className={`p-3 text-sm rounded-md border ${
-                  messageType === 'success' 
-                    ? 'text-green-700 bg-green-50 border-green-200' 
-                    : 'text-red-600 bg-red-50 border-red-200'
-                }`}>
+                <div
+                  className={`p-3 text-sm rounded-md border ${
+                    messageType === "success"
+                      ? "text-green-700 bg-green-50 border-green-200"
+                      : "text-red-600 bg-red-50 border-red-200"
+                  }`}
+                >
                   {message}
                 </div>
               )}
               <div className="space-y-2">
-                <Label htmlFor="username">{t("auth.employeeLogin.username") || "Kullanıcı Adı"}</Label>
+                <Label htmlFor="username">
+                  {t("auth.employeeLogin.username") || "Kullanıcı Adı"}
+                </Label>
                 <Input
                   id="username"
                   type="text"
@@ -99,7 +113,9 @@ export default function EmployeeLogin() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="password">{t("auth.employeeLogin.password") || "Şifre"}</Label>
+                <Label htmlFor="password">
+                  {t("auth.employeeLogin.password") || "Şifre"}
+                </Label>
                 <Input
                   id="password"
                   type="password"
@@ -109,11 +125,14 @@ export default function EmployeeLogin() {
                 />
               </div>
               <Button type="submit" className="w-full" disabled={loading}>
-                {loading ? (t("auth.employeeLogin.loading") || "Giriş yapılıyor...") : (t("auth.employeeLogin.submit") || "Giriş Yap")}
+                {loading
+                  ? t("auth.employeeLogin.loading") || "Giriş yapılıyor..."
+                  : t("auth.employeeLogin.submit") || "Giriş Yap"}
               </Button>
               <div className="text-center text-sm">
                 <Link to="/login" className="text-primary hover:underline">
-                  {t("auth.employeeLogin.backToCompany") || "Şirket girişine dön"}
+                  {t("auth.employeeLogin.backToCompany") ||
+                    "Şirket girişine dön"}
                 </Link>
               </div>
             </form>
@@ -124,4 +143,3 @@ export default function EmployeeLogin() {
     </div>
   );
 }
-

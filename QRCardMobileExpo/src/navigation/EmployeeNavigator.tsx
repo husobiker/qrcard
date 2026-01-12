@@ -6,27 +6,27 @@ import {useTheme} from '../contexts/ThemeContext';
 import {useLanguage} from '../contexts/LanguageContext';
 
 // Screens
-import DashboardScreen from '../screens/dashboard/DashboardScreen';
-import CRMScreen from '../screens/crm/CRMScreen';
+import EmployeeDashboardScreen from '../screens/employee/DashboardScreen';
 import CalendarScreen from '../screens/calendar/CalendarScreen';
 import TasksScreen from '../screens/tasks/TasksScreen';
+import CRMScreen from '../screens/crm/CRMScreen';
+import ReportsScreen from '../screens/reports/ReportsScreen';
+import ProfileScreen from '../screens/profile/ProfileScreen';
 import GoalsScreen from '../screens/goals/GoalsScreen';
 import TransactionsScreen from '../screens/transactions/TransactionsScreen';
 import CommunicationsScreen from '../screens/communications/CommunicationsScreen';
 import CommissionsScreen from '../screens/commissions/CommissionsScreen';
 import CallLogsScreen from '../screens/callLogs/CallLogsScreen';
-import EmployeesScreen from '../screens/employees/EmployeesScreen';
-import ProfileScreen from '../screens/profile/ProfileScreen';
 
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
 
-function DashboardStack() {
+function EmployeeDashboardStack() {
   return (
     <Stack.Navigator>
       <Stack.Screen
-        name="DashboardMain"
-        component={DashboardScreen}
+        name="EmployeeDashboardMain"
+        component={EmployeeDashboardScreen}
         options={{headerShown: false as boolean}}
       />
       <Stack.Screen name="Goals" component={GoalsScreen} />
@@ -35,23 +35,25 @@ function DashboardStack() {
       <Stack.Screen name="Commissions" component={CommissionsScreen} />
       <Stack.Screen name="CallLogs" component={CallLogsScreen} />
       <Stack.Screen name="CRM" component={CRMScreen} />
+      <Stack.Screen name="Reports" component={ReportsScreen} />
     </Stack.Navigator>
   );
 }
 
-function ProfileStack() {
+function EmployeeProfileStack() {
   return (
     <Stack.Navigator>
       <Stack.Screen
-        name="ProfileMain"
+        name="EmployeeProfileMain"
         component={ProfileScreen}
         options={{headerShown: false as boolean}}
       />
+      <Stack.Screen name="Reports" component={ReportsScreen} />
     </Stack.Navigator>
   );
 }
 
-export default function MainNavigator() {
+export default function EmployeeNavigator() {
   const {theme} = useTheme();
   const {t} = useLanguage();
 
@@ -70,28 +72,18 @@ export default function MainNavigator() {
         headerTintColor: theme.colors.text,
       }}>
       <Tab.Screen
-        name="DashboardTab"
-        component={DashboardStack}
+        name="EmployeeDashboardTab"
+        component={EmployeeDashboardStack}
         options={{
-          title: t('dashboard.title'),
+          title: 'Anasayfa',
           headerShown: false as boolean,
           tabBarIcon: ({color, size}) => (
-            <Icon name="dashboard" size={size} color={color} />
+            <Icon name="home" size={size} color={color} />
           ),
         }}
       />
       <Tab.Screen
-        name="Employees"
-        component={EmployeesScreen}
-        options={{
-          title: 'Personeller',
-          tabBarIcon: ({color, size}) => (
-            <Icon name="people" size={size} color={color} />
-          ),
-        }}
-      />
-      <Tab.Screen
-        name="Calendar"
+        name="EmployeeCalendar"
         component={CalendarScreen}
         options={{
           title: t('calendar.title'),
@@ -101,7 +93,7 @@ export default function MainNavigator() {
         }}
       />
       <Tab.Screen
-        name="Tasks"
+        name="EmployeeTasks"
         component={TasksScreen}
         options={{
           title: t('tasks.title'),
@@ -112,8 +104,18 @@ export default function MainNavigator() {
         }}
       />
       <Tab.Screen
-        name="ProfileTab"
-        component={ProfileStack}
+        name="EmployeeReports"
+        component={ReportsScreen}
+        options={{
+          title: 'Raporlar',
+          tabBarIcon: ({color, size}) => (
+            <Icon name="bar-chart" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tab.Screen
+        name="EmployeeProfileTab"
+        component={EmployeeProfileStack}
         options={{
           title: 'Profil',
           headerShown: false as boolean,
@@ -125,4 +127,3 @@ export default function MainNavigator() {
     </Tab.Navigator>
   );
 }
-

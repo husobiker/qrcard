@@ -1,8 +1,8 @@
 export const colors = {
   // Primary colors
-  primary: '#7C3AED', // Purple (matching web app)
-  primaryDark: '#6D28D9',
-  primaryLight: '#8B5CF6',
+  primary: '#ff3131', // Red (main design color)
+  primaryDark: '#e52828', // Red for buttons
+  primaryLight: '#ff5c5c',
 
   // Secondary colors
   secondary: '#10B981',

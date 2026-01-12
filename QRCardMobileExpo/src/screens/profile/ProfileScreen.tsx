@@ -3,55 +3,123 @@ import {
   View,
   Text,
   StyleSheet,
-  FlatList,
-  RefreshControl,
-  TouchableOpacity,
-  StatusBar,
   ScrollView,
+  TouchableOpacity,
+  RefreshControl,
+  TextInput,
+  Alert,
+  StatusBar,
   Modal,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useAuth } from "../../contexts/AuthContext";
 import { useTheme } from "../../contexts/ThemeContext";
+import { getCompanyByUserId, updateCompany, getCompanyById } from "../../services/companyService";
 import { getCompanyReports, getEmployeeReports } from "../../services/reportsService";
+import { getEmployeeById } from "../../services/employeeService";
+import type { Company, Employee } from "../../types";
 import type { ReportsData } from "../../services/reportsService";
 import { MaterialIcons as Icon } from "@expo/vector-icons";
+import { supabase } from "../../services/supabase";
 
-interface Report {
-  id: string;
-  title: string;
-  titleEn: string;
-  type: "sales" | "performance" | "commission";
-}
-
-export default function ReportsScreen() {
-  const { user, userType } = useAuth();
+export default function ProfileScreen({ navigation }: any) {
+  const { user, userType, signOut } = useAuth();
   const { theme } = useTheme();
-  const [reports] = useState<Report[]>([
+  const [loading, setLoading] = useState(false);
+  const [company, setCompany] = useState<Company | null>(null);
+  const [employee, setEmployee] = useState<Employee | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [showEditForm, setShowEditForm] = useState(false);
+  const [reports] = useState([
     { id: "1", title: "Satış Raporu", titleEn: "Sales", type: "sales" },
     { id: "2", title: "Performans Raporu", titleEn: "Performance", type: "performance" },
     { id: "3", title: "Komisyon Raporu", titleEn: "Commission", type: "commission" },
   ]);
-  const [loading, setLoading] = useState(false);
+  const [loadingReports, setLoadingReports] = useState(false);
   const [reportsData, setReportsData] = useState<ReportsData | null>(null);
-  const [selectedReport, setSelectedReport] = useState<Report | null>(null);
-  const [modalVisible, setModalVisible] = useState(false);
+  const [selectedReport, setSelectedReport] = useState<{
+    id: string;
+    title: string;
+    titleEn: string;
+    type: "sales" | "performance" | "commission";
+  } | null>(null);
+  const [reportModalVisible, setReportModalVisible] = useState(false);
+  const [formData, setFormData] = useState({
+    name: "",
+    address: "",
+    phone: "",
+    website: "",
+    tax_number: "",
+    tax_office: "",
+    api_endpoint: "",
+    santral_id: "",
+    api_key: "",
+    api_secret: "",
+  });
 
   useEffect(() => {
-    loadReportsData();
+    if (user) {
+      if (userType === "company") {
+        loadCompany();
+      } else if (userType === "employee") {
+        loadEmployee();
+      }
+      loadReportsData();
+    }
   }, [user]);
+
+  const loadCompany = async () => {
+    if (!user || userType !== "company") return;
+
+    try {
+      const companyData = await getCompanyByUserId(user.id);
+      if (companyData) {
+        setCompany(companyData);
+        setFormData({
+          name: companyData.name || "",
+          address: companyData.address || "",
+          phone: companyData.phone || "",
+          website: companyData.website || "",
+          tax_number: companyData.tax_number || "",
+          tax_office: companyData.tax_office || "",
+          api_endpoint: companyData.api_endpoint || "",
+          santral_id: companyData.santral_id || "",
+          api_key: companyData.api_key || "",
+          api_secret: companyData.api_secret || "",
+        });
+      }
+    } catch (error) {
+      console.error("Error loading company:", error);
+    }
+  };
+
+  const loadEmployee = async () => {
+    if (!user || userType !== "employee") return;
+
+    try {
+      const employeeData = await getEmployeeById(user.id);
+      if (employeeData) {
+        setEmployee(employeeData);
+        // Load company data for employee
+        const companyData = await getCompanyById(employeeData.company_id);
+        if (companyData) {
+          setCompany(companyData);
+        }
+      }
+    } catch (error) {
+      console.error("Error loading employee:", error);
+    }
+  };
 
   const loadReportsData = async () => {
     if (!user) return;
 
-    setLoading(true);
+    setLoadingReports(true);
     try {
       if (userType === "company") {
-        // For company users, user.id is the company_id
         const data = await getCompanyReports(user.id);
         setReportsData(data);
       } else {
-        // For employee users, get company_id from user object
         const companyId = (user as any).company_id;
         if (companyId) {
           const data = await getEmployeeReports(user.id, companyId);
@@ -60,7 +128,6 @@ export default function ReportsScreen() {
       }
     } catch (error) {
       console.error("Error loading reports:", error);
-      // Set empty data on error
       setReportsData({
         crm_stats: { total: 0, today_follow_ups: 0, sales_completed: 0, in_follow_up: 0 },
         appointment_stats: {
@@ -75,39 +142,19 @@ export default function ReportsScreen() {
         analytics_stats: { total_views: 0, total_clicks: 0, employees_with_views: 0 },
       });
     } finally {
-      setLoading(false);
+      setLoadingReports(false);
     }
   };
 
-  const handleReportPress = (report: Report) => {
+  const handleReportPress = (report: {
+    id: string;
+    title: string;
+    titleEn: string;
+    type: "sales" | "performance" | "commission";
+  }) => {
     setSelectedReport(report);
-    setModalVisible(true);
+    setReportModalVisible(true);
   };
-
-  const renderReport = ({ item }: { item: Report }) => (
-    <TouchableOpacity
-      style={[
-        styles.reportCard,
-        { backgroundColor: theme.colors.surface, borderColor: theme.colors.gray200 },
-      ]}
-      onPress={() => handleReportPress(item)}
-    >
-      <View style={styles.reportHeader}>
-        <View style={[styles.reportIcon, { backgroundColor: theme.colors.primary }]}>
-          <Icon name="bar-chart" size={20} color="#FFFFFF" />
-        </View>
-        <View style={styles.reportInfo}>
-          <Text style={[styles.reportTitle, { color: theme.colors.text }]}>
-            {item.title}
-          </Text>
-          <Text style={[styles.reportType, { color: theme.colors.textSecondary }]}>
-            {item.titleEn}
-          </Text>
-        </View>
-        <Icon name="chevron-right" size={24} color={theme.colors.gray400} />
-      </View>
-    </TouchableOpacity>
-  );
 
   const renderReportDetails = () => {
     if (!selectedReport || !reportsData) return null;
@@ -589,34 +636,541 @@ export default function ReportsScreen() {
     }
   };
 
+  const handleSaveCompany = async () => {
+    if (!user || userType !== "company" || !company) return;
+
+    setSaving(true);
+    try {
+      const updated = await updateCompany(company.id, formData);
+      if (updated) {
+        setCompany(updated);
+        Alert.alert("Başarılı", "Profil bilgileri güncellendi");
+        setShowEditForm(false);
+      } else {
+        Alert.alert("Hata", "Profil bilgileri güncellenemedi");
+      }
+    } catch (error) {
+      console.error("Error saving company:", error);
+      Alert.alert("Hata", "Profil bilgileri güncellenemedi");
+    } finally {
+      setSaving(false);
+    }
+  };
+
   return (
     <SafeAreaView
       style={[styles.container, { backgroundColor: theme.colors.background }]}
       edges={["bottom", "left", "right"]}
     >
       <StatusBar barStyle={theme.isDark ? "light-content" : "dark-content"} />
-      <View style={styles.header}>
-        <Text style={[styles.headerTitle, { color: theme.colors.text }]}>Raporlar</Text>
-      </View>
-      <FlatList
-        data={reports}
-        renderItem={renderReport}
-        keyExtractor={(item) => item.id}
+      <ScrollView
+        style={styles.scrollView}
         refreshControl={
           <RefreshControl
             refreshing={loading}
-            onRefresh={loadReportsData}
+            onRefresh={loadCompany}
             tintColor={theme.colors.primary}
           />
         }
-        contentContainerStyle={styles.listContent}
-      />
+      >
+        <View style={styles.content}>
+          {/* Header */}
+          <View style={styles.header}>
+            <Text style={[styles.title, { color: theme.colors.text }]}>
+              Profil
+            </Text>
+            {userType === "company" && (
+              <TouchableOpacity
+                style={[
+                  styles.editButton,
+                  { backgroundColor: theme.colors.primaryDark },
+                ]}
+                onPress={() => setShowEditForm(!showEditForm)}
+              >
+                <Icon
+                  name={showEditForm ? "close" : "edit"}
+                  size={20}
+                  color="#FFFFFF"
+                />
+                <Text style={styles.editButtonText}>
+                  {showEditForm ? "İptal" : "Profilimi Düzenle"}
+                </Text>
+              </TouchableOpacity>
+            )}
+          </View>
+
+          {/* Profile Info - Company */}
+          {userType === "company" && company && (
+            <View
+              style={[
+                styles.profileCard,
+                {
+                  backgroundColor: theme.colors.surface,
+                  borderColor: theme.colors.gray200,
+                },
+              ]}
+            >
+              {!showEditForm ? (
+                <>
+                  <View style={styles.profileItem}>
+                    <Text style={[styles.label, { color: theme.colors.textSecondary }]}>
+                      Şirket Adı
+                    </Text>
+                    <Text style={[styles.value, { color: theme.colors.text }]}>
+                      {company.name || "-"}
+                    </Text>
+                  </View>
+                  <View style={styles.profileItem}>
+                    <Text style={[styles.label, { color: theme.colors.textSecondary }]}>
+                      Telefon
+                    </Text>
+                    <Text style={[styles.value, { color: theme.colors.text }]}>
+                      {company.phone || "-"}
+                    </Text>
+                  </View>
+                  <View style={styles.profileItem}>
+                    <Text style={[styles.label, { color: theme.colors.textSecondary }]}>
+                      Adres
+                    </Text>
+                    <Text style={[styles.value, { color: theme.colors.text }]}>
+                      {company.address || "-"}
+                    </Text>
+                  </View>
+                  <View style={styles.profileItem}>
+                    <Text style={[styles.label, { color: theme.colors.textSecondary }]}>
+                      Website
+                    </Text>
+                    <Text style={[styles.value, { color: theme.colors.text }]}>
+                      {company.website || "-"}
+                    </Text>
+                  </View>
+                  <View style={styles.profileItem}>
+                    <Text style={[styles.label, { color: theme.colors.textSecondary }]}>
+                      Vergi Numarası
+                    </Text>
+                    <Text style={[styles.value, { color: theme.colors.text }]}>
+                      {company.tax_number || "-"}
+                    </Text>
+                  </View>
+                  <View style={styles.profileItem}>
+                    <Text style={[styles.label, { color: theme.colors.textSecondary }]}>
+                      Vergi Dairesi
+                    </Text>
+                    <Text style={[styles.value, { color: theme.colors.text }]}>
+                      {company.tax_office || "-"}
+                    </Text>
+                  </View>
+                </>
+              ) : (
+                <>
+                  <View style={styles.inputGroup}>
+                    <Text style={[styles.label, { color: theme.colors.text }]}>
+                      Şirket Adı *
+                    </Text>
+                    <TextInput
+                      style={[
+                        styles.input,
+                        {
+                          color: theme.colors.text,
+                          borderColor: theme.colors.gray300,
+                        },
+                      ]}
+                      value={formData.name}
+                      onChangeText={(text) =>
+                        setFormData({ ...formData, name: text })
+                      }
+                      placeholder="Şirket Adı"
+                      placeholderTextColor={theme.colors.gray500}
+                    />
+                  </View>
+
+                  <View style={styles.inputGroup}>
+                    <Text style={[styles.label, { color: theme.colors.text }]}>
+                      Telefon
+                    </Text>
+                    <TextInput
+                      style={[
+                        styles.input,
+                        {
+                          color: theme.colors.text,
+                          borderColor: theme.colors.gray300,
+                        },
+                      ]}
+                      value={formData.phone}
+                      onChangeText={(text) =>
+                        setFormData({ ...formData, phone: text })
+                      }
+                      placeholder="Telefon"
+                      placeholderTextColor={theme.colors.gray500}
+                      keyboardType="phone-pad"
+                    />
+                  </View>
+
+                  <View style={styles.inputGroup}>
+                    <Text style={[styles.label, { color: theme.colors.text }]}>
+                      Adres
+                    </Text>
+                    <TextInput
+                      style={[
+                        styles.input,
+                        {
+                          color: theme.colors.text,
+                          borderColor: theme.colors.gray300,
+                        },
+                      ]}
+                      value={formData.address}
+                      onChangeText={(text) =>
+                        setFormData({ ...formData, address: text })
+                      }
+                      placeholder="Adres"
+                      placeholderTextColor={theme.colors.gray500}
+                      multiline
+                    />
+                  </View>
+
+                  <View style={styles.inputGroup}>
+                    <Text style={[styles.label, { color: theme.colors.text }]}>
+                      Website
+                    </Text>
+                    <TextInput
+                      style={[
+                        styles.input,
+                        {
+                          color: theme.colors.text,
+                          borderColor: theme.colors.gray300,
+                        },
+                      ]}
+                      value={formData.website}
+                      onChangeText={(text) =>
+                        setFormData({ ...formData, website: text })
+                      }
+                      placeholder="https://example.com"
+                      placeholderTextColor={theme.colors.gray500}
+                      keyboardType="url"
+                    />
+                  </View>
+
+                  <Text
+                    style={[
+                      styles.sectionTitle,
+                      { color: theme.colors.text, marginTop: 16 },
+                    ]}
+                  >
+                    Vergi Bilgileri
+                  </Text>
+
+                  <View style={styles.inputGroup}>
+                    <Text style={[styles.label, { color: theme.colors.text }]}>
+                      Vergi Numarası
+                    </Text>
+                    <TextInput
+                      style={[
+                        styles.input,
+                        {
+                          color: theme.colors.text,
+                          borderColor: theme.colors.gray300,
+                        },
+                      ]}
+                      value={formData.tax_number}
+                      onChangeText={(text) =>
+                        setFormData({ ...formData, tax_number: text })
+                      }
+                      placeholder="Vergi Numarası"
+                      placeholderTextColor={theme.colors.gray500}
+                    />
+                  </View>
+
+                  <View style={styles.inputGroup}>
+                    <Text style={[styles.label, { color: theme.colors.text }]}>
+                      Vergi Dairesi
+                    </Text>
+                    <TextInput
+                      style={[
+                        styles.input,
+                        {
+                          color: theme.colors.text,
+                          borderColor: theme.colors.gray300,
+                        },
+                      ]}
+                      value={formData.tax_office}
+                      onChangeText={(text) =>
+                        setFormData({ ...formData, tax_office: text })
+                      }
+                      placeholder="Vergi Dairesi"
+                      placeholderTextColor={theme.colors.gray500}
+                    />
+                  </View>
+
+                  <Text
+                    style={[
+                      styles.sectionTitle,
+                      { color: theme.colors.text, marginTop: 16 },
+                    ]}
+                  >
+                    Sanal Santral API Ayarları
+                  </Text>
+
+                  <View style={styles.inputGroup}>
+                    <Text style={[styles.label, { color: theme.colors.text }]}>
+                      API Endpoint
+                    </Text>
+                    <TextInput
+                      style={[
+                        styles.input,
+                        {
+                          color: theme.colors.text,
+                          borderColor: theme.colors.gray300,
+                        },
+                      ]}
+                      value={formData.api_endpoint}
+                      onChangeText={(text) =>
+                        setFormData({ ...formData, api_endpoint: text })
+                      }
+                      placeholder="https://api.sanal.link"
+                      placeholderTextColor={theme.colors.gray500}
+                      keyboardType="url"
+                    />
+                  </View>
+
+                  <View style={styles.inputGroup}>
+                    <Text style={[styles.label, { color: theme.colors.text }]}>
+                      Santral ID
+                    </Text>
+                    <TextInput
+                      style={[
+                        styles.input,
+                        {
+                          color: theme.colors.text,
+                          borderColor: theme.colors.gray300,
+                        },
+                      ]}
+                      value={formData.santral_id}
+                      onChangeText={(text) =>
+                        setFormData({ ...formData, santral_id: text })
+                      }
+                      placeholder="8390"
+                      placeholderTextColor={theme.colors.gray500}
+                    />
+                  </View>
+
+                  <View style={styles.inputGroup}>
+                    <Text style={[styles.label, { color: theme.colors.text }]}>
+                      API Key
+                    </Text>
+                    <TextInput
+                      style={[
+                        styles.input,
+                        {
+                          color: theme.colors.text,
+                          borderColor: theme.colors.gray300,
+                        },
+                      ]}
+                      value={formData.api_key}
+                      onChangeText={(text) =>
+                        setFormData({ ...formData, api_key: text })
+                      }
+                      placeholder="API Key"
+                      placeholderTextColor={theme.colors.gray500}
+                      secureTextEntry
+                    />
+                  </View>
+
+                  <View style={styles.inputGroup}>
+                    <Text style={[styles.label, { color: theme.colors.text }]}>
+                      API Secret (Opsiyonel)
+                    </Text>
+                    <TextInput
+                      style={[
+                        styles.input,
+                        {
+                          color: theme.colors.text,
+                          borderColor: theme.colors.gray300,
+                        },
+                      ]}
+                      value={formData.api_secret}
+                      onChangeText={(text) =>
+                        setFormData({ ...formData, api_secret: text })
+                      }
+                      placeholder="API Secret"
+                      placeholderTextColor={theme.colors.gray500}
+                      secureTextEntry
+                    />
+                  </View>
+
+                  <TouchableOpacity
+                    style={[
+                      styles.saveButton,
+                      { backgroundColor: theme.colors.primaryDark },
+                    ]}
+                    onPress={handleSaveCompany}
+                    disabled={saving}
+                  >
+                    <Icon name="save" size={20} color="#FFFFFF" />
+                    <Text style={styles.saveButtonText}>
+                      {saving ? "Kaydediliyor..." : "Kaydet"}
+                    </Text>
+                  </TouchableOpacity>
+                </>
+              )}
+            </View>
+          )}
+
+          {/* Profile Info - Employee */}
+          {userType === "employee" && employee && (
+            <View
+              style={[
+                styles.profileCard,
+                {
+                  backgroundColor: theme.colors.surface,
+                  borderColor: theme.colors.gray200,
+                },
+              ]}
+            >
+              <View style={styles.profileItem}>
+                <Text style={[styles.label, { color: theme.colors.textSecondary }]}>
+                  Ad Soyad
+                </Text>
+                <Text style={[styles.value, { color: theme.colors.text }]}>
+                  {employee.first_name} {employee.last_name}
+                </Text>
+              </View>
+              {employee.job_title && (
+                <View style={styles.profileItem}>
+                  <Text style={[styles.label, { color: theme.colors.textSecondary }]}>
+                    Pozisyon
+                  </Text>
+                  <Text style={[styles.value, { color: theme.colors.text }]}>
+                    {employee.job_title}
+                  </Text>
+                </View>
+              )}
+              {employee.department && (
+                <View style={styles.profileItem}>
+                  <Text style={[styles.label, { color: theme.colors.textSecondary }]}>
+                    Departman
+                  </Text>
+                  <Text style={[styles.value, { color: theme.colors.text }]}>
+                    {employee.department}
+                  </Text>
+                </View>
+              )}
+              {employee.phone && (
+                <View style={styles.profileItem}>
+                  <Text style={[styles.label, { color: theme.colors.textSecondary }]}>
+                    Telefon
+                  </Text>
+                  <Text style={[styles.value, { color: theme.colors.text }]}>
+                    {employee.phone}
+                  </Text>
+                </View>
+              )}
+              {employee.email && (
+                <View style={styles.profileItem}>
+                  <Text style={[styles.label, { color: theme.colors.textSecondary }]}>
+                    E-posta
+                  </Text>
+                  <Text style={[styles.value, { color: theme.colors.text }]}>
+                    {employee.email}
+                  </Text>
+                </View>
+              )}
+              {company && (
+                <View style={styles.profileItem}>
+                  <Text style={[styles.label, { color: theme.colors.textSecondary }]}>
+                    Şirket
+                  </Text>
+                  <Text style={[styles.value, { color: theme.colors.text }]}>
+                    {company.name}
+                  </Text>
+                </View>
+              )}
+            </View>
+          )}
+
+          {/* Reports Section */}
+          <View style={styles.section}>
+            <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>
+              Raporlar
+            </Text>
+            {loadingReports ? (
+              <View style={styles.loadingContainer}>
+                <Text style={{ color: theme.colors.text }}>Yükleniyor...</Text>
+              </View>
+            ) : reports.length === 0 ? (
+              <View style={styles.emptyContainer}>
+                <Icon name="assessment" size={64} color={theme.colors.gray400} />
+                <Text style={[styles.emptyText, { color: theme.colors.textSecondary }]}>
+                  Henüz rapor yok
+                </Text>
+              </View>
+            ) : (
+              <View>
+                {reports.map((report) => (
+                  <TouchableOpacity
+                    key={report.id}
+                    style={[
+                      styles.reportCard,
+                      {
+                        backgroundColor: theme.colors.surface,
+                        borderColor: theme.colors.gray200,
+                      },
+                    ]}
+                    onPress={() => handleReportPress(report)}
+                  >
+                    <View style={styles.reportHeader}>
+                      <View style={[styles.reportIcon, { backgroundColor: theme.colors.primary }]}>
+                        <Icon name="bar-chart" size={20} color="#FFFFFF" />
+                      </View>
+                      <View style={styles.reportInfo}>
+                        <Text style={[styles.reportTitle, { color: theme.colors.text }]}>
+                          {report.title}
+                        </Text>
+                        <Text style={[styles.reportType, { color: theme.colors.textSecondary }]}>
+                          {report.titleEn}
+                        </Text>
+                      </View>
+                      <Icon name="chevron-right" size={24} color={theme.colors.gray400} />
+                    </View>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            )}
+          </View>
+
+          {/* Logout Button */}
+          <TouchableOpacity
+            style={[
+              styles.logoutButton,
+              { backgroundColor: theme.colors.error },
+            ]}
+            onPress={async () => {
+              Alert.alert(
+                "Çıkış Yap",
+                "Çıkış yapmak istediğinize emin misiniz?",
+                [
+                  { text: "İptal", style: "cancel" },
+                  {
+                    text: "Çıkış Yap",
+                    style: "destructive",
+                    onPress: async () => {
+                      await signOut();
+                    },
+                  },
+                ]
+              );
+            }}
+          >
+            <Icon name="logout" size={20} color="#FFFFFF" />
+            <Text style={styles.logoutButtonText}>Çıkış Yap</Text>
+          </TouchableOpacity>
+        </View>
+      </ScrollView>
 
       {/* Report Details Modal */}
       <Modal
-        visible={modalVisible}
+        visible={reportModalVisible}
         animationType="slide"
-        onRequestClose={() => setModalVisible(false)}
+        onRequestClose={() => setReportModalVisible(false)}
       >
         <SafeAreaView
           style={[styles.modalContainer, { backgroundColor: theme.colors.background }]}
@@ -627,12 +1181,15 @@ export default function ReportsScreen() {
             <Text style={[styles.modalTitle, { color: theme.colors.text }]}>
               {selectedReport?.title}
             </Text>
-            <TouchableOpacity onPress={() => setModalVisible(false)}>
+            <TouchableOpacity onPress={() => setReportModalVisible(false)}>
               <Icon name="close" size={24} color={theme.colors.text} />
             </TouchableOpacity>
           </View>
-          <ScrollView style={styles.modalContent}>
-            {loading ? (
+          <ScrollView 
+            style={styles.modalContent}
+            contentContainerStyle={styles.modalContentContainer}
+          >
+            {loadingReports ? (
               <View style={styles.loadingContainer}>
                 <Text style={{ color: theme.colors.text }}>Yükleniyor...</Text>
               </View>
@@ -650,18 +1207,95 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  header: {
+  scrollView: {
+    flex: 1,
+  },
+  content: {
     padding: 16,
     paddingTop: 70,
-    paddingBottom: 16,
   },
-  headerTitle: {
+  header: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 24,
+  },
+  title: {
     fontSize: 24,
     fontWeight: "bold",
   },
-  listContent: {
+  editButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 8,
+    gap: 6,
+  },
+  editButtonText: {
+    color: "#FFFFFF",
+    fontWeight: "600",
+    fontSize: 14,
+  },
+  profileCard: {
     padding: 16,
-    paddingTop: 0,
+    borderRadius: 12,
+    borderWidth: 1,
+    marginBottom: 24,
+  },
+  profileItem: {
+    marginBottom: 16,
+  },
+  label: {
+    fontSize: 14,
+    fontWeight: "500",
+    marginBottom: 4,
+  },
+  value: {
+    fontSize: 16,
+  },
+  inputGroup: {
+    marginBottom: 16,
+  },
+  input: {
+    borderWidth: 1,
+    borderRadius: 8,
+    padding: 12,
+    fontSize: 16,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: "600",
+    marginBottom: 12,
+  },
+  saveButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 14,
+    borderRadius: 8,
+    gap: 8,
+    marginTop: 8,
+  },
+  saveButtonText: {
+    color: "#FFFFFF",
+    fontWeight: "600",
+    fontSize: 16,
+  },
+  section: {
+    marginBottom: 24,
+  },
+  loadingContainer: {
+    padding: 32,
+    alignItems: "center",
+  },
+  emptyContainer: {
+    padding: 32,
+    alignItems: "center",
+  },
+  emptyText: {
+    marginTop: 16,
+    fontSize: 14,
   },
   reportCard: {
     padding: 16,
@@ -674,13 +1308,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 12,
   },
-  reportIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 8,
-    alignItems: "center",
-    justifyContent: "center",
-  },
   reportInfo: {
     flex: 1,
   },
@@ -691,6 +1318,14 @@ const styles = StyleSheet.create({
   reportType: {
     fontSize: 12,
     marginTop: 4,
+    textTransform: "capitalize",
+  },
+  reportIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 8,
+    alignItems: "center",
+    justifyContent: "center",
   },
   modalContainer: {
     flex: 1,
@@ -709,7 +1344,10 @@ const styles = StyleSheet.create({
   },
   modalContent: {
     flex: 1,
+  },
+  modalContentContainer: {
     padding: 16,
+    paddingBottom: 40,
   },
   detailsContainer: {
     gap: 20,
@@ -745,15 +1383,6 @@ const styles = StyleSheet.create({
   statValue: {
     fontSize: 20,
     fontWeight: "bold",
-  },
-  loadingContainer: {
-    padding: 32,
-    alignItems: "center",
-  },
-  emptyText: {
-    fontSize: 14,
-    textAlign: "center",
-    padding: 32,
   },
   sectionDescription: {
     fontSize: 13,
@@ -793,5 +1422,29 @@ const styles = StyleSheet.create({
   },
   employeeTableNumber: {
     textAlign: "right",
+  },
+  loadingContainer: {
+    padding: 32,
+    alignItems: "center",
+  },
+  emptyText: {
+    fontSize: 14,
+    textAlign: "center",
+    padding: 32,
+  },
+  logoutButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 16,
+    borderRadius: 12,
+    gap: 8,
+    marginTop: 24,
+    marginBottom: 16,
+  },
+  logoutButtonText: {
+    color: "#FFFFFF",
+    fontSize: 16,
+    fontWeight: "600",
   },
 });

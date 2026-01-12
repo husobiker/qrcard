@@ -116,7 +116,7 @@ export default function Landing() {
       <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center">
-            <img src="/logo.png" alt="QR Card Logo" className="h-14 md:h-16 w-auto object-contain" />
+            <img src="/crew.png" alt="QR Card Logo" className="h-14 md:h-16 w-auto object-contain" />
           </div>
           <nav className="hidden md:flex items-center space-x-6">
             <a href="#features" className="text-sm font-medium text-muted-foreground hover:text-foreground">
@@ -145,16 +145,16 @@ export default function Landing() {
         <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center">
           {/* Left Side - Content */}
           <div className="text-left space-y-6 lg:space-y-8">
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-purple-500/10 border border-purple-500/20 mb-4 animate-pulse">
-              <Sparkles className="h-4 w-4 text-purple-600" />
-              <span className="text-sm font-medium text-purple-600">Pazarlama Ekibi Yönetim Platformu</span>
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 mb-4 animate-pulse">
+              <Sparkles className="h-4 w-4 text-primary" />
+              <span className="text-sm font-medium text-primary">Pazarlama Ekibi Yönetim Platformu</span>
             </div>
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold leading-tight">
-              <span className="bg-gradient-to-r from-purple-600 via-purple-500 to-purple-400 bg-clip-text text-transparent">
+              <span className="bg-gradient-to-r from-[#ff3131] via-[#ff4141] to-[#ff5151] bg-clip-text text-transparent">
                 Pazarlama Ekibinizi
               </span>
               <br />
-              <span className="bg-gradient-to-r from-purple-700 via-purple-600 to-purple-500 bg-clip-text text-transparent">
+              <span className="bg-gradient-to-r from-[#e52828] via-[#ff3131] to-[#ff4141] bg-clip-text text-transparent">
                 Profesyonelce Yönetin
               </span>
             </h1>
@@ -164,24 +164,24 @@ export default function Landing() {
             </p>
             <div className="flex flex-col sm:flex-row gap-4">
               <Link to="/signup">
-                <Button size="lg" className="w-full sm:w-auto group bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-700 hover:to-purple-600 text-white border-0 shadow-lg shadow-purple-500/25 hover:shadow-xl hover:shadow-purple-500/30 hover:scale-105 transition-all duration-200">
+                <Button size="lg" className="w-full sm:w-auto group bg-gradient-to-r from-[#ff3131] to-[#ff4141] hover:from-[#e52828] hover:to-[#ff3131] text-white border-0 shadow-lg shadow-[#ff3131]/25 hover:shadow-xl hover:shadow-[#ff3131]/30 hover:scale-105 transition-all duration-200">
                   Ücretsiz Deneyin
                   <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
                 </Button>
               </Link>
               <Link to="/login">
-                <Button size="lg" variant="outline" className="w-full sm:w-auto border-purple-200 hover:border-purple-300 hover:bg-purple-50 hover:scale-105 transition-all duration-200">
+                <Button size="lg" variant="outline" className="w-full sm:w-auto border-primary/30 hover:border-primary/50 hover:bg-primary/5 hover:scale-105 transition-all duration-200">
                   Giriş Yap
                 </Button>
               </Link>
             </div>
             <div className="flex items-center gap-6 pt-4">
               <div className="flex items-center gap-2">
-                <CheckCircle2 className="h-5 w-5 text-purple-600" />
+                <CheckCircle2 className="h-5 w-5 text-primary" />
                 <span className="text-sm text-muted-foreground">Kredi kartı gerektirmez</span>
               </div>
               <div className="flex items-center gap-2">
-                <CheckCircle2 className="h-5 w-5 text-purple-600" />
+                <CheckCircle2 className="h-5 w-5 text-primary" />
                 <span className="text-sm text-muted-foreground">14 gün ücretsiz deneme</span>
               </div>
             </div>
@@ -780,7 +780,7 @@ export default function Landing() {
           <div className="grid md:grid-cols-4 gap-8">
             <div>
               <div className="flex items-center mb-4">
-                <img src="/logo.png" alt="QR Card Logo" className="h-8 w-auto object-contain" />
+                <img src="/crew.png" alt="QR Card Logo" className="h-8 w-auto object-contain" />
               </div>
               <p className="text-sm text-muted-foreground">
                 Pazarlama personellerinizi tek platformda yönetin.

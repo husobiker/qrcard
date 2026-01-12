@@ -1,15 +1,15 @@
 {
   "expo": {
-    "name": "QR Card",
-    "slug": "qrcard-mobile",
+    "name": "Crew",
+    "slug": "crew",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
+    "icon": "./assets/appicon.png",
     "userInterfaceStyle": "automatic",
     "splash": {
-      "image": "./assets/splash-icon.png",
+      "image": "./assets/crew.png",
       "resizeMode": "contain",
-      "backgroundColor": "#7C3AED"
+      "backgroundColor": "#FFFFFF"
     },
     "assetBundlePatterns": [
       "**/*"
@@ -17,23 +17,44 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.qrcard.mobile",
+      "buildNumber": "1",
+      "displayName": "Crew",
+      "splash": {
+        "image": "./assets/crew.png",
+        "resizeMode": "contain",
+        "backgroundColor": "#FFFFFF"
+      },
       "infoPlist": {
         "NSLocationWhenInUseUsageDescription": "This app uses your location to track vehicles.",
         "NSLocationAlwaysUsageDescription": "This app uses your location to track vehicles.",
-        "NSFaceIDUsageDescription": "Use Face ID to authenticate"
+        "NSFaceIDUsageDescription": "Use Face ID to authenticate",
+        "NSPhotoLibraryUsageDescription": "This app needs access to your photo library to select profile photos.",
+        "NSPhotoLibraryAddUsageDescription": "This app needs access to save photos to your photo library.",
+        "ITSAppUsesNonExemptEncryption": false
       }
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#7C3AED"
+        "foregroundImage": "./assets/appicon.png",
+        "backgroundColor": "#ff3131"
+      },
+      "icon": "./assets/appicon.png",
+      "splash": {
+        "image": "./assets/crew.png",
+        "resizeMode": "contain",
+        "backgroundColor": "#FFFFFF"
       },
       "package": "com.qrcard.mobile",
+      "versionCode": 1,
+      "label": "Crew",
       "permissions": [
-        "ACCESS_FINE_LOCATION",
-        "ACCESS_COARSE_LOCATION",
-        "USE_BIOMETRIC",
-        "USE_FINGERPRINT"
+        "android.permission.ACCESS_FINE_LOCATION",
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.USE_BIOMETRIC",
+        "android.permission.USE_FINGERPRINT",
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE",
+        "android.permission.RECORD_AUDIO"
       ]
     },
     "web": {
@@ -41,11 +62,21 @@
     },
     "plugins": [
       "expo-location",
-      "expo-local-authentication"
+      "expo-local-authentication",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Bu uygulama profil fotoğrafları seçmek için galeri erişimine ihtiyaç duyar."
+        }
+      ],
+      "@react-native-community/datetimepicker"
     ],
     "extra": {
       "supabaseUrl": "https://adbxyrdctxxhcojimljw.supabase.co",
-      "supabaseAnonKey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFkYnh5cmRjdHh4aGNvamltbGp3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM0ODc3MzAsImV4cCI6MjA3OTA2MzczMH0.labagow8k-biixI6hrsCABL43XfoaP6AY6qti8lFFJw"
+      "supabaseAnonKey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFkYnh5cmRjdHh4aGNvamltbGp3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM0ODc3MzAsImV4cCI6MjA3OTA2MzczMH0.labagow8k-biixI6hrsCABL43XfoaP6AY6qti8lFFJw",
+      "eas": {
+        "projectId": "90e821c4-317d-4b3e-a99a-d722dfb6044f"
+      }
     }
   }
 }

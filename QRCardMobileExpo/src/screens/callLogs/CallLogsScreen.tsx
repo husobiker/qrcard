@@ -1,10 +1,11 @@
 import React, {useState, useEffect} from 'react';
-import {View, Text, StyleSheet, FlatList, RefreshControl} from 'react-native';
+import {View, Text, StyleSheet, FlatList, RefreshControl, StatusBar} from 'react-native';
+import {SafeAreaView} from 'react-native-safe-area-context';
 import {useAuth} from '../../contexts/AuthContext';
 import {useTheme} from '../../contexts/ThemeContext';
 import {supabase} from '../../services/supabase';
 import type {CallLog} from '../../types';
-import Icon from 'react-native-vector-icons/MaterialIcons';
+import {MaterialIcons as Icon} from '@expo/vector-icons';
 
 export default function CallLogsScreen() {
   const {user, userType} = useAuth();
@@ -103,7 +104,8 @@ export default function CallLogsScreen() {
   );
 
   return (
-    <View style={[styles.container, {backgroundColor: theme.colors.background}]}>
+    <SafeAreaView style={[styles.container, {backgroundColor: theme.colors.background}]}>
+      <StatusBar barStyle={theme.isDark ? 'light-content' : 'dark-content'} />
       <FlatList
         data={callLogs}
         renderItem={renderCallLog}
@@ -113,7 +115,7 @@ export default function CallLogsScreen() {
         }
         contentContainerStyle={styles.listContent}
       />
-    </View>
+    </SafeAreaView>
   );
 }
 

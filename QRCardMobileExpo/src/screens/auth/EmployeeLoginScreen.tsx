@@ -14,61 +14,28 @@ import {
 import { useAuth } from "../../contexts/AuthContext";
 import { useTheme } from "../../contexts/ThemeContext";
 import { useLanguage } from "../../contexts/LanguageContext";
-import {
-  authenticateWithBiometrics,
-  isBiometricAvailable,
-} from "../../services/biometricAuth";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { MaterialIcons as Icon } from "@expo/vector-icons";
 
-export default function LoginScreen({ navigation }: any) {
-  const [email, setEmail] = useState("");
+export default function EmployeeLoginScreen({ navigation }: any) {
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const [biometricAvailable, setBiometricAvailable] = useState(false);
-  const { signIn } = useAuth();
+  const { signInEmployee } = useAuth();
   const { theme } = useTheme();
   const { t } = useLanguage();
 
-  React.useEffect(() => {
-    checkBiometricAvailability();
-  }, []);
-
-  const checkBiometricAvailability = async () => {
-    const available = await isBiometricAvailable();
-    setBiometricAvailable(available);
-  };
-
   const handleLogin = async () => {
-    if (!email || !password) {
-      Alert.alert("Error", "Please enter email and password");
+    if (!username || !password) {
+      Alert.alert("Hata", "Lütfen kullanıcı adı ve şifre girin");
       return;
     }
 
     setLoading(true);
-    const result = await signIn(email, password);
+    const result = await signInEmployee(username, password);
     setLoading(false);
 
     if (!result.success) {
-      Alert.alert("Login Failed", result.error || "Invalid credentials");
-    }
-  };
-
-  const handleBiometricLogin = async () => {
-    const result = await authenticateWithBiometrics("Authenticate to login");
-    if (result.success) {
-      const savedEmail = await AsyncStorage.getItem("savedEmail");
-      const savedPassword = await AsyncStorage.getItem("savedPassword");
-      if (savedEmail && savedPassword) {
-        setEmail(savedEmail);
-        setPassword(savedPassword);
-        await handleLogin();
-      } else {
-        Alert.alert(
-          "No Saved Credentials",
-          "Please login with email and password first"
-        );
-      }
+      Alert.alert("Giriş Başarısız", result.error || "Geçersiz kullanıcı adı veya şifre");
     }
   };
 
@@ -79,6 +46,13 @@ export default function LoginScreen({ navigation }: any) {
     >
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.content}>
+          <TouchableOpacity
+            style={styles.backButton}
+            onPress={() => navigation.navigate("Login")}
+          >
+            <Icon name="arrow-back" size={24} color={theme.colors.text} />
+          </TouchableOpacity>
+
           <View style={styles.logoContainer}>
             <Image
               source={require("../../../assets/crew.png")}
@@ -87,12 +61,12 @@ export default function LoginScreen({ navigation }: any) {
             />
           </View>
           <Text style={[styles.title, { color: theme.colors.text }]}>
-            {t("auth.login.title")}
+            Personel Girişi
           </Text>
 
           <View style={styles.inputContainer}>
             <Icon
-              name="email"
+              name="person"
               size={20}
               color={theme.colors.gray500}
               style={styles.inputIcon}
@@ -102,11 +76,10 @@ export default function LoginScreen({ navigation }: any) {
                 styles.input,
                 { color: theme.colors.text, borderColor: theme.colors.gray300 },
               ]}
-              placeholder={t("auth.login.email")}
+              placeholder="Kullanıcı Adı"
               placeholderTextColor={theme.colors.gray500}
-              value={email}
-              onChangeText={setEmail}
-              keyboardType="email-address"
+              value={username}
+              onChangeText={setUsername}
               autoCapitalize="none"
             />
           </View>
@@ -123,7 +96,7 @@ export default function LoginScreen({ navigation }: any) {
                 styles.input,
                 { color: theme.colors.text, borderColor: theme.colors.gray300 },
               ]}
-              placeholder={t("auth.login.password")}
+              placeholder="Şifre"
               placeholderTextColor={theme.colors.gray500}
               value={password}
               onChangeText={setPassword}
@@ -140,60 +113,16 @@ export default function LoginScreen({ navigation }: any) {
             disabled={loading}
           >
             <Text style={styles.buttonText}>
-              {loading ? "Loading..." : t("auth.login.submit")}
-            </Text>
-          </TouchableOpacity>
-
-          {biometricAvailable && (
-            <TouchableOpacity
-              style={[
-                styles.biometricButton,
-                { borderColor: theme.colors.primary },
-              ]}
-              onPress={handleBiometricLogin}
-            >
-              <Icon name="fingerprint" size={24} color={theme.colors.primary} />
-              <Text
-                style={[styles.biometricText, { color: theme.colors.primary }]}
-              >
-                Use Biometric
-              </Text>
-            </TouchableOpacity>
-          )}
-
-          <TouchableOpacity
-            style={styles.linkButton}
-            onPress={() => navigation.navigate("ForgotPassword")}
-          >
-            <Text style={[styles.linkText, { color: theme.colors.primary }]}>
-              {t("auth.login.forgotPassword")}
+              {loading ? "Giriş yapılıyor..." : "Giriş Yap"}
             </Text>
           </TouchableOpacity>
 
           <TouchableOpacity
             style={styles.linkButton}
-            onPress={() => navigation.navigate("Signup")}
+            onPress={() => navigation.navigate("Login")}
           >
             <Text style={[styles.linkText, { color: theme.colors.primary }]}>
-              Don't have an account? Sign up
-            </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[
-              styles.employeeButton,
-              { borderColor: theme.colors.primary },
-            ]}
-            onPress={() => navigation.navigate("EmployeeLogin")}
-          >
-            <Icon name="person" size={20} color={theme.colors.primary} />
-            <Text
-              style={[
-                styles.employeeButtonText,
-                { color: theme.colors.primary },
-              ]}
-            >
-              Personel Girişi
+              Şirket girişine dön
             </Text>
           </TouchableOpacity>
 
@@ -227,6 +156,12 @@ const styles = StyleSheet.create({
   },
   content: {
     padding: 24,
+  },
+  backButton: {
+    position: "absolute",
+    top: 50,
+    left: 24,
+    zIndex: 1,
   },
   logoContainer: {
     alignItems: "center",
@@ -274,40 +209,12 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "600",
   },
-  biometricButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    height: 50,
-    borderRadius: 8,
-    borderWidth: 1,
-    marginTop: 16,
-    gap: 8,
-  },
-  biometricText: {
-    fontSize: 16,
-    fontWeight: "600",
-  },
   linkButton: {
     marginTop: 16,
     alignItems: "center",
   },
   linkText: {
     fontSize: 14,
-  },
-  employeeButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    height: 50,
-    borderRadius: 8,
-    borderWidth: 1,
-    marginTop: 16,
-    gap: 8,
-  },
-  employeeButtonText: {
-    fontSize: 16,
-    fontWeight: "600",
   },
   footerContainer: {
     flexDirection: "row",
