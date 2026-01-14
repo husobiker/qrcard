@@ -27,6 +27,8 @@ import {
   uploadEmployeePhoto,
   type EmployeeFormData,
 } from "../../services/employeeService";
+import { getRegionsByCompany, createRegion } from "../../services/regionService";
+import { FIXED_ROLES, type Region } from "../../types";
 import {
   getEmployeeSipSettings,
   createEmployeeSipSettings,
@@ -46,7 +48,7 @@ import { MaterialIcons as Icon } from "@expo/vector-icons";
 
 export default function EmployeesScreen() {
   const { user, userType } = useAuth();
-  const { theme } = useTheme();
+  const { theme, isDark } = useTheme();
   const { t } = useLanguage();
   const [companyId, setCompanyId] = useState<string | null>(null);
   const [employees, setEmployees] = useState<Employee[]>([]);
@@ -96,6 +98,15 @@ export default function EmployeesScreen() {
     sip_port: 5060,
     webrtc_enabled: false,
   });
+  const [regions, setRegions] = useState<Region[]>([]);
+  const [selectedRole, setSelectedRole] = useState<string | null>(null);
+  const [selectedRegionId, setSelectedRegionId] = useState<string | null>(null);
+  const [roleModalVisible, setRoleModalVisible] = useState(false);
+  const [regionModalVisible, setRegionModalVisible] = useState(false);
+  const [addRegionModalVisible, setAddRegionModalVisible] = useState(false);
+  const [newRegionName, setNewRegionName] = useState("");
+  const [newRegionDescription, setNewRegionDescription] = useState("");
+  const [creatingRegion, setCreatingRegion] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -108,14 +119,23 @@ export default function EmployeesScreen() {
 
     setLoading(true);
     try {
+      console.log('EmployeesScreen: Loading data for user:', user.id);
       const company = await getCompanyByUserId(user.id);
+      console.log('EmployeesScreen: Company found:', company?.id);
       if (company) {
         setCompanyId(company.id);
         const employeesData = await getEmployeesByCompany(company.id);
+        console.log('EmployeesScreen: Employees data:', employeesData?.length || 0, 'employees');
         setEmployees(employeesData);
+        // Load regions
+        const regionsData = await getRegionsByCompany(company.id);
+        setRegions(regionsData);
+      } else {
+        console.log('EmployeesScreen: No company found for user');
       }
     } catch (error) {
       console.error("Error loading data:", error);
+      console.error("Error details:", JSON.stringify(error, null, 2));
     } finally {
       setLoading(false);
     }
@@ -143,6 +163,8 @@ export default function EmployeesScreen() {
     setPhotoUri(null);
     setPhotoPreview(null);
     setPhotoUrl("");
+    setSelectedRole(null);
+    setSelectedRegionId(null);
     setSipSettings({
       sip_username: "",
       sip_password: "",
@@ -157,6 +179,45 @@ export default function EmployeesScreen() {
     setEditingEmployee(null);
     resetForm();
     setModalVisible(true);
+  };
+
+  const handleAddRegion = async () => {
+    if (!companyId || !newRegionName.trim()) {
+      Alert.alert("Hata", "Lütfen bölge adını girin");
+      return;
+    }
+
+    setCreatingRegion(true);
+    try {
+      const newRegion = await createRegion(companyId, {
+        name: newRegionName.trim(),
+        description: newRegionDescription.trim() || undefined,
+      });
+
+      if (newRegion) {
+        // Refresh regions list
+        const regionsData = await getRegionsByCompany(companyId);
+        setRegions(regionsData);
+        
+        // Select the newly created region
+        setSelectedRegionId(newRegion.id);
+        
+        // Close modals and reset form
+        setAddRegionModalVisible(false);
+        setRegionModalVisible(false);
+        setNewRegionName("");
+        setNewRegionDescription("");
+        
+        Alert.alert("Başarılı", "Bölge başarıyla eklendi");
+      } else {
+        Alert.alert("Hata", "Bölge eklenemedi");
+      }
+    } catch (error) {
+      console.error("Error adding region:", error);
+      Alert.alert("Hata", "Bölge eklenirken bir hata oluştu");
+    } finally {
+      setCreatingRegion(false);
+    }
   };
 
   const handleEditEmployee = async (employee: Employee) => {
@@ -183,6 +244,10 @@ export default function EmployeesScreen() {
         ? employee.profile_image_url
         : ""
     );
+
+    // Set role and region
+    setSelectedRole(employee.role || null);
+    setSelectedRegionId(employee.region_id || null);
 
     // Load SIP settings
     const sip = await getEmployeeSipSettings(employee.id);
@@ -244,19 +309,19 @@ export default function EmployeesScreen() {
 
   const handleDeleteEmployee = async (employee: Employee) => {
     Alert.alert(
-      "Delete Employee",
-      `Are you sure you want to delete ${employee.first_name} ${employee.last_name}?`,
+      "Personel Sil",
+      `${employee?.first_name || ""} ${employee?.last_name || ""} adlı personeli silmek istediğinize emin misiniz?`,
       [
-        { text: "Cancel", style: "cancel" },
+        { text: "İptal", style: "cancel" },
         {
-          text: "Delete",
+          text: "Sil",
           style: "destructive",
           onPress: async () => {
             const success = await deleteEmployee(employee.id);
             if (success) {
               await loadData();
             } else {
-              Alert.alert("Error", "Failed to delete employee");
+              Alert.alert("Hata", "Personel silinemedi");
             }
           },
         },
@@ -305,6 +370,8 @@ export default function EmployeesScreen() {
         const updated = await updateEmployee(editingEmployee.id, {
           ...formData,
           profile_image_url: profileImageUrl,
+          role: selectedRole,
+          region_id: selectedRegionId,
         });
         if (updated) {
           // Save/update SIP settings
@@ -335,6 +402,7 @@ export default function EmployeesScreen() {
               });
             }
           }
+          // Role and region are already included in updateEmployee call above
           await loadData();
           setModalVisible(false);
           resetForm();
@@ -344,7 +412,11 @@ export default function EmployeesScreen() {
           Alert.alert("Hata", "Personel güncellenemedi");
         }
       } else {
-        const newEmployee = await createEmployee(companyId, formData);
+        const newEmployee = await createEmployee(companyId, {
+          ...formData,
+          role: selectedRole,
+          region_id: selectedRegionId,
+        });
         if (newEmployee) {
           if (photoUri) {
             // Upload photo for new employee (local file)
@@ -384,6 +456,7 @@ export default function EmployeesScreen() {
               webrtc_enabled: sipSettings.webrtc_enabled,
             });
           }
+          // Role and region are already included in createEmployee call above
           await loadData();
           setModalVisible(false);
           resetForm();
@@ -405,6 +478,9 @@ export default function EmployeesScreen() {
   };
 
   const renderEmployee = ({ item }: { item: Employee }) => {
+    if (!item || !item.first_name || !item.last_name) {
+      return null;
+    }
     const initials = `${item.first_name[0]}${item.last_name[0]}`.toUpperCase();
 
     return (
@@ -421,10 +497,14 @@ export default function EmployeesScreen() {
         <View style={styles.employeeHeader}>
           {item.profile_image_url ? (
             <Image
+              key={`employee-avatar-${item.id}-${item.profile_image_url}`}
               source={{ uri: item.profile_image_url }}
               style={styles.avatarImage}
-              onError={() => {
-                // Image failed to load, will show fallback
+              onError={(e) => {
+                console.error('Error loading employee photo:', item.profile_image_url, e.nativeEvent.error);
+              }}
+              onLoad={() => {
+                console.log('Employee photo loaded successfully:', item.profile_image_url);
               }}
             />
           ) : (
@@ -456,13 +536,13 @@ export default function EmployeesScreen() {
   return (
     <SafeAreaView
       style={[styles.container, { backgroundColor: theme.colors.background }]}
-      edges={["bottom", "left", "right"]}
+      edges={["top", "bottom", "left", "right"]}
     >
-      <StatusBar barStyle={theme.isDark ? "light-content" : "dark-content"} />
+      <StatusBar barStyle={isDark ? "light-content" : "dark-content"} />
       <View
         style={[styles.header, { borderBottomColor: theme.colors.gray200 }]}
       >
-        <View>
+        <View style={styles.headerTextContainer}>
           <Text style={[styles.title, { color: theme.colors.text }]}>
             Personeller
           </Text>
@@ -654,7 +734,7 @@ export default function EmployeesScreen() {
           edges={["bottom", "left", "right"]}
         >
           <StatusBar
-            barStyle={theme.isDark ? "light-content" : "dark-content"}
+            barStyle={isDark ? "light-content" : "dark-content"}
           />
           <View
             style={[
@@ -679,8 +759,15 @@ export default function EmployeesScreen() {
               <View style={styles.photoContainer}>
                 {photoPreview ? (
                   <Image
+                    key={`photo-preview-${photoPreview}`}
                     source={{ uri: photoPreview }}
                     style={styles.photoPreview}
+                    onError={(e) => {
+                      console.error('Error loading photo preview:', photoPreview, e.nativeEvent.error);
+                    }}
+                    onLoad={() => {
+                      console.log('Photo preview loaded successfully:', photoPreview);
+                    }}
                   />
                 ) : (
                   <View
@@ -724,34 +811,6 @@ export default function EmployeesScreen() {
                     <Text style={styles.removePhotoButtonText}>Kaldır</Text>
                   </TouchableOpacity>
                 )}
-              </View>
-              <View style={styles.formGroup}>
-                <Text style={[styles.label, { color: theme.colors.text }]}>
-                  Veya Fotoğraf URL'si
-                </Text>
-                <TextInput
-                  style={[
-                    styles.input,
-                    {
-                      color: theme.colors.text,
-                      borderColor: theme.colors.gray300,
-                    },
-                  ]}
-                  value={photoUrl}
-                  onChangeText={(text) => {
-                    setPhotoUrl(text);
-                    if (text.trim()) {
-                      setPhotoPreview(text.trim());
-                      setPhotoUri(null);
-                    }
-                  }}
-                  placeholder="https://example.com/photo.jpg"
-                  placeholderTextColor={theme.colors.gray500}
-                  keyboardType="url"
-                />
-                <Text style={[styles.hint, { color: theme.colors.gray500 }]}>
-                  Development build yoksa URL ile fotoğraf ekleyebilirsiniz
-                </Text>
               </View>
             </View>
 
@@ -864,6 +923,7 @@ export default function EmployeesScreen() {
                   placeholder="Telefon"
                   placeholderTextColor={theme.colors.gray500}
                   keyboardType="phone-pad"
+                  maxLength={11}
                 />
               </View>
               <View style={[styles.formGroup, styles.formGroupHalf]}>
@@ -885,6 +945,8 @@ export default function EmployeesScreen() {
                   placeholder="E-posta"
                   placeholderTextColor={theme.colors.gray500}
                   keyboardType="email-address"
+                  autoCapitalize="none"
+                  autoCorrect={false}
                 />
               </View>
             </View>
@@ -948,6 +1010,89 @@ export default function EmployeesScreen() {
                 </Text>
               )}
             </View>
+
+            {/* Rol Seçimi */}
+            <View style={styles.formGroup}>
+              <Text style={[styles.label, { color: theme.colors.text }]}>
+                Rol
+              </Text>
+              <TouchableOpacity
+                style={[
+                  styles.selectContainer,
+                  {
+                    backgroundColor: theme.colors.surface,
+                    borderColor: theme.colors.gray300,
+                  },
+                ]}
+                onPress={() => setRoleModalVisible(true)}
+              >
+                <Text
+                  style={[
+                    styles.selectText,
+                    {
+                      color: selectedRole
+                        ? theme.colors.text
+                        : theme.colors.gray500,
+                    },
+                  ]}
+                >
+                  {selectedRole || "Rol seçin (opsiyonel)"}
+                </Text>
+                <Icon
+                  name="arrow-drop-down"
+                  size={24}
+                  color={theme.colors.gray500}
+                />
+              </TouchableOpacity>
+            </View>
+
+            {/* Bölge Seçimi - Bölge Sorumlusu ve Pazarlama Personeli için */}
+            {(selectedRole === FIXED_ROLES.REGIONAL_MANAGER ||
+              selectedRole === FIXED_ROLES.MARKETING_STAFF) && (
+              <View style={styles.formGroup}>
+                <Text style={[styles.label, { color: theme.colors.text }]}>
+                  Bölge
+                </Text>
+                <TouchableOpacity
+                  style={[
+                    styles.selectContainer,
+                    {
+                      backgroundColor: theme.colors.surface,
+                      borderColor: theme.colors.gray300,
+                    },
+                  ]}
+                  onPress={() => setRegionModalVisible(true)}
+                >
+                  <Text
+                    style={[
+                      styles.selectText,
+                      {
+                        color: selectedRegionId
+                          ? theme.colors.text
+                          : theme.colors.gray500,
+                      },
+                    ]}
+                  >
+                    {selectedRegionId
+                      ? regions.find((r) => r.id === selectedRegionId)?.name ||
+                        "Bölge seçin"
+                      : "Bölge seçin (opsiyonel)"}
+                  </Text>
+                  <Icon
+                    name="arrow-drop-down"
+                    size={24}
+                    color={theme.colors.gray500}
+                  />
+                </TouchableOpacity>
+                {selectedRole === FIXED_ROLES.MARKETING_STAFF && (
+                  <Text
+                    style={[styles.hint, { color: theme.colors.textSecondary }]}
+                  >
+                    Bölge atanması, Bölge Sorumlusu'nun sizi görebilmesi için gereklidir.
+                  </Text>
+                )}
+              </View>
+            )}
 
             {/* Sosyal Medya Linkleri */}
             <View style={[styles.formGroup, styles.sectionDivider]}>
@@ -1113,13 +1258,23 @@ export default function EmployeesScreen() {
                         borderColor: theme.colors.gray300,
                       },
                     ]}
-                    value={String(formData.default_duration_minutes || 30)}
-                    onChangeText={(text) =>
-                      setFormData({
-                        ...formData,
-                        default_duration_minutes: parseInt(text) || 30,
-                      })
-                    }
+                    value={formData.default_duration_minutes ? String(formData.default_duration_minutes) : ''}
+                    onChangeText={(text) => {
+                      if (text === '') {
+                        setFormData({
+                          ...formData,
+                          default_duration_minutes: undefined,
+                        });
+                      } else {
+                        const num = parseInt(text);
+                        if (!isNaN(num) && num > 0) {
+                          setFormData({
+                            ...formData,
+                            default_duration_minutes: num,
+                          });
+                        }
+                      }
+                    }}
                     keyboardType="numeric"
                     placeholder="30"
                     placeholderTextColor={theme.colors.gray500}
@@ -1425,6 +1580,414 @@ export default function EmployeesScreen() {
             </View>
           </ScrollView>
 
+          {/* Role Selection Modal - Inside Employee Form Modal, outside ScrollView */}
+          {roleModalVisible && (
+            <View style={styles.roleModalWrapper}>
+              <View style={styles.roleModalBackdrop} />
+              <View
+                style={[
+                  styles.roleModalContainer,
+                  { backgroundColor: theme.colors.surface },
+                ]}
+              >
+                <View
+                  style={[
+                    styles.roleModalHeader,
+                    { borderBottomColor: theme.colors.gray200 },
+                  ]}
+                >
+                  <Text
+                    style={[styles.roleModalTitle, { color: theme.colors.text }]}
+                  >
+                    Rol Seç
+                  </Text>
+                  <TouchableOpacity
+                    onPress={() => setRoleModalVisible(false)}
+                  >
+                    <Icon name="close" size={24} color={theme.colors.text} />
+                  </TouchableOpacity>
+                </View>
+
+                <ScrollView style={styles.roleModalScrollView}>
+                  <TouchableOpacity
+                    style={[
+                      styles.roleOption,
+                      {
+                        backgroundColor:
+                          selectedRole === null
+                            ? theme.colors.primary + "15"
+                            : theme.colors.surface,
+                        borderColor:
+                          selectedRole === null
+                            ? theme.colors.primary
+                            : theme.colors.gray200,
+                      },
+                    ]}
+                    onPress={() => {
+                      setSelectedRole(null);
+                      setSelectedRegionId(null); // Clear region when role is cleared
+                      setRoleModalVisible(false);
+                    }}
+                  >
+                    <Text
+                      style={[
+                        styles.roleOptionText,
+                        {
+                          color:
+                            selectedRole === null
+                              ? theme.colors.primary
+                              : theme.colors.text,
+                        },
+                      ]}
+                    >
+                      Rol Yok
+                    </Text>
+                    {selectedRole === null && (
+                      <Icon
+                        name="check"
+                        size={20}
+                        color={theme.colors.primary}
+                      />
+                    )}
+                  </TouchableOpacity>
+                  {Object.values(FIXED_ROLES).filter(role => role !== FIXED_ROLES.COMPANY && role !== FIXED_ROLES.CUSTOMER).map((roleName) => (
+                    <TouchableOpacity
+                      key={roleName}
+                      style={[
+                        styles.roleOption,
+                        {
+                          backgroundColor:
+                            selectedRole === roleName
+                              ? theme.colors.primary + "15"
+                              : theme.colors.surface,
+                          borderColor:
+                            selectedRole === roleName
+                              ? theme.colors.primary
+                              : theme.colors.gray200,
+                        },
+                      ]}
+                      onPress={() => {
+                        setSelectedRole(roleName);
+                        // Clear region if not Regional Manager
+                        if (roleName !== FIXED_ROLES.REGIONAL_MANAGER) {
+                          setSelectedRegionId(null);
+                        }
+                        setRoleModalVisible(false);
+                      }}
+                    >
+                      <Text
+                        style={[
+                          styles.roleOptionText,
+                          {
+                            color:
+                              selectedRole === roleName
+                                ? theme.colors.primary
+                                : theme.colors.text,
+                          },
+                        ]}
+                      >
+                        {roleName}
+                      </Text>
+                      {selectedRole === roleName && (
+                        <Icon
+                          name="check"
+                          size={20}
+                          color={theme.colors.primary}
+                        />
+                      )}
+                    </TouchableOpacity>
+                  ))}
+                </ScrollView>
+              </View>
+            </View>
+          )}
+
+          {/* Region Selection Modal - Inside Employee Form Modal, outside ScrollView */}
+          {regionModalVisible && (
+            <View style={styles.roleModalWrapper}>
+              <View style={styles.roleModalBackdrop} />
+              <View
+                style={[
+                  styles.roleModalContainer,
+                  { backgroundColor: theme.colors.surface },
+                ]}
+              >
+                <View
+                  style={[
+                    styles.roleModalHeader,
+                    { borderBottomColor: theme.colors.gray200 },
+                  ]}
+                >
+                  <Text
+                    style={[styles.roleModalTitle, { color: theme.colors.text }]}
+                  >
+                    Bölge Seç
+                  </Text>
+                  <View style={styles.roleModalHeaderActions}>
+                    <TouchableOpacity
+                      style={[
+                        styles.addRegionButton,
+                        { backgroundColor: theme.colors.primary },
+                      ]}
+                      onPress={() => setAddRegionModalVisible(true)}
+                    >
+                      <Icon name="add" size={20} color="#FFFFFF" />
+                      <Text style={styles.addRegionButtonText}>Yeni Bölge</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      onPress={() => setRegionModalVisible(false)}
+                    >
+                      <Icon name="close" size={24} color={theme.colors.text} />
+                    </TouchableOpacity>
+                  </View>
+                </View>
+
+                <ScrollView style={styles.roleModalScrollView}>
+                  <TouchableOpacity
+                    style={[
+                      styles.roleOption,
+                      {
+                        backgroundColor:
+                          selectedRegionId === null
+                            ? theme.colors.primary + "15"
+                            : theme.colors.surface,
+                        borderColor:
+                          selectedRegionId === null
+                            ? theme.colors.primary
+                            : theme.colors.gray200,
+                      },
+                    ]}
+                    onPress={() => {
+                      setSelectedRegionId(null);
+                      setRegionModalVisible(false);
+                    }}
+                  >
+                    <Text
+                      style={[
+                        styles.roleOptionText,
+                        {
+                          color:
+                            selectedRegionId === null
+                              ? theme.colors.primary
+                              : theme.colors.text,
+                        },
+                      ]}
+                    >
+                      Bölge Seçilmedi
+                    </Text>
+                    {selectedRegionId === null && (
+                      <Icon
+                        name="check"
+                        size={20}
+                        color={theme.colors.primary}
+                      />
+                    )}
+                  </TouchableOpacity>
+                  {regions.map((region) => (
+                    <TouchableOpacity
+                      key={region.id}
+                      style={[
+                        styles.roleOption,
+                        {
+                          backgroundColor:
+                            selectedRegionId === region.id
+                              ? theme.colors.primary + "15"
+                              : theme.colors.surface,
+                          borderColor:
+                            selectedRegionId === region.id
+                              ? theme.colors.primary
+                              : theme.colors.gray200,
+                        },
+                      ]}
+                      onPress={() => {
+                        setSelectedRegionId(region.id);
+                        setRegionModalVisible(false);
+                      }}
+                    >
+                      <View style={styles.roleOptionContent}>
+                        <Text
+                          style={[
+                            styles.roleOptionText,
+                            {
+                              color:
+                                selectedRegionId === region.id
+                                  ? theme.colors.primary
+                                  : theme.colors.text,
+                            },
+                          ]}
+                        >
+                          {region.name}
+                        </Text>
+                        {region.description && (
+                          <Text
+                            style={[
+                              styles.roleOptionDescription,
+                              { color: theme.colors.textSecondary },
+                            ]}
+                          >
+                            {region.description}
+                          </Text>
+                        )}
+                      </View>
+                      {selectedRegionId === region.id && (
+                        <Icon
+                          name="check"
+                          size={20}
+                          color={theme.colors.primary}
+                        />
+                      )}
+                    </TouchableOpacity>
+                  ))}
+                  {regions.length === 0 && (
+                    <View style={styles.emptyRegionsContainer}>
+                      <Icon
+                        name="location-off"
+                        size={48}
+                        color={theme.colors.gray400}
+                      />
+                      <Text
+                        style={[
+                          styles.emptyRegionsText,
+                          { color: theme.colors.textSecondary },
+                        ]}
+                      >
+                        Henüz bölge eklenmemiş.
+                      </Text>
+                      <Text
+                        style={[
+                          styles.emptyRegionsSubtext,
+                          { color: theme.colors.textSecondary },
+                        ]}
+                      >
+                        Yeni bölge eklemek için yukarıdaki "Yeni Bölge" butonuna tıklayın.
+                      </Text>
+                    </View>
+                  )}
+                </ScrollView>
+              </View>
+            </View>
+          )}
+
+          {/* Add Region Modal */}
+          {addRegionModalVisible && (
+            <View style={styles.roleModalWrapper}>
+              <View style={styles.roleModalBackdrop} />
+              <View
+                style={[
+                  styles.roleModalContainer,
+                  { backgroundColor: theme.colors.surface },
+                ]}
+              >
+                <View
+                  style={[
+                    styles.roleModalHeader,
+                    { borderBottomColor: theme.colors.gray200 },
+                  ]}
+                >
+                  <Text
+                    style={[styles.roleModalTitle, { color: theme.colors.text }]}
+                  >
+                    Yeni Bölge Ekle
+                  </Text>
+                  <TouchableOpacity
+                    onPress={() => {
+                      setAddRegionModalVisible(false);
+                      setNewRegionName("");
+                      setNewRegionDescription("");
+                    }}
+                  >
+                    <Icon name="close" size={24} color={theme.colors.text} />
+                  </TouchableOpacity>
+                </View>
+
+                <ScrollView style={styles.roleModalScrollView}>
+                  <View style={styles.formGroup}>
+                    <Text style={[styles.label, { color: theme.colors.text }]}>
+                      Bölge Adı *
+                    </Text>
+                    <TextInput
+                      style={[
+                        styles.input,
+                        {
+                          color: theme.colors.text,
+                          borderColor: theme.colors.gray300,
+                        },
+                      ]}
+                      value={newRegionName}
+                      onChangeText={setNewRegionName}
+                      placeholder="Örn: İstanbul, Ankara"
+                      placeholderTextColor={theme.colors.gray500}
+                    />
+                  </View>
+
+                  <View style={styles.formGroup}>
+                    <Text style={[styles.label, { color: theme.colors.text }]}>
+                      Açıklama (Opsiyonel)
+                    </Text>
+                    <TextInput
+                      style={[
+                        styles.textArea,
+                        {
+                          color: theme.colors.text,
+                          borderColor: theme.colors.gray300,
+                        },
+                      ]}
+                      value={newRegionDescription}
+                      onChangeText={setNewRegionDescription}
+                      placeholder="Bölge hakkında kısa bilgi"
+                      placeholderTextColor={theme.colors.gray500}
+                      multiline
+                      numberOfLines={3}
+                      textAlignVertical="top"
+                    />
+                  </View>
+                </ScrollView>
+
+                <View
+                  style={[
+                    styles.modalFooter,
+                    { borderTopColor: theme.colors.gray200 },
+                  ]}
+                >
+                  <TouchableOpacity
+                    style={[
+                      styles.modalButton,
+                      { backgroundColor: theme.colors.gray200 },
+                    ]}
+                    onPress={() => {
+                      setAddRegionModalVisible(false);
+                      setNewRegionName("");
+                      setNewRegionDescription("");
+                    }}
+                    disabled={creatingRegion}
+                  >
+                    <Text
+                      style={[styles.modalButtonText, { color: theme.colors.text }]}
+                    >
+                      İptal
+                    </Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[
+                      styles.modalButton,
+                      {
+                        backgroundColor: creatingRegion
+                          ? theme.colors.gray400
+                          : theme.colors.primaryDark,
+                      },
+                    ]}
+                    onPress={handleAddRegion}
+                    disabled={creatingRegion}
+                  >
+                    <Text style={styles.modalButtonTextWhite}>
+                      {creatingRegion ? "Ekleniyor..." : "Ekle"}
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </View>
+          )}
+
           <View
             style={[
               styles.modalFooter,
@@ -1471,7 +2034,7 @@ export default function EmployeesScreen() {
           edges={["bottom", "left", "right"]}
         >
           <StatusBar
-            barStyle={theme.isDark ? "light-content" : "dark-content"}
+            barStyle={isDark ? "light-content" : "dark-content"}
           />
           <View
             style={[
@@ -1512,7 +2075,7 @@ export default function EmployeesScreen() {
           edges={["bottom", "left", "right"]}
         >
           <StatusBar
-            barStyle={theme.isDark ? "light-content" : "dark-content"}
+            barStyle={isDark ? "light-content" : "dark-content"}
           />
           <View
             style={[
@@ -1834,6 +2397,7 @@ export default function EmployeesScreen() {
           </ScrollView>
         </SafeAreaView>
       </Modal>
+
     </SafeAreaView>
   );
 }
@@ -1845,10 +2409,15 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "center",
-    padding: 16,
+    alignItems: "flex-start",
+    paddingHorizontal: 16,
     paddingTop: 8,
+    paddingBottom: 16,
     borderBottomWidth: 1,
+  },
+  headerTextContainer: {
+    flex: 1,
+    marginRight: 12,
   },
   title: {
     fontSize: 24,
@@ -2223,5 +2792,116 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 8,
     marginTop: 20,
+  },
+  selectContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    borderWidth: 1,
+    borderRadius: 8,
+    padding: 12,
+  },
+  selectText: {
+    fontSize: 16,
+    flex: 1,
+  },
+  roleOption: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    padding: 16,
+    borderRadius: 8,
+    borderWidth: 1,
+    marginBottom: 8,
+  },
+  roleOptionContent: {
+    flex: 1,
+  },
+  roleOptionText: {
+    fontSize: 16,
+    fontWeight: "600",
+    marginBottom: 4,
+  },
+  roleOptionDescription: {
+    fontSize: 14,
+  },
+  roleModalWrapper: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    zIndex: 1000,
+  },
+  roleModalBackdrop: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+  },
+  roleModalContainer: {
+    position: "absolute",
+    top: "20%",
+    left: 0,
+    right: 0,
+    borderRadius: 20,
+    maxHeight: "60%",
+    minHeight: "40%",
+    zIndex: 1001,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  roleModalHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    padding: 16,
+    borderBottomWidth: 1,
+  },
+  roleModalHeaderActions: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
+  addRegionButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 8,
+    gap: 6,
+  },
+  addRegionButtonText: {
+    color: "#FFFFFF",
+    fontSize: 14,
+    fontWeight: "600",
+  },
+  roleModalTitle: {
+    fontSize: 20,
+    fontWeight: "600",
+  },
+  roleModalScrollView: {
+    flex: 1,
+    padding: 16,
+  },
+  emptyRegionsContainer: {
+    padding: 16,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  emptyRegionsText: {
+    fontSize: 14,
+    textAlign: "center",
+    marginTop: 12,
+    marginBottom: 4,
+  },
+  emptyRegionsSubtext: {
+    fontSize: 12,
+    textAlign: "center",
   },
 });

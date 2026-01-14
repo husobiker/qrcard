@@ -27,7 +27,7 @@ import type { Employee, Company } from "../../types";
 
 export default function EmployeeDashboardScreen({ navigation }: any) {
   const { user, userType } = useAuth();
-  const { theme } = useTheme();
+  const { theme, isDark } = useTheme();
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [employee, setEmployee] = useState<Employee | null>(null);
@@ -124,7 +124,7 @@ export default function EmployeeDashboardScreen({ navigation }: any) {
         style={[styles.container, { backgroundColor: theme.colors.background }]}
         edges={["bottom", "left", "right"]}
       >
-        <StatusBar barStyle={theme.isDark ? "light-content" : "dark-content"} />
+        <StatusBar barStyle={isDark ? "light-content" : "dark-content"} />
         <View style={styles.loadingContainer}>
           <Text style={{ color: theme.colors.text }}>Yükleniyor...</Text>
         </View>
@@ -138,7 +138,7 @@ export default function EmployeeDashboardScreen({ navigation }: any) {
         style={[styles.container, { backgroundColor: theme.colors.background }]}
         edges={["bottom", "left", "right"]}
       >
-        <StatusBar barStyle={theme.isDark ? "light-content" : "dark-content"} />
+        <StatusBar barStyle={isDark ? "light-content" : "dark-content"} />
         <View style={styles.loadingContainer}>
           <Text style={{ color: theme.colors.error }}>Çalışan bulunamadı</Text>
         </View>
@@ -151,7 +151,7 @@ export default function EmployeeDashboardScreen({ navigation }: any) {
       style={[styles.container, { backgroundColor: theme.colors.background }]}
       edges={["bottom", "left", "right"]}
     >
-      <StatusBar barStyle={theme.isDark ? "light-content" : "dark-content"} />
+      <StatusBar barStyle={isDark ? "light-content" : "dark-content"} />
       <ScrollView
         style={styles.scrollView}
         refreshControl={
@@ -183,14 +183,14 @@ export default function EmployeeDashboardScreen({ navigation }: any) {
               ) : (
                 <View style={[styles.profileImagePlaceholder, { backgroundColor: theme.colors.gray200 }]}>
                   <Text style={[styles.profileInitials, { color: theme.colors.textSecondary }]}>
-                    {employee.first_name.charAt(0)}
-                    {employee.last_name.charAt(0)}
+                    {employee?.first_name?.charAt(0) || ""}
+                    {employee?.last_name?.charAt(0) || ""}
                   </Text>
                 </View>
               )}
               <View style={styles.profileInfo}>
                 <Text style={[styles.profileName, { color: theme.colors.text }]}>
-                  {employee.first_name} {employee.last_name}
+                  {employee?.first_name || ""} {employee?.last_name || ""}
                 </Text>
                 {employee.job_title && (
                   <Text style={[styles.profileJob, { color: theme.colors.textSecondary }]}>
@@ -348,7 +348,7 @@ export default function EmployeeDashboardScreen({ navigation }: any) {
             <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>QR Kodum</Text>
             <QRCodeGenerator
               url={getPublicUrl()}
-              employeeName={`${employee.first_name} ${employee.last_name}`}
+              employeeName={`${employee?.first_name || ""} ${employee?.last_name || ""}`}
               employeeId={employee.id}
             />
             <TouchableOpacity

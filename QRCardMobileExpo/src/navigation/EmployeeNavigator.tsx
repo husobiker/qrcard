@@ -27,7 +27,7 @@ function EmployeeDashboardStack() {
       <Stack.Screen
         name="EmployeeDashboardMain"
         component={EmployeeDashboardScreen}
-        options={{headerShown: false as boolean}}
+        options={{headerShown: false}}
       />
       <Stack.Screen name="Goals" component={GoalsScreen} />
       <Stack.Screen name="Transactions" component={TransactionsScreen} />
@@ -46,7 +46,7 @@ function EmployeeProfileStack() {
       <Stack.Screen
         name="EmployeeProfileMain"
         component={ProfileScreen}
-        options={{headerShown: false as boolean}}
+        options={{headerShown: false}}
       />
       <Stack.Screen name="Reports" component={ReportsScreen} />
     </Stack.Navigator>
@@ -64,7 +64,16 @@ export default function EmployeeNavigator() {
         tabBarInactiveTintColor: theme.colors.gray500,
         tabBarStyle: {
           backgroundColor: theme.colors.surface,
-          borderTopColor: theme.colors.gray200,
+          borderTopWidth: 0,
+          elevation: 8,
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: -2 },
+          shadowOpacity: 0.1,
+          shadowRadius: 4,
+          paddingBottom: 0,
+          paddingTop: 0,
+          height: 60,
+          marginTop: 0,
         },
         headerStyle: {
           backgroundColor: theme.colors.surface,
@@ -76,7 +85,7 @@ export default function EmployeeNavigator() {
         component={EmployeeDashboardStack}
         options={{
           title: 'Anasayfa',
-          headerShown: false as boolean,
+          headerShown: false,
           tabBarIcon: ({color, size}) => (
             <Icon name="home" size={size} color={color} />
           ),
@@ -97,7 +106,7 @@ export default function EmployeeNavigator() {
         component={TasksScreen}
         options={{
           title: t('tasks.title'),
-          headerShown: false as boolean,
+          headerShown: false,
           tabBarIcon: ({color, size}) => (
             <Icon name="check-circle" size={size} color={color} />
           ),
@@ -118,7 +127,7 @@ export default function EmployeeNavigator() {
         component={EmployeeProfileStack}
         options={{
           title: 'Profil',
-          headerShown: false as boolean,
+          headerShown: false,
           tabBarIcon: ({color, size}) => (
             <Icon name="person" size={size} color={color} />
           ),

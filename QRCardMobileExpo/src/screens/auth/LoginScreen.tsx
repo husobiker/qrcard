@@ -41,7 +41,7 @@ export default function LoginScreen({ navigation }: any) {
 
   const handleLogin = async () => {
     if (!email || !password) {
-      Alert.alert("Error", "Please enter email and password");
+      Alert.alert("Hata", "Lütfen e-posta ve şifre girin");
       return;
     }
 
@@ -50,12 +50,12 @@ export default function LoginScreen({ navigation }: any) {
     setLoading(false);
 
     if (!result.success) {
-      Alert.alert("Login Failed", result.error || "Invalid credentials");
+      Alert.alert("Giriş Başarısız", result.error || "Geçersiz giriş bilgileri");
     }
   };
 
   const handleBiometricLogin = async () => {
-    const result = await authenticateWithBiometrics("Authenticate to login");
+    const result = await authenticateWithBiometrics("Giriş yapmak için kimlik doğrulayın");
     if (result.success) {
       const savedEmail = await AsyncStorage.getItem("savedEmail");
       const savedPassword = await AsyncStorage.getItem("savedPassword");
@@ -65,8 +65,8 @@ export default function LoginScreen({ navigation }: any) {
         await handleLogin();
       } else {
         Alert.alert(
-          "No Saved Credentials",
-          "Please login with email and password first"
+          "Kayıtlı Bilgi Yok",
+          "Lütfen önce e-posta ve şifre ile giriş yapın"
         );
       }
     }
@@ -140,7 +140,7 @@ export default function LoginScreen({ navigation }: any) {
             disabled={loading}
           >
             <Text style={styles.buttonText}>
-              {loading ? "Loading..." : t("auth.login.submit")}
+              {loading ? "Yükleniyor..." : t("auth.login.submit")}
             </Text>
           </TouchableOpacity>
 
@@ -156,7 +156,7 @@ export default function LoginScreen({ navigation }: any) {
               <Text
                 style={[styles.biometricText, { color: theme.colors.primary }]}
               >
-                Use Biometric
+                Biyometrik Kullan
               </Text>
             </TouchableOpacity>
           )}
@@ -175,7 +175,7 @@ export default function LoginScreen({ navigation }: any) {
             onPress={() => navigation.navigate("Signup")}
           >
             <Text style={[styles.linkText, { color: theme.colors.primary }]}>
-              Don't have an account? Sign up
+              Hesabınız yok mu? Kayıt olun
             </Text>
           </TouchableOpacity>
 

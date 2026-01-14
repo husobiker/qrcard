@@ -9,7 +9,7 @@ import {MaterialIcons as Icon} from '@expo/vector-icons';
 
 export default function TransactionsScreen() {
   const {user, userType} = useAuth();
-  const {theme} = useTheme();
+  const {theme, isDark} = useTheme();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(false);
 
@@ -84,7 +84,7 @@ export default function TransactionsScreen() {
 
   return (
     <SafeAreaView style={[styles.container, {backgroundColor: theme.colors.background}]}>
-      <StatusBar barStyle={theme.isDark ? 'light-content' : 'dark-content'} />
+      <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} />
       <FlatList
         data={transactions}
         renderItem={renderTransaction}

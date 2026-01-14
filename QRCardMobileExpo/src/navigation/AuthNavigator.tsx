@@ -12,7 +12,7 @@ export default function AuthNavigator() {
     <Stack.Navigator
       initialRouteName="Login"
       screenOptions={{
-        headerShown: false as boolean,
+        headerShown: false,
       }}>
       <Stack.Screen name="Login" component={LoginScreen} />
       <Stack.Screen name="Signup" component={SignupScreen} />

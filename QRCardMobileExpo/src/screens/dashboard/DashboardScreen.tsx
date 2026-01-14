@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useFocusEffect } from "@react-navigation/native";
 import {
   View,
   Text,
@@ -13,6 +14,7 @@ import {
   Image,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useAuth } from "../../contexts/AuthContext";
 import { useTheme } from "../../contexts/ThemeContext";
 import { useLanguage } from "../../contexts/LanguageContext";
@@ -31,10 +33,10 @@ export default function DashboardScreen({ navigation }: any) {
   const [loading, setLoading] = useState(false);
   const [company, setCompany] = useState<Company | null>(null);
   const [stats, setStats] = useState({
-    crm: 0,
-    tasks: 0,
-    appointments: 0,
-    vehicles: 0,
+    monthlyGoal: 0,
+    monthlyGoalProgress: 0,
+    statistics: 0,
+    activeEmployees: 0,
   });
 
   useEffect(() => {
@@ -46,32 +48,54 @@ export default function DashboardScreen({ navigation }: any) {
     }
   }, [user]);
 
+  // Reload company data when screen comes into focus (e.g., after profile update)
+  useFocusEffect(
+    React.useCallback(() => {
+      if (user && userType === "company") {
+        loadCompany();
+      }
+    }, [user, userType])
+  );
+
   const loadCompany = async () => {
     if (!user || userType !== "company") return;
 
     try {
       const companyData = await getCompanyByUserId(user.id);
       if (companyData) {
+        console.log('Dashboard: Company loaded, logo_url:', companyData.logo_url);
+        console.log('Dashboard: Company loaded, background_image_url:', companyData.background_image_url);
         setCompany(companyData);
         // Set language from company data
         if (companyData.language) {
           setLanguage(companyData.language);
         }
       } else {
-        // Company doesn't exist, create it
-        const { data, error } = await supabase
-          .from("companies")
-          .insert({
-            id: user.id,
-            name: "My Company",
-            language: "tr" as "tr" | "en",
-          } as any)
-          .select()
-          .single();
+        // Company doesn't exist, check for pending company name from signup
+        const pendingCompanyName = await AsyncStorage.getItem(`pending_company_${user.id}`);
+        
+        // Use pending company name if available, otherwise don't create with default
+        if (pendingCompanyName) {
+          const { data, error } = await supabase
+            .from("companies")
+            .insert({
+              id: user.id,
+              name: pendingCompanyName,
+              language: "tr" as "tr" | "en",
+            } as any)
+            .select()
+            .single();
 
-        if (data && !error) {
-          setCompany(data);
+          if (data && !error) {
+            await AsyncStorage.removeItem(`pending_company_${user.id}`);
+            setCompany(data);
+            if (data.language) {
+              setLanguage(data.language);
+            }
+          }
         }
+        // If no pending company name, don't create company automatically
+        // User should complete their profile in ProfileScreen
       }
     } catch (error) {
       console.error("Error loading company:", error);
@@ -86,38 +110,58 @@ export default function DashboardScreen({ navigation }: any) {
       const companyId =
         userType === "company" ? user.id : (user as any).company_id;
 
-      // Get CRM leads count
+      // Get active employees count
+      const { count: activeEmployeesCount } = await supabase
+        .from("employees")
+        .select("*", { count: "exact", head: true })
+        .eq("company_id", companyId);
+
+      // Get monthly goals (current month)
+      const now = new Date();
+      const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+      const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+      
+      const { data: monthlyGoals } = await supabase
+        .from("performance_goals")
+        .select("*")
+        .eq("company_id", companyId)
+        .eq("period_type", "monthly")
+        .gte("period_start", monthStart.toISOString().split("T")[0])
+        .lte("period_end", monthEnd.toISOString().split("T")[0]);
+
+      // Calculate total monthly goal progress
+      let totalGoal = 0;
+      let totalProgress = 0;
+      if (monthlyGoals && monthlyGoals.length > 0) {
+        monthlyGoals.forEach((goal: any) => {
+          totalGoal += Number(goal.target_value || 0);
+          totalProgress += Number(goal.current_value || 0);
+        });
+      }
+
+      // Get general statistics (total tasks + appointments + CRM leads)
+      const { count: tasksCount } = await supabase
+        .from("tasks")
+        .select("*", { count: "exact", head: true })
+        .eq("company_id", companyId);
+
+      const { count: appointmentsCount } = await supabase
+        .from("appointments")
+        .select("*", { count: "exact", head: true })
+        .eq("company_id", companyId);
+
       const { count: crmCount } = await supabase
         .from("crm_leads")
         .select("*", { count: "exact", head: true })
         .eq("company_id", companyId);
 
-      // Get tasks count
-      const { count: tasksCount } = await supabase
-        .from("tasks")
-        .select("*", { count: "exact", head: true })
-        .eq("company_id", companyId)
-        .neq("status", "completed");
-
-      // Get appointments count
-      const { count: appointmentsCount } = await supabase
-        .from("appointments")
-        .select("*", { count: "exact", head: true })
-        .eq("company_id", companyId)
-        .eq("status", "pending");
-
-      // Get vehicles count
-      const { count: vehiclesCount } = await supabase
-        .from("vehicles")
-        .select("*", { count: "exact", head: true })
-        .eq("company_id", companyId)
-        .eq("status", "active");
+      const totalStatistics = (tasksCount || 0) + (appointmentsCount || 0) + (crmCount || 0);
 
       setStats({
-        crm: crmCount || 0,
-        tasks: tasksCount || 0,
-        appointments: appointmentsCount || 0,
-        vehicles: vehiclesCount || 0,
+        monthlyGoal: totalGoal,
+        monthlyGoalProgress: totalProgress,
+        statistics: totalStatistics,
+        activeEmployees: activeEmployeesCount || 0,
       });
     } catch (error) {
       console.error("Error loading stats:", error);
@@ -126,35 +170,55 @@ export default function DashboardScreen({ navigation }: any) {
     }
   };
 
-  const StatCard = ({ title, value, icon, color, onPress }: any) => (
+  const StatCard = ({ title, value, icon, color, onPress, style, progress }: any) => (
     <TouchableOpacity
       style={[
         styles.statCard,
         {
           backgroundColor: theme.colors.surface,
-          shadowColor: color,
+          borderColor: theme.colors.gray200 || "#E5E7EB",
         },
+        style,
       ]}
       onPress={onPress}
       activeOpacity={0.7}
     >
-      <View
-        style={[
-          styles.statIconContainer,
-          {
-            backgroundColor: color + "15",
-            borderColor: color + "30",
-          },
-        ]}
-      >
-        <Icon name={icon} size={28} color={color} />
+      <View style={styles.statCardContent}>
+        <View
+          style={[
+            styles.statIconContainer,
+            {
+              backgroundColor: color + "15",
+              borderColor: color + "30",
+            },
+          ]}
+        >
+          <Icon name={icon} size={20} color={color} />
+        </View>
+        <View style={styles.statCardMain}>
+          <Text style={[styles.statTitle, { color: theme.colors.textSecondary }]}>
+            {title}
+          </Text>
+          <Text style={[styles.statValue, { color: theme.colors.text }]}>
+            {value}
+          </Text>
+          {progress !== undefined && (
+            <View style={styles.progressBars}>
+              {Array.from({ length: 10 }).map((_, index) => (
+                <View
+                  key={index}
+                  style={[
+                    styles.progressBar,
+                    {
+                      backgroundColor: index < progress ? color : theme.colors.gray200 || "#E5E7EB",
+                    },
+                  ]}
+                />
+              ))}
+            </View>
+          )}
+        </View>
       </View>
-      <Text style={[styles.statValue, { color: theme.colors.text }]}>
-        {value}
-      </Text>
-      <Text style={[styles.statTitle, { color: theme.colors.textSecondary }]}>
-        {title}
-      </Text>
     </TouchableOpacity>
   );
 
@@ -179,15 +243,21 @@ export default function DashboardScreen({ navigation }: any) {
   return (
     <SafeAreaView
       style={[styles.container, { backgroundColor: theme.colors.background }]}
-      edges={["bottom", "left", "right"]}
+      edges={["left", "right"]}
     >
       <StatusBar barStyle="dark-content" />
       <ScrollView
         style={styles.scrollView}
+        contentContainerStyle={{ paddingBottom: 0 }}
         refreshControl={
           <RefreshControl
             refreshing={loading}
-            onRefresh={loadStats}
+            onRefresh={() => {
+              if (user && userType === "company") {
+                loadCompany();
+              }
+              loadStats();
+            }}
             tintColor={theme.colors.primary}
           />
         }
@@ -197,27 +267,47 @@ export default function DashboardScreen({ navigation }: any) {
           <View style={styles.heroSection}>
             {company?.background_image_url ? (
               <ImageBackground
-                source={{ uri: company.background_image_url }}
+                key={`dashboard-bg-${company.background_image_url}`}
+                source={{ 
+                  uri: company.background_image_url + (company.background_image_url.includes('?') ? '&' : '?') + 't=' + Date.now()
+                }}
                 style={styles.heroBackground}
                 imageStyle={styles.heroBackgroundImage}
+                onError={(e) => {
+                  console.error('Dashboard: Error loading background image:', company.background_image_url, e.nativeEvent.error);
+                }}
+                onLoad={() => {
+                  console.log('Dashboard: Background image loaded successfully:', company.background_image_url);
+                }}
               >
                 <View style={styles.heroOverlay} />
                 <View style={styles.heroContent}>
                   {company?.logo_url && (
                     <View style={styles.logoCard}>
                       <Image
-                        source={{ uri: company.logo_url }}
+                        key={`dashboard-logo-bg-${company.logo_url}`}
+                        source={{ 
+                          uri: company.logo_url + (company.logo_url.includes('?') ? '&' : '?') + 't=' + Date.now()
+                        }}
                         style={styles.companyLogo}
                         resizeMode="contain"
+                        onError={(e) => {
+                          console.error('Dashboard: Error loading logo (with bg):', company.logo_url, e.nativeEvent.error);
+                        }}
+                        onLoad={() => {
+                          console.log('Dashboard: Logo loaded successfully (with bg):', company.logo_url);
+                        }}
                       />
                     </View>
                   )}
                   <Text style={[styles.companyName, { color: "#FFFFFF" }]}>
                     {userType === "company"
-                      ? company?.name || (user as any).name || "Welcome"
-                      : `${(user as any).first_name} ${
-                          (user as any).last_name
-                        }`}
+                      ? company?.name || (user as Company)?.name || "Welcome"
+                      : user
+                      ? `${(user as any).first_name || ""} ${
+                          (user as any).last_name || ""
+                        }`.trim() || "Welcome"
+                      : "Welcome"}
                   </Text>
                 </View>
               </ImageBackground>
@@ -232,18 +322,29 @@ export default function DashboardScreen({ navigation }: any) {
                   {company?.logo_url && (
                     <View style={styles.logoCard}>
                       <Image
-                        source={{ uri: company.logo_url }}
+                        key={`dashboard-logo-fallback-${company.logo_url}`}
+                        source={{ 
+                          uri: company.logo_url + (company.logo_url.includes('?') ? '&' : '?') + 't=' + Date.now()
+                        }}
                         style={styles.companyLogo}
                         resizeMode="contain"
+                        onError={(e) => {
+                          console.error('Dashboard: Error loading logo (fallback):', company.logo_url, e.nativeEvent.error);
+                        }}
+                        onLoad={() => {
+                          console.log('Dashboard: Logo loaded successfully (fallback):', company.logo_url);
+                        }}
                       />
                     </View>
                   )}
                   <Text style={[styles.companyName, { color: "#FFFFFF" }]}>
                     {userType === "company"
-                      ? company?.name || (user as any).name || "Welcome"
-                      : `${(user as any).first_name} ${
-                          (user as any).last_name
-                        }`}
+                      ? company?.name || (user as Company)?.name || "Welcome"
+                      : user
+                      ? `${(user as any).first_name || ""} ${
+                          (user as any).last_name || ""
+                        }`.trim() || "Welcome"
+                      : "Welcome"}
                   </Text>
                 </View>
               </View>
@@ -252,33 +353,31 @@ export default function DashboardScreen({ navigation }: any) {
 
           <View style={styles.statsContainer}>
             <StatCard
-              title="CRM Leads"
-              value={stats.crm}
-              icon="people"
+              title="Aylık Hedef"
+              value={`${Math.round((stats.monthlyGoalProgress / (stats.monthlyGoal || 1)) * 100)}%`}
+              icon="flag"
               color={theme.colors.primary}
-              onPress={() => navigation.navigate("CRM")}
+              onPress={() => navigation.navigate("Goals")}
+              progress={Math.min(10, Math.round((stats.monthlyGoalProgress / (stats.monthlyGoal || 1)) * 10))}
             />
-            <StatCard
-              title="Tasks"
-              value={stats.tasks}
-              icon="check-circle"
-              color={theme.colors.secondary}
-              onPress={() => navigation.navigate("Tasks")}
-            />
-            <StatCard
-              title="Appointments"
-              value={stats.appointments}
-              icon="calendar-today"
-              color={theme.colors.warning}
-              onPress={() => navigation.navigate("Calendar")}
-            />
-            <StatCard
-              title="Vehicles"
-              value={stats.vehicles}
-              icon="directions-car"
-              color={theme.colors.info}
-              onPress={() => navigation.navigate("Vehicles")}
-            />
+            <View style={styles.twoCardsRow}>
+              <StatCard
+                title="İstatistik"
+                value={stats.statistics}
+                icon="bar-chart"
+                color={theme.colors.secondary || "#10B981"}
+                onPress={() => navigation.navigate("Reports")}
+                style={{ width: "48%" }}
+              />
+              <StatCard
+                title="Aktif Personel"
+                value={stats.activeEmployees}
+                icon="people"
+                color={theme.colors.warning || "#F59E0B"}
+                onPress={() => navigation.navigate("Employees")}
+                style={{ width: "48%" }}
+              />
+            </View>
           </View>
 
           <View style={styles.quickAccessSection}>
@@ -287,11 +386,18 @@ export default function DashboardScreen({ navigation }: any) {
             </Text>
             <View style={styles.quickActionsContainer}>
               {userType === "company" && (
-                <QuickAction
-                  title="Personeller"
-                  icon="people-outline"
-                  onPress={() => navigation.navigate("Employees")}
-                />
+                <>
+                  <QuickAction
+                    title="Personeller"
+                    icon="people-outline"
+                    onPress={() => navigation.navigate("Employees")}
+                  />
+                  <QuickAction
+                    title="Müşteriler"
+                    icon="business"
+                    onPress={() => navigation.navigate("Customers")}
+                  />
+                </>
               )}
               <QuickAction
                 title="Takvim"
@@ -343,6 +449,20 @@ export default function DashboardScreen({ navigation }: any) {
                 icon="assessment"
                 onPress={() => navigation.navigate("Reports")}
               />
+              {userType === "company" && (
+                <>
+                  <QuickAction
+                    title="Personel Raporları"
+                    icon="assessment"
+                    onPress={() => navigation.navigate("EmployeeReports")}
+                  />
+                  <QuickAction
+                    title="Roller"
+                    icon="admin-panel-settings"
+                    onPress={() => navigation.navigate("Roles")}
+                  />
+                </>
+              )}
             </View>
           </View>
         </View>
@@ -483,45 +603,66 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   statsContainer: {
-    flexDirection: "row",
-    flexWrap: "wrap",
+    flexDirection: "column",
     gap: 12,
-    marginBottom: 24,
+    marginBottom: 0,
     paddingHorizontal: 16,
   },
+  twoCardsRow: {
+    flexDirection: "row",
+    gap: 12,
+    justifyContent: "space-between",
+  },
   statCard: {
-    width: "47%",
-    padding: 20,
-    borderRadius: 20,
-    alignItems: "center",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 12,
-    elevation: 4,
-    borderWidth: 0,
-  },
-  statIconContainer: {
-    width: 56,
-    height: 56,
-    borderRadius: 16,
-    justifyContent: "center",
-    alignItems: "center",
-    marginBottom: 12,
+    width: "100%",
+    padding: 12,
+    borderRadius: 8,
     borderWidth: 1,
+    marginBottom: 0,
   },
-  statValue: {
-    fontSize: 32,
-    fontWeight: "bold",
-    marginBottom: 6,
-    letterSpacing: -0.5,
+  statCardContent: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
+  statCardMain: {
+    flex: 1,
   },
   statTitle: {
-    fontSize: 13,
-    textAlign: "center",
+    fontSize: 12,
     fontWeight: "500",
+    marginBottom: 4,
+    lineHeight: 16,
+  },
+  statValue: {
+    fontSize: 20,
+    fontWeight: "600",
+    lineHeight: 24,
+  },
+  statIconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 8,
+    justifyContent: "center",
+    alignItems: "center",
+    borderWidth: 1,
+    flexShrink: 0,
+  },
+  progressBars: {
+    flexDirection: "row",
+    gap: 4,
+    marginTop: 8,
+  },
+  progressBar: {
+    flex: 1,
+    height: 4,
+    borderRadius: 2,
   },
   quickAccessSection: {
     paddingHorizontal: 16,
+    marginBottom: 0,
+    paddingBottom: 0,
+    marginTop: 8,
   },
   quickActionsContainer: {
     flexDirection: "row",

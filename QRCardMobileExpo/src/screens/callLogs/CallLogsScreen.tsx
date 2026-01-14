@@ -9,7 +9,7 @@ import {MaterialIcons as Icon} from '@expo/vector-icons';
 
 export default function CallLogsScreen() {
   const {user, userType} = useAuth();
-  const {theme} = useTheme();
+  const {theme, isDark} = useTheme();
   const [callLogs, setCallLogs] = useState<CallLog[]>([]);
   const [loading, setLoading] = useState(false);
 
@@ -105,7 +105,7 @@ export default function CallLogsScreen() {
 
   return (
     <SafeAreaView style={[styles.container, {backgroundColor: theme.colors.background}]}>
-      <StatusBar barStyle={theme.isDark ? 'light-content' : 'dark-content'} />
+      <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} />
       <FlatList
         data={callLogs}
         renderItem={renderCallLog}

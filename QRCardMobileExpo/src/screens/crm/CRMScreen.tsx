@@ -19,7 +19,7 @@ import {MaterialIcons as Icon} from '@expo/vector-icons';
 
 export default function CRMScreen() {
   const {user, userType} = useAuth();
-  const {theme} = useTheme();
+  const {theme, isDark} = useTheme();
   const [leads, setLeads] = useState<CRMLead[]>([]);
   const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -117,7 +117,7 @@ export default function CRMScreen() {
 
   return (
     <SafeAreaView style={[styles.container, {backgroundColor: theme.colors.background}]}>
-      <StatusBar barStyle={theme.isDark ? 'light-content' : 'dark-content'} />
+      <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} />
       <View style={[styles.searchContainer, {backgroundColor: theme.colors.surface}]}>
         <Icon name="search" size={20} color={theme.colors.gray500} style={styles.searchIcon} />
         <TextInput

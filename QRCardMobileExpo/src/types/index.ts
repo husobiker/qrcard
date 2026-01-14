@@ -69,6 +69,8 @@ export interface Employee {
   available_hours: AvailableHours | null
   default_duration_minutes: number | null
   password_hash: string | null
+  role: string | null
+  region_id: string | null
   created_at: string
 }
 
@@ -86,10 +88,13 @@ export interface CRMLead {
   id: string
   company_id: string
   employee_id: string | null
+  region_id: string | null
   customer_name: string
   contact_name: string | null
   phone: string | null
   email: string | null
+  tc_no: string | null
+  tax_no: string | null
   notes: string | null
   follow_up_date: string | null
   status: CRMLeadStatus
@@ -104,6 +109,7 @@ export interface Task {
   id: string
   company_id: string
   employee_id: string
+  region_id: string | null
   title: string
   description: string | null
   status: TaskStatus
@@ -111,6 +117,10 @@ export interface Task {
   due_date: string | null
   completed_at: string | null
   assigned_by: string
+  checklist_items?: string[]
+  checklist_completed?: string[]
+  address?: string | null
+  attachments?: string[]
   created_at: string
   updated_at: string
 }
@@ -138,6 +148,7 @@ export interface Transaction {
   id: string
   company_id: string
   employee_id: string | null
+  region_id: string | null
   transaction_type: TransactionType
   category: string
   amount: number
@@ -209,6 +220,7 @@ export interface Vehicle {
   device_id: string
   device_name: string | null
   employee_id: string | null
+  region_id: string | null
   vehicle_type: 'car' | 'truck' | 'van' | 'motorcycle' | 'other'
   status: 'active' | 'inactive' | 'maintenance'
   last_seen: string | null
@@ -242,3 +254,92 @@ export interface VehicleCommand {
   created_by: string | null
 }
 
+// Role Management Types
+export interface Role {
+  id: string
+  company_id: string
+  name: string
+  description: string | null
+  created_at: string
+  updated_at: string
+}
+
+export interface RolePermission {
+  id: string
+  role_id: string
+  page_name: string
+  can_view: boolean
+  can_create: boolean
+  can_edit: boolean
+  can_delete: boolean
+  created_at: string
+}
+
+export interface RoleFormData {
+  name: string
+  description?: string
+  permissions?: RolePermission[]
+}
+
+// Region Management Types
+export interface Region {
+  id: string
+  company_id: string
+  name: string
+  description: string | null
+  created_at: string
+  updated_at: string
+}
+
+export interface RegionFormData {
+  name: string
+  description?: string
+}
+
+// Quote Types
+export type QuoteStatus = 'draft' | 'sent' | 'accepted' | 'rejected' | 'expired'
+
+export interface Quote {
+  id: string
+  company_id: string
+  employee_id: string | null
+  customer_id: string | null
+  customer_name: string
+  product_service: string | null
+  description: string | null
+  price: number
+  tax_rate: number
+  tax_amount: number
+  total_amount: number
+  validity_date: string | null
+  status: QuoteStatus
+  notes: string | null
+  attachments: any[]
+  created_at: string
+  updated_at: string
+}
+
+export interface QuoteFormData {
+  employee_id: string
+  customer_id?: string | null
+  customer_name: string
+  product_service?: string
+  description?: string
+  price: number
+  tax_rate?: number
+  validity_date?: string
+  status?: QuoteStatus
+  notes?: string
+  attachments?: any[]
+}
+
+// Fixed Roles Constants
+export const FIXED_ROLES = {
+  COMPANY: 'Şirket',
+  REGIONAL_MANAGER: 'Bölge Sorumlusu',
+  CALL_CENTER: 'Çağrı Merkezi',
+  MARKETING_STAFF: 'Pazarlama Personeli',
+  CUSTOMER: 'Müşteri'
+} as const
+
+export type FixedRole = typeof FIXED_ROLES[keyof typeof FIXED_ROLES]

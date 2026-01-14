@@ -19,7 +19,7 @@ import {MaterialIcons as Icon} from '@expo/vector-icons';
 
 export default function VehicleTrackingScreen() {
   const {user, userType} = useAuth();
-  const {theme} = useTheme();
+  const {theme, isDark} = useTheme();
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [locations, setLocations] = useState<VehicleLocation[]>([]);
   const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
@@ -113,7 +113,7 @@ export default function VehicleTrackingScreen() {
 
   return (
     <SafeAreaView style={[styles.container, {backgroundColor: theme.colors.background}]}>
-      <StatusBar barStyle={theme.isDark ? 'light-content' : 'dark-content'} />
+      <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} />
       <View style={styles.mapPlaceholder}>
         <Icon name="map" size={48} color={theme.colors.gray400} />
         <Text style={[styles.mapPlaceholderText, {color: theme.colors.textSecondary}]}>

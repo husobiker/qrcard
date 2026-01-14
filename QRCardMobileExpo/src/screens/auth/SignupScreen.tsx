@@ -13,6 +13,7 @@ import {
 import {supabase} from '../../services/supabase';
 import {useTheme} from '../../contexts/ThemeContext';
 import {useLanguage} from '../../contexts/LanguageContext';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import {MaterialIcons as Icon} from '@expo/vector-icons';
 
 export default function SignupScreen({navigation}: any) {
@@ -25,7 +26,7 @@ export default function SignupScreen({navigation}: any) {
 
   const handleSignup = async () => {
     if (!email || !password || !companyName) {
-      Alert.alert('Error', 'Please fill all fields');
+      Alert.alert('Hata', 'Lütfen tüm alanları doldurun');
       return;
     }
 
@@ -37,29 +38,48 @@ export default function SignupScreen({navigation}: any) {
       });
 
       if (error) {
-        Alert.alert('Signup Failed', error.message);
+        Alert.alert('Kayıt Başarısız', error.message);
         setLoading(false);
         return;
       }
 
       if (data.user) {
-        // Create company record
-        const {error: companyError} = await supabase
-          .from('companies')
-          .insert({
-            id: data.user.id,
-            name: companyName,
-          });
+        // Try to create company record immediately (if email confirmation is disabled)
+        // Wait a bit for session to be established
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        // Get the current session
+        const {data: {session}} = await supabase.auth.getSession();
+        
+        if (session) {
+          // Session exists, try to create company
+          const {error: companyError} = await supabase
+            .from('companies')
+            .insert({
+              id: data.user.id,
+              name: companyName,
+            });
 
-        if (companyError) {
-          Alert.alert('Error', 'Failed to create company');
-        } else {
-          Alert.alert('Success', 'Account created successfully. Please check your email to verify.');
-          navigation.navigate('Login');
+          if (!companyError) {
+            // Company created successfully
+            Alert.alert('Başarılı', 'Hesabınız başarıyla oluşturuldu. Lütfen e-postanızı kontrol ederek doğrulama yapın.');
+            navigation.navigate('Login');
+            return;
+          }
         }
+        
+        // If we reach here, either no session or company creation failed
+        // Save company name to AsyncStorage for later creation after email verification
+        await AsyncStorage.setItem(`pending_company_${data.user.id}`, companyName);
+        
+        Alert.alert(
+          'E-posta Doğrulama Gerekli',
+          'Hesabınız oluşturuldu. Lütfen e-postanızı kontrol ederek doğrulama yapın. E-posta doğrulandıktan sonra giriş yaptığınızda şirket bilgileriniz otomatik olarak oluşturulacaktır.',
+          [{text: 'Tamam', onPress: () => navigation.navigate('Login')}]
+        );
       }
     } catch (error: any) {
-      Alert.alert('Error', error?.message || 'Signup failed');
+      Alert.alert('Hata', error?.message || 'Kayıt başarısız');
     } finally {
       setLoading(false);
     }
@@ -79,7 +99,7 @@ export default function SignupScreen({navigation}: any) {
             <Icon name="business" size={20} color={theme.colors.gray500} style={styles.inputIcon} />
             <TextInput
               style={[styles.input, {color: theme.colors.text, borderColor: theme.colors.gray300}]}
-              placeholder="Company Name"
+              placeholder="Şirket Adı"
               placeholderTextColor={theme.colors.gray500}
               value={companyName}
               onChangeText={setCompanyName}
@@ -116,7 +136,7 @@ export default function SignupScreen({navigation}: any) {
             onPress={handleSignup}
             disabled={loading}>
             <Text style={styles.buttonText}>
-              {loading ? 'Creating...' : 'Sign Up'}
+              {loading ? 'Oluşturuluyor...' : 'Kayıt Ol'}
             </Text>
           </TouchableOpacity>
 
@@ -124,7 +144,7 @@ export default function SignupScreen({navigation}: any) {
             style={styles.linkButton}
             onPress={() => navigation.navigate('Login')}>
             <Text style={[styles.linkText, {color: theme.colors.primary}]}>
-              Already have an account? Sign in
+              Zaten hesabınız var mı? Giriş yapın
             </Text>
           </TouchableOpacity>
         </View>

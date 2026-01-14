@@ -26,7 +26,7 @@ interface Report {
 
 export default function ReportsScreen() {
   const { user, userType } = useAuth();
-  const { theme } = useTheme();
+  const { theme, isDark } = useTheme();
   const [reports] = useState<Report[]>([
     { id: "1", title: "Satış Raporu", titleEn: "Sales", type: "sales" },
     { id: "2", title: "Performans Raporu", titleEn: "Performance", type: "performance" },
@@ -594,7 +594,7 @@ export default function ReportsScreen() {
       style={[styles.container, { backgroundColor: theme.colors.background }]}
       edges={["bottom", "left", "right"]}
     >
-      <StatusBar barStyle={theme.isDark ? "light-content" : "dark-content"} />
+      <StatusBar barStyle={isDark ? "light-content" : "dark-content"} />
       <View style={styles.header}>
         <Text style={[styles.headerTitle, { color: theme.colors.text }]}>Raporlar</Text>
       </View>
@@ -622,7 +622,7 @@ export default function ReportsScreen() {
           style={[styles.modalContainer, { backgroundColor: theme.colors.background }]}
           edges={["bottom", "left", "right"]}
         >
-          <StatusBar barStyle={theme.isDark ? "light-content" : "dark-content"} />
+          <StatusBar barStyle={isDark ? "light-content" : "dark-content"} />
           <View style={[styles.modalHeader, { borderBottomColor: theme.colors.gray200 }]}>
             <Text style={[styles.modalTitle, { color: theme.colors.text }]}>
               {selectedReport?.title}

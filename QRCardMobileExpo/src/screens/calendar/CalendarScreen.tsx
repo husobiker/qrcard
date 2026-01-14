@@ -20,7 +20,7 @@ import { MaterialIcons as Icon } from "@expo/vector-icons";
 
 export default function CalendarScreen() {
   const { user, userType } = useAuth();
-  const { theme } = useTheme();
+  const { theme, isDark } = useTheme();
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [loading, setLoading] = useState(false);
@@ -201,7 +201,7 @@ export default function CalendarScreen() {
       style={[styles.container, { backgroundColor: theme.colors.background }]}
       edges={["bottom", "left", "right"]}
     >
-      <StatusBar barStyle={theme.isDark ? "light-content" : "dark-content"} />
+      <StatusBar barStyle={isDark ? "light-content" : "dark-content"} />
       <ScrollView
         style={styles.scrollView}
         refreshControl={
@@ -552,7 +552,7 @@ export default function CalendarScreen() {
           edges={["bottom", "left", "right"]}
         >
           <StatusBar
-            barStyle={theme.isDark ? "light-content" : "dark-content"}
+            barStyle={isDark ? "light-content" : "dark-content"}
           />
           <View
             style={[

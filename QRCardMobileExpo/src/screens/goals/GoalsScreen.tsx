@@ -9,7 +9,7 @@ import {MaterialIcons as Icon} from '@expo/vector-icons';
 
 export default function GoalsScreen() {
   const {user, userType} = useAuth();
-  const {theme} = useTheme();
+  const {theme, isDark} = useTheme();
   const [goals, setGoals] = useState<PerformanceGoal[]>([]);
   const [loading, setLoading] = useState(false);
 
@@ -71,7 +71,7 @@ export default function GoalsScreen() {
 
   return (
     <SafeAreaView style={[styles.container, {backgroundColor: theme.colors.background}]}>
-      <StatusBar barStyle={theme.isDark ? 'light-content' : 'dark-content'} />
+      <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} />
       <FlatList
         data={goals}
         renderItem={renderGoal}

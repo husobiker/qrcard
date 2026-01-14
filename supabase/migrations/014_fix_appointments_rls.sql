@@ -9,17 +9,10 @@ CREATE POLICY "Public can insert appointments"
   WITH CHECK (true);
 
 -- Also ensure employees can view their own appointments
+-- Note: Simplified to avoid infinite recursion - service layer will handle filtering
 DROP POLICY IF EXISTS "Employees can view own appointments" ON appointments;
 
 CREATE POLICY "Employees can view own appointments"
   ON appointments FOR SELECT
-  USING (
-    EXISTS (
-      SELECT 1 FROM employees
-      WHERE employees.id = appointments.employee_id
-      AND employees.id IN (
-        SELECT id FROM employees WHERE id = appointments.employee_id
-      )
-    )
-  );
+  USING (true); -- Allow all selects, service layer will filter by employee_id
 

@@ -5,26 +5,52 @@ import {useAuth} from '../contexts/AuthContext';
 import AuthNavigator from './AuthNavigator';
 import MainNavigator from './MainNavigator';
 import EmployeeNavigator from './EmployeeNavigator';
+import RegionalManagerNavigator from './RegionalManagerNavigator';
+import MarketingStaffNavigator from './MarketingStaffNavigator';
 import LoadingScreen from '../screens/auth/LoadingScreen';
+import {FIXED_ROLES} from '../types';
+import type {Employee} from '../types';
 
 const Stack = createStackNavigator();
 
 export default function AppNavigator() {
   const auth = useAuth();
-  const isAuthenticated = typeof auth.isAuthenticated === 'boolean' ? auth.isAuthenticated : Boolean(auth.isAuthenticated);
-  const loading = typeof auth.loading === 'boolean' ? auth.loading : Boolean(auth.loading);
+  const isAuthenticated = auth.isAuthenticated;
+  const loading = auth.loading;
   const userType = auth.userType;
+  const user = auth.user;
 
-  if (loading === true) {
+  if (loading) {
     return <LoadingScreen />;
   }
 
+  // Check if employee is Regional Manager or Marketing Staff
+  const isRegionalManager =
+    userType === 'employee' &&
+    (user as Employee)?.role === FIXED_ROLES.REGIONAL_MANAGER;
+  
+  const isMarketingStaff =
+    userType === 'employee' &&
+    (user as Employee)?.role === FIXED_ROLES.MARKETING_STAFF;
+
   return (
     <NavigationContainer>
-      <Stack.Navigator screenOptions={{headerShown: false as boolean}}>
-        {isAuthenticated === true ? (
+      <Stack.Navigator screenOptions={{headerShown: false}}>
+        {isAuthenticated ? (
           userType === 'employee' ? (
-            <Stack.Screen name="EmployeeMain" component={EmployeeNavigator} />
+            isRegionalManager ? (
+              <Stack.Screen
+                name="RegionalManagerMain"
+                component={RegionalManagerNavigator}
+              />
+            ) : isMarketingStaff ? (
+              <Stack.Screen
+                name="MarketingStaffMain"
+                component={MarketingStaffNavigator}
+              />
+            ) : (
+              <Stack.Screen name="EmployeeMain" component={EmployeeNavigator} />
+            )
           ) : (
             <Stack.Screen name="Main" component={MainNavigator} />
           )

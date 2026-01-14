@@ -9,7 +9,7 @@ import {MaterialIcons as Icon} from '@expo/vector-icons';
 
 export default function CommissionsScreen() {
   const {user, userType} = useAuth();
-  const {theme} = useTheme();
+  const {theme, isDark} = useTheme();
   const [commissions, setCommissions] = useState<CommissionPayment[]>([]);
   const [loading, setLoading] = useState(false);
 
@@ -88,7 +88,7 @@ export default function CommissionsScreen() {
 
   return (
     <SafeAreaView style={[styles.container, {backgroundColor: theme.colors.background}]}>
-      <StatusBar barStyle={theme.isDark ? 'light-content' : 'dark-content'} />
+      <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} />
       <FlatList
         data={commissions}
         renderItem={renderCommission}

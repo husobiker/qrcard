@@ -17,6 +17,10 @@ import CommissionsScreen from '../screens/commissions/CommissionsScreen';
 import CallLogsScreen from '../screens/callLogs/CallLogsScreen';
 import EmployeesScreen from '../screens/employees/EmployeesScreen';
 import ProfileScreen from '../screens/profile/ProfileScreen';
+import RolesScreen from '../screens/roles/RolesScreen';
+import CustomersScreen from '../screens/customers/CustomersScreen';
+import EmployeeReportsScreen from '../screens/employeeReports/EmployeeReportsScreen';
+import ReportsScreen from '../screens/reports/ReportsScreen';
 
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
@@ -27,7 +31,7 @@ function DashboardStack() {
       <Stack.Screen
         name="DashboardMain"
         component={DashboardScreen}
-        options={{headerShown: false as boolean}}
+        options={{headerShown: false}}
       />
       <Stack.Screen name="Goals" component={GoalsScreen} />
       <Stack.Screen name="Transactions" component={TransactionsScreen} />
@@ -35,6 +39,26 @@ function DashboardStack() {
       <Stack.Screen name="Commissions" component={CommissionsScreen} />
       <Stack.Screen name="CallLogs" component={CallLogsScreen} />
       <Stack.Screen name="CRM" component={CRMScreen} />
+      <Stack.Screen
+        name="Customers"
+        component={CustomersScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="EmployeeReports"
+        component={EmployeeReportsScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="Reports"
+        component={ReportsScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="Roles"
+        component={RolesScreen}
+        options={{ headerShown: false }}
+      />
     </Stack.Navigator>
   );
 }
@@ -45,7 +69,12 @@ function ProfileStack() {
       <Stack.Screen
         name="ProfileMain"
         component={ProfileScreen}
-        options={{headerShown: false as boolean}}
+        options={{headerShown: false}}
+      />
+      <Stack.Screen
+        name="Roles"
+        component={RolesScreen}
+        options={{ headerShown: false }}
       />
     </Stack.Navigator>
   );
@@ -62,7 +91,16 @@ export default function MainNavigator() {
         tabBarInactiveTintColor: theme.colors.gray500,
         tabBarStyle: {
           backgroundColor: theme.colors.surface,
-          borderTopColor: theme.colors.gray200,
+          borderTopWidth: 0,
+          elevation: 8,
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: -2 },
+          shadowOpacity: 0.1,
+          shadowRadius: 4,
+          paddingBottom: 0,
+          paddingTop: 0,
+          height: 60,
+          marginTop: 0,
         },
         headerStyle: {
           backgroundColor: theme.colors.surface,
@@ -74,7 +112,7 @@ export default function MainNavigator() {
         component={DashboardStack}
         options={{
           title: t('dashboard.title'),
-          headerShown: false as boolean,
+          headerShown: false,
           tabBarIcon: ({color, size}) => (
             <Icon name="dashboard" size={size} color={color} />
           ),
@@ -85,6 +123,7 @@ export default function MainNavigator() {
         component={EmployeesScreen}
         options={{
           title: 'Personeller',
+          headerShown: false,
           tabBarIcon: ({color, size}) => (
             <Icon name="people" size={size} color={color} />
           ),
@@ -105,7 +144,7 @@ export default function MainNavigator() {
         component={TasksScreen}
         options={{
           title: t('tasks.title'),
-          headerShown: false as boolean,
+          headerShown: false,
           tabBarIcon: ({color, size}) => (
             <Icon name="check-circle" size={size} color={color} />
           ),
@@ -116,7 +155,7 @@ export default function MainNavigator() {
         component={ProfileStack}
         options={{
           title: 'Profil',
-          headerShown: false as boolean,
+          headerShown: false,
           tabBarIcon: ({color, size}) => (
             <Icon name="person" size={size} color={color} />
           ),

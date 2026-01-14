@@ -10,21 +10,24 @@ import {
   Alert,
   StatusBar,
   Modal,
+  Image,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useAuth } from "../../contexts/AuthContext";
 import { useTheme } from "../../contexts/ThemeContext";
-import { getCompanyByUserId, updateCompany, getCompanyById } from "../../services/companyService";
+import { getCompanyByUserId, updateCompany, getCompanyById, uploadCompanyLogo, uploadCompanyBackgroundImage } from "../../services/companyService";
 import { getCompanyReports, getEmployeeReports } from "../../services/reportsService";
 import { getEmployeeById } from "../../services/employeeService";
 import type { Company, Employee } from "../../types";
 import type { ReportsData } from "../../services/reportsService";
 import { MaterialIcons as Icon } from "@expo/vector-icons";
 import { supabase } from "../../services/supabase";
+import * as ImagePicker from "expo-image-picker";
 
 export default function ProfileScreen({ navigation }: any) {
-  const { user, userType, signOut } = useAuth();
-  const { theme } = useTheme();
+  const { user, userType, signOut, refreshUser } = useAuth();
+  const { theme, isDark } = useTheme();
   const [loading, setLoading] = useState(false);
   const [company, setCompany] = useState<Company | null>(null);
   const [employee, setEmployee] = useState<Employee | null>(null);
@@ -56,6 +59,12 @@ export default function ProfileScreen({ navigation }: any) {
     api_key: "",
     api_secret: "",
   });
+  const [logoUri, setLogoUri] = useState<string | null>(null);
+  const [logoPreview, setLogoPreview] = useState<string | null>(null);
+  const [backgroundImageUri, setBackgroundImageUri] = useState<string | null>(null);
+  const [backgroundImagePreview, setBackgroundImagePreview] = useState<string | null>(null);
+  const [uploadingLogo, setUploadingLogo] = useState(false);
+  const [uploadingBackground, setUploadingBackground] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -87,6 +96,43 @@ export default function ProfileScreen({ navigation }: any) {
           api_key: companyData.api_key || "",
           api_secret: companyData.api_secret || "",
         });
+        setLogoPreview(companyData.logo_url);
+        setBackgroundImagePreview(companyData.background_image_url);
+      } else {
+        // Company doesn't exist, check for pending company name
+        const pendingCompanyName = await AsyncStorage.getItem(`pending_company_${user.id}`);
+        
+        if (pendingCompanyName) {
+          // Try to create company with pending name
+          const {data, error} = await supabase
+            .from('companies')
+            .insert({
+              id: user.id,
+              name: pendingCompanyName,
+              language: 'tr' as 'tr' | 'en',
+            } as any)
+            .select()
+            .single();
+
+          if (data && !error) {
+            await AsyncStorage.removeItem(`pending_company_${user.id}`);
+            setCompany(data);
+            setFormData({
+              name: data.name || "",
+              address: data.address || "",
+              phone: data.phone || "",
+              website: data.website || "",
+              tax_number: data.tax_number || "",
+              tax_office: data.tax_office || "",
+              api_endpoint: data.api_endpoint || "",
+              santral_id: data.santral_id || "",
+              api_key: data.api_key || "",
+              api_secret: data.api_secret || "",
+            });
+            setLogoPreview(data.logo_url);
+            setBackgroundImagePreview(data.background_image_url);
+          }
+        }
       }
     } catch (error) {
       console.error("Error loading company:", error);
@@ -636,14 +682,102 @@ export default function ProfileScreen({ navigation }: any) {
     }
   };
 
+  const pickImage = async (type: 'logo' | 'background') => {
+    try {
+      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('İzin Gerekli', 'Galeri erişimi için izin gereklidir. Lütfen ayarlardan galeri erişim iznini verin.');
+        return;
+      }
+
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ['images'] as any,
+        allowsEditing: true,
+        aspect: type === 'logo' ? [1, 1] : [16, 9],
+        quality: 0.8,
+      });
+
+      if (!result.canceled && result.assets[0]) {
+        const uri = result.assets[0].uri;
+        if (type === 'logo') {
+          setLogoUri(uri);
+          setLogoPreview(uri);
+        } else {
+          setBackgroundImageUri(uri);
+          setBackgroundImagePreview(uri);
+        }
+      }
+    } catch (error: any) {
+      console.error('Error picking image:', error);
+      let errorMessage = 'Görsel seçilirken bir hata oluştu';
+      if (error?.message) {
+        if (error.message.includes('permission') || error.message.includes('Permission')) {
+          errorMessage = 'Galeri erişim izni verilmedi. Lütfen ayarlardan izin verin.';
+        } else if (error.message.includes('canceled') || error.message.includes('Canceled')) {
+          return; // User canceled, no need to show error
+        } else {
+          errorMessage = `Görsel seçilirken hata: ${error.message}`;
+        }
+      }
+      Alert.alert('Hata', errorMessage);
+    }
+  };
+
   const handleSaveCompany = async () => {
     if (!user || userType !== "company" || !company) return;
 
     setSaving(true);
     try {
-      const updated = await updateCompany(company.id, formData);
+      let logoUrl = company.logo_url;
+      let backgroundImageUrl = company.background_image_url;
+
+      // Upload logo if selected
+      if (logoUri) {
+        setUploadingLogo(true);
+        const uploadedLogoUrl = await uploadCompanyLogo(logoUri, company.id);
+        if (uploadedLogoUrl) {
+          logoUrl = uploadedLogoUrl;
+        } else {
+          Alert.alert('Hata', 'Logo yüklenirken bir hata oluştu. Lütfen tekrar deneyin.');
+          setUploadingLogo(false);
+          setSaving(false);
+          return;
+        }
+        setUploadingLogo(false);
+      }
+
+      // Upload background image if selected
+      if (backgroundImageUri) {
+        setUploadingBackground(true);
+        const uploadedBgUrl = await uploadCompanyBackgroundImage(backgroundImageUri, company.id);
+        if (uploadedBgUrl) {
+          backgroundImageUrl = uploadedBgUrl;
+        } else {
+          Alert.alert('Hata', 'Arka plan görseli yüklenirken bir hata oluştu. Lütfen tekrar deneyin.');
+          setUploadingBackground(false);
+          setSaving(false);
+          return;
+        }
+        setUploadingBackground(false);
+      }
+
+      const updated = await updateCompany(company.id, {
+        ...formData,
+        logo_url: logoUrl,
+        background_image_url: backgroundImageUrl,
+      });
+      
       if (updated) {
+        console.log('ProfileScreen: Company updated, logo_url:', updated.logo_url);
+        console.log('ProfileScreen: Company updated, background_image_url:', updated.background_image_url);
         setCompany(updated);
+        // Update previews with new URLs
+        setLogoPreview(updated.logo_url || null);
+        setBackgroundImagePreview(updated.background_image_url || null);
+        setLogoUri(null);
+        setBackgroundImageUri(null);
+        // Refresh user data in AuthContext to update all screens
+        await refreshUser();
         Alert.alert("Başarılı", "Profil bilgileri güncellendi");
         setShowEditForm(false);
       } else {
@@ -654,6 +788,8 @@ export default function ProfileScreen({ navigation }: any) {
       Alert.alert("Hata", "Profil bilgileri güncellenemedi");
     } finally {
       setSaving(false);
+      setUploadingLogo(false);
+      setUploadingBackground(false);
     }
   };
 
@@ -662,7 +798,7 @@ export default function ProfileScreen({ navigation }: any) {
       style={[styles.container, { backgroundColor: theme.colors.background }]}
       edges={["bottom", "left", "right"]}
     >
-      <StatusBar barStyle={theme.isDark ? "light-content" : "dark-content"} />
+      <StatusBar barStyle={isDark ? "light-content" : "dark-content"} />
       <ScrollView
         style={styles.scrollView}
         refreshControl={
@@ -712,6 +848,26 @@ export default function ProfileScreen({ navigation }: any) {
             >
               {!showEditForm ? (
                 <>
+                  {company.logo_url && (
+                    <View style={styles.profileItem}>
+                      <Image
+                        key={`display-logo-${company.logo_url}`}
+                        source={{ uri: company.logo_url }}
+                        style={styles.displayLogo}
+                        resizeMode="contain"
+                      />
+                    </View>
+                  )}
+                  {company.background_image_url && (
+                    <View style={styles.profileItem}>
+                      <Image
+                        key={`display-bg-${company.background_image_url}`}
+                        source={{ uri: company.background_image_url }}
+                        style={styles.displayBackgroundImage}
+                        resizeMode="cover"
+                      />
+                    </View>
+                  )}
                   <View style={styles.profileItem}>
                     <Text style={[styles.label, { color: theme.colors.textSecondary }]}>
                       Şirket Adı
@@ -877,6 +1033,8 @@ export default function ProfileScreen({ navigation }: any) {
                       }
                       placeholder="Vergi Numarası"
                       placeholderTextColor={theme.colors.gray500}
+                      maxLength={11}
+                      keyboardType="numeric"
                     />
                   </View>
 
@@ -997,6 +1155,101 @@ export default function ProfileScreen({ navigation }: any) {
                     />
                   </View>
 
+                  <Text
+                    style={[
+                      styles.sectionTitle,
+                      { color: theme.colors.text, marginTop: 16 },
+                    ]}
+                  >
+                    Görseller
+                  </Text>
+
+                  {/* Logo Upload */}
+                  <View style={styles.inputGroup}>
+                    <Text style={[styles.label, { color: theme.colors.text }]}>
+                      Şirket Logosu
+                    </Text>
+                    <View style={styles.imageUploadContainer}>
+                      {logoPreview && (
+                        <Image
+                          key={`logo-${logoPreview}`}
+                          source={{ uri: logoPreview }}
+                          style={styles.imagePreview}
+                          resizeMode="contain"
+                        />
+                      )}
+                      <TouchableOpacity
+                        style={[
+                          styles.imageUploadButton,
+                          {
+                            backgroundColor: theme.colors.primary,
+                            borderColor: theme.colors.gray300,
+                          },
+                        ]}
+                        onPress={() => pickImage('logo')}
+                        disabled={uploadingLogo}
+                      >
+                        <Icon
+                          name={logoPreview ? "edit" : "add-photo-alternate"}
+                          size={20}
+                          color="#FFFFFF"
+                        />
+                        <Text style={styles.imageUploadButtonText}>
+                          {uploadingLogo
+                            ? "Yükleniyor..."
+                            : logoPreview
+                            ? "Logoyu Değiştir"
+                            : "Logo Yükle"}
+                        </Text>
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+
+                  {/* Background Image Upload */}
+                  <View style={styles.inputGroup}>
+                    <Text style={[styles.label, { color: theme.colors.text }]}>
+                      Arka Plan Görseli
+                    </Text>
+                    <View style={styles.imageUploadContainer}>
+                      {backgroundImagePreview && (
+                        <Image
+                          key={`bg-${backgroundImagePreview}`}
+                          source={{ uri: backgroundImagePreview }}
+                          style={styles.backgroundImagePreview}
+                          resizeMode="cover"
+                        />
+                      )}
+                      <TouchableOpacity
+                        style={[
+                          styles.imageUploadButton,
+                          {
+                            backgroundColor: theme.colors.primary,
+                            borderColor: theme.colors.gray300,
+                          },
+                        ]}
+                        onPress={() => pickImage('background')}
+                        disabled={uploadingBackground}
+                      >
+                        <Icon
+                          name={
+                            backgroundImagePreview
+                              ? "edit"
+                              : "add-photo-alternate"
+                          }
+                          size={20}
+                          color="#FFFFFF"
+                        />
+                        <Text style={styles.imageUploadButtonText}>
+                          {uploadingBackground
+                            ? "Yükleniyor..."
+                            : backgroundImagePreview
+                            ? "Görseli Değiştir"
+                            : "Arka Plan Görseli Yükle"}
+                        </Text>
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+
                   <TouchableOpacity
                     style={[
                       styles.saveButton,
@@ -1031,7 +1284,7 @@ export default function ProfileScreen({ navigation }: any) {
                   Ad Soyad
                 </Text>
                 <Text style={[styles.value, { color: theme.colors.text }]}>
-                  {employee.first_name} {employee.last_name}
+                  {employee?.first_name || ""} {employee?.last_name || ""}
                 </Text>
               </View>
               {employee.job_title && (
@@ -1137,6 +1390,49 @@ export default function ProfileScreen({ navigation }: any) {
             )}
           </View>
 
+          {/* Role Management Section */}
+          {userType === "company" && !showEditForm && (
+            <View style={styles.section}>
+              <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>
+                Rol Yönetimi
+              </Text>
+              <TouchableOpacity
+                style={[
+                  styles.roleManagementButton,
+                  {
+                    backgroundColor: theme.colors.surface,
+                    borderColor: theme.colors.gray200,
+                  },
+                ]}
+                onPress={() => navigation.navigate("Roles")}
+              >
+                <Icon
+                  name="admin-panel-settings"
+                  size={24}
+                  color={theme.colors.primary}
+                />
+                <View style={styles.roleManagementButtonText}>
+                  <Text style={[styles.roleManagementTitle, { color: theme.colors.text }]}>
+                    Rolleri Yönet
+                  </Text>
+                  <Text
+                    style={[
+                      styles.roleManagementSubtitle,
+                      { color: theme.colors.textSecondary },
+                    ]}
+                  >
+                    Rolleri oluşturun ve izinleri ayarlayın
+                  </Text>
+                </View>
+                <Icon
+                  name="chevron-right"
+                  size={24}
+                  color={theme.colors.gray400 || "#9CA3AF"}
+                />
+              </TouchableOpacity>
+            </View>
+          )}
+
           {/* Logout Button */}
           <TouchableOpacity
             style={[
@@ -1176,7 +1472,7 @@ export default function ProfileScreen({ navigation }: any) {
           style={[styles.modalContainer, { backgroundColor: theme.colors.background }]}
           edges={["bottom", "left", "right"]}
         >
-          <StatusBar barStyle={theme.isDark ? "light-content" : "dark-content"} />
+          <StatusBar barStyle={isDark ? "light-content" : "dark-content"} />
           <View style={[styles.modalHeader, { borderBottomColor: theme.colors.gray200 }]}>
             <Text style={[styles.modalTitle, { color: theme.colors.text }]}>
               {selectedReport?.title}
@@ -1281,6 +1577,50 @@ const styles = StyleSheet.create({
     color: "#FFFFFF",
     fontWeight: "600",
     fontSize: 16,
+  },
+  imageUploadContainer: {
+    gap: 12,
+  },
+  imagePreview: {
+    width: 120,
+    height: 120,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+  },
+  backgroundImagePreview: {
+    width: "100%",
+    height: 150,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+  },
+  imageUploadButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 12,
+    borderRadius: 8,
+    gap: 8,
+    borderWidth: 1,
+  },
+  imageUploadButtonText: {
+    color: "#FFFFFF",
+    fontWeight: "600",
+    fontSize: 14,
+  },
+  displayLogo: {
+    width: 120,
+    height: 120,
+    borderRadius: 8,
+    alignSelf: "center",
+    marginBottom: 16,
+  },
+  displayBackgroundImage: {
+    width: "100%",
+    height: 150,
+    borderRadius: 8,
+    marginBottom: 16,
   },
   section: {
     marginBottom: 24,
@@ -1446,5 +1786,24 @@ const styles = StyleSheet.create({
     color: "#FFFFFF",
     fontSize: 16,
     fontWeight: "600",
+  },
+  roleManagementButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    padding: 16,
+    borderRadius: 12,
+    borderWidth: 1,
+    gap: 12,
+  },
+  roleManagementButtonText: {
+    flex: 1,
+  },
+  roleManagementTitle: {
+    fontSize: 16,
+    fontWeight: "600",
+    marginBottom: 4,
+  },
+  roleManagementSubtitle: {
+    fontSize: 14,
   },
 });

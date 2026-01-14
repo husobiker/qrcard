@@ -22,7 +22,7 @@ export default function ForgotPasswordScreen({navigation}: any) {
 
   const handleResetPassword = async () => {
     if (!email) {
-      Alert.alert('Error', 'Please enter your email');
+      Alert.alert('Hata', 'Lütfen e-posta adresinizi girin');
       return;
     }
 
@@ -33,16 +33,16 @@ export default function ForgotPasswordScreen({navigation}: any) {
       });
 
       if (error) {
-        Alert.alert('Error', error.message);
+        Alert.alert('Hata', error.message);
       } else {
         Alert.alert(
-          'Success',
-          'Password reset email sent. Please check your inbox.',
-          [{text: 'OK', onPress: () => navigation.navigate('Login')}],
+          'Başarılı',
+          'Şifre sıfırlama e-postası gönderildi. Lütfen gelen kutunuzu kontrol edin.',
+          [{text: 'Tamam', onPress: () => navigation.navigate('Login')}],
         );
       }
     } catch (error: any) {
-      Alert.alert('Error', error?.message || 'Failed to send reset email');
+      Alert.alert('Hata', error?.message || 'Şifre sıfırlama e-postası gönderilemedi');
     } finally {
       setLoading(false);
     }
@@ -58,7 +58,7 @@ export default function ForgotPasswordScreen({navigation}: any) {
         </Text>
 
         <Text style={[styles.subtitle, {color: theme.colors.textSecondary}]}>
-          Enter your email address and we'll send you a link to reset your password.
+          E-posta adresinizi girin, size şifre sıfırlama bağlantısı göndereceğiz.
         </Text>
 
         <View style={styles.inputContainer}>
@@ -79,7 +79,7 @@ export default function ForgotPasswordScreen({navigation}: any) {
           onPress={handleResetPassword}
           disabled={loading}>
           <Text style={styles.buttonText}>
-            {loading ? 'Sending...' : 'Send Reset Link'}
+            {loading ? 'Gönderiliyor...' : 'Sıfırlama Bağlantısı Gönder'}
           </Text>
         </TouchableOpacity>
 
@@ -87,7 +87,7 @@ export default function ForgotPasswordScreen({navigation}: any) {
           style={styles.linkButton}
           onPress={() => navigation.navigate('Login')}>
           <Text style={[styles.linkText, {color: theme.colors.primary}]}>
-            Back to Login
+            Giriş Sayfasına Dön
           </Text>
         </TouchableOpacity>
       </View>

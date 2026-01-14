@@ -9,7 +9,7 @@ import {MaterialIcons as Icon} from '@expo/vector-icons';
 
 export default function CommunicationsScreen() {
   const {user, userType} = useAuth();
-  const {theme} = useTheme();
+  const {theme, isDark} = useTheme();
   const [communications, setCommunications] = useState<CustomerCommunication[]>([]);
   const [loading, setLoading] = useState(false);
 
@@ -93,7 +93,7 @@ export default function CommunicationsScreen() {
 
   return (
     <SafeAreaView style={[styles.container, {backgroundColor: theme.colors.background}]}>
-      <StatusBar barStyle={theme.isDark ? 'light-content' : 'dark-content'} />
+      <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} />
       <FlatList
         data={communications}
         renderItem={renderCommunication}
