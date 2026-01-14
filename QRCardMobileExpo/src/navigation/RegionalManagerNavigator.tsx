@@ -9,8 +9,10 @@ import {useLanguage} from '../contexts/LanguageContext';
 import RegionalManagerDashboardScreen from '../screens/regionalManager/DashboardScreen';
 import RegionalEmployeesScreen from '../screens/regionalManager/EmployeesScreen';
 import RegionalTasksScreen from '../screens/regionalManager/TasksScreen';
+import RegionalManagerMyTasksScreen from '../screens/regionalManager/MyTasksScreen';
 import RegionalCRMScreen from '../screens/regionalManager/CRMScreen';
 import RegionalReportsScreen from '../screens/regionalManager/ReportsScreen';
+import RegionalManagerEmployeeReportsScreen from '../screens/regionalManager/EmployeeReportsScreen';
 import ProfileScreen from '../screens/profile/ProfileScreen';
 
 const Tab = createBottomTabNavigator();
@@ -22,6 +24,16 @@ function RegionalManagerDashboardStack() {
       <Stack.Screen
         name="RegionalManagerDashboardMain"
         component={RegionalManagerDashboardScreen}
+        options={{headerShown: false}}
+      />
+      <Stack.Screen 
+        name="RegionalManagerMyTasks" 
+        component={RegionalManagerMyTasksScreen}
+        options={{headerShown: false}}
+      />
+      <Stack.Screen 
+        name="RegionalManagerEmployeeReports" 
+        component={RegionalManagerEmployeeReportsScreen}
         options={{headerShown: false}}
       />
       <Stack.Screen name="RegionalReports" component={RegionalReportsScreen} />

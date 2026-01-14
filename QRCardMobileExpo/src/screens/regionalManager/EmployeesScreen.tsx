@@ -11,13 +11,16 @@ import {
   Modal,
   ScrollView,
   Platform,
+  Alert,
+  Linking,
 } from "react-native";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { useAuth } from "../../contexts/AuthContext";
 import { useTheme } from "../../contexts/ThemeContext";
 import { getEmployeesByRegion, getEmployeeById } from "../../services/employeeService";
 import { getTasks } from "../../services/taskService";
-import type { Employee, SocialLinks, ExtraLink, Task, TaskStatus } from "../../types";
+import { getLeads } from "../../services/crmService";
+import type { Employee, SocialLinks, ExtraLink, Task, TaskStatus, CRMLead } from "../../types";
 import { MaterialIcons as Icon } from "@expo/vector-icons";
 
 export default function RegionalEmployeesScreen() {
@@ -32,8 +35,13 @@ export default function RegionalEmployeesScreen() {
   const [loadingEmployeeDetails, setLoadingEmployeeDetails] = useState(false);
   const [employeeTasks, setEmployeeTasks] = useState<Task[]>([]);
   const [loadingTasks, setLoadingTasks] = useState(false);
+  const [employeeLeads, setEmployeeLeads] = useState<CRMLead[]>([]);
+  const [loadingLeads, setLoadingLeads] = useState(false);
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [taskModalVisible, setTaskModalVisible] = useState(false);
+  const [selectedLead, setSelectedLead] = useState<CRMLead | null>(null);
+  const [leadModalVisible, setLeadModalVisible] = useState(false);
+  const [viewingAttachment, setViewingAttachment] = useState<string | null>(null);
 
   useEffect(() => {
     if (employee && employee.region_id) {
@@ -59,31 +67,42 @@ export default function RegionalEmployeesScreen() {
     setModalVisible(true);
     setLoadingEmployeeDetails(true);
     setLoadingTasks(true);
+    setLoadingLeads(true);
     try {
       // Fetch full employee details from database
       const fullEmployee = await getEmployeeById(emp.id);
       if (fullEmployee) {
         setSelectedEmployee(fullEmployee);
-        // Load tasks for this employee
+        // Load tasks and leads for this employee
         if (fullEmployee.company_id) {
-          const tasks = await getTasks(fullEmployee.company_id, fullEmployee.id);
+          const [tasks, leads] = await Promise.all([
+            getTasks(fullEmployee.company_id, fullEmployee.id),
+            getLeads(fullEmployee.company_id, fullEmployee.id)
+          ]);
           setEmployeeTasks(tasks);
+          setEmployeeLeads(leads);
         }
       } else {
         // Fallback to the employee from list if fetch fails
         setSelectedEmployee(emp);
         if (emp.company_id) {
-          const tasks = await getTasks(emp.company_id, emp.id);
+          const [tasks, leads] = await Promise.all([
+            getTasks(emp.company_id, emp.id),
+            getLeads(emp.company_id, emp.id)
+          ]);
           setEmployeeTasks(tasks);
+          setEmployeeLeads(leads);
         }
       }
     } catch (error) {
       console.error("Error loading employee details:", error);
       setSelectedEmployee(emp);
       setEmployeeTasks([]);
+      setEmployeeLeads([]);
     } finally {
       setLoadingEmployeeDetails(false);
       setLoadingTasks(false);
+      setLoadingLeads(false);
     }
   };
 
@@ -91,6 +110,7 @@ export default function RegionalEmployeesScreen() {
     setModalVisible(false);
     setSelectedEmployee(null);
     setEmployeeTasks([]);
+    setEmployeeLeads([]);
   };
 
   const getTaskStatusColor = (status: TaskStatus): string => {
@@ -120,6 +140,21 @@ export default function RegionalEmployeesScreen() {
         return "İptal";
       default:
         return status;
+    }
+  };
+
+  const getLeadStatusColor = (status: string): string => {
+    switch (status) {
+      case "Satış Yapıldı":
+        return "#10B981";
+      case "Takipte":
+        return "#F59E0B";
+      case "Reddedildi":
+        return "#EF4444";
+      case "Görüşüldü":
+        return "#3B82F6";
+      default:
+        return "#6B7280";
     }
   };
 
@@ -848,8 +883,382 @@ export default function RegionalEmployeesScreen() {
                   </View>
                 )}
               </View>
+
+              {/* Customers Section */}
+              <View style={styles.tasksSection}>
+                <View style={styles.tasksSectionHeader}>
+                  <Icon
+                    name="people"
+                    size={20}
+                    color={theme.colors.primary}
+                    style={styles.detailIcon}
+                  />
+                  <Text
+                    style={[
+                      styles.tasksSectionTitle,
+                      { color: theme.colors.text },
+                    ]}
+                  >
+                    Müşteriler ({employeeLeads.length})
+                  </Text>
+                </View>
+
+                {loadingLeads ? (
+                  <View style={styles.tasksLoadingContainer}>
+                    <Text
+                      style={[
+                        styles.tasksLoadingText,
+                        { color: theme.colors.textSecondary },
+                      ]}
+                    >
+                      Müşteriler yükleniyor...
+                    </Text>
+                  </View>
+                ) : employeeLeads.length > 0 ? (
+                  <View style={styles.tasksList}>
+                    {employeeLeads.map((lead) => {
+                      const statusColor = getLeadStatusColor(lead.status);
+                      const statusLabel = lead.status;
+                      const isNewStatus = lead.status === "Yeni";
+                      
+                      return (
+                        <TouchableOpacity
+                          key={lead.id}
+                          style={[
+                            styles.leadCard,
+                            {
+                              backgroundColor: theme.colors.surface,
+                              borderColor: theme.colors.gray200,
+                            },
+                          ]}
+                          activeOpacity={0.7}
+                          onPress={() => {
+                            setSelectedLead(lead);
+                            setLeadModalVisible(true);
+                          }}
+                        >
+                          <View style={styles.leadCardContent}>
+                            {isNewStatus && (
+                              <View style={styles.newBadge}>
+                                <Text style={styles.newBadgeText}>Yeni</Text>
+                              </View>
+                            )}
+                            <View style={styles.leadCardHeader}>
+                              <Text
+                                style={[
+                                  styles.leadCardTitle,
+                                  { color: theme.colors.text },
+                                ]}
+                                numberOfLines={2}
+                              >
+                                {lead.customer_name}
+                              </Text>
+                            </View>
+                            {lead.contact_name && (
+                              <Text
+                                style={[
+                                  styles.leadCardDescription,
+                                  { color: theme.colors.textSecondary },
+                                ]}
+                                numberOfLines={1}
+                              >
+                                İletişim: {lead.contact_name}
+                              </Text>
+                            )}
+                            {!isNewStatus && (
+                              <View style={styles.leadCardFooter}>
+                                <View
+                                  style={[
+                                    styles.leadStatusBadge,
+                                    {
+                                      backgroundColor: statusColor + "20",
+                                      borderColor: statusColor + "40",
+                                    },
+                                  ]}
+                                >
+                                  <Text
+                                    style={[
+                                      styles.leadStatusText,
+                                      { color: statusColor },
+                                    ]}
+                                  >
+                                    {statusLabel}
+                                  </Text>
+                                </View>
+                              </View>
+                            )}
+                          </View>
+                        </TouchableOpacity>
+                      );
+                    })}
+                  </View>
+                ) : (
+                  <View style={styles.tasksEmptyContainer}>
+                    <Text
+                      style={[
+                        styles.tasksEmptyText,
+                        { color: theme.colors.textSecondary },
+                      ]}
+                    >
+                      Bu personelin henüz müşterisi bulunmuyor
+                    </Text>
+                  </View>
+                )}
+              </View>
             </ScrollView>
           ) : null}
+
+          {/* Lead Detail Modal - Inside Employee Detail Modal */}
+          <Modal
+        visible={leadModalVisible}
+        animationType="slide"
+        onRequestClose={() => {
+          setLeadModalVisible(false);
+          setSelectedLead(null);
+        }}
+        presentationStyle="fullScreen"
+      >
+        <View
+          style={[
+            styles.modalContainer,
+            { backgroundColor: theme.colors.background },
+          ]}
+        >
+          <StatusBar barStyle="dark-content" />
+          <SafeAreaView
+            edges={["top"]}
+            style={{ backgroundColor: theme.colors.background }}
+          >
+            <View
+              style={[
+                styles.modalHeader,
+                {
+                  borderBottomColor: theme.colors.gray200,
+                  paddingTop: Platform.OS === "ios" ? Math.max(insets.top - 10, 12) : 0,
+                },
+              ]}
+            >
+              <TouchableOpacity
+                onPress={() => {
+                  setLeadModalVisible(false);
+                  setSelectedLead(null);
+                }}
+                style={styles.modalBackButton}
+              >
+                <Icon name="arrow-back" size={24} color={theme.colors.text} />
+              </TouchableOpacity>
+              <Text style={[styles.modalTitle, { color: theme.colors.text }]}>
+                Müşteri Detayı
+              </Text>
+              <TouchableOpacity
+                onPress={() => {
+                  setLeadModalVisible(false);
+                  setSelectedLead(null);
+                }}
+                style={styles.modalCloseButton}
+              >
+                <Icon name="close" size={24} color={theme.colors.text} />
+              </TouchableOpacity>
+            </View>
+          </SafeAreaView>
+
+          {selectedLead && (
+            <ScrollView style={styles.modalContent} showsVerticalScrollIndicator={false}>
+              <View style={styles.formGroup}>
+                <Text style={[styles.label, { color: theme.colors.text }]}>
+                  Müşteri Adı
+                </Text>
+                <Text style={[styles.detailValue, { color: theme.colors.text }]}>
+                  {selectedLead.customer_name}
+                </Text>
+              </View>
+
+              {selectedLead.contact_name && (
+                <View style={styles.formGroup}>
+                  <Text style={[styles.label, { color: theme.colors.text }]}>
+                    İletişim Kişisi
+                  </Text>
+                  <Text
+                    style={[
+                      styles.detailValue,
+                      { color: theme.colors.textSecondary },
+                    ]}
+                  >
+                    {selectedLead.contact_name}
+                  </Text>
+                </View>
+              )}
+
+              {selectedLead.phone && (
+                <View style={styles.formGroup}>
+                  <Text style={[styles.label, { color: theme.colors.text }]}>
+                    Telefon
+                  </Text>
+                  <Text
+                    style={[
+                      styles.detailValue,
+                      { color: theme.colors.textSecondary },
+                    ]}
+                  >
+                    {selectedLead.phone}
+                  </Text>
+                </View>
+              )}
+
+              {selectedLead.email && (
+                <View style={styles.formGroup}>
+                  <Text style={[styles.label, { color: theme.colors.text }]}>
+                    E-posta
+                  </Text>
+                  <Text
+                    style={[
+                      styles.detailValue,
+                      { color: theme.colors.textSecondary },
+                    ]}
+                  >
+                    {selectedLead.email}
+                  </Text>
+                </View>
+              )}
+
+              {selectedLead.tc_no && (
+                <View style={styles.formGroup}>
+                  <Text style={[styles.label, { color: theme.colors.text }]}>
+                    TC No
+                  </Text>
+                  <Text
+                    style={[
+                      styles.detailValue,
+                      { color: theme.colors.textSecondary },
+                    ]}
+                  >
+                    {selectedLead.tc_no}
+                  </Text>
+                </View>
+              )}
+
+              {selectedLead.tax_no && (
+                <View style={styles.formGroup}>
+                  <Text style={[styles.label, { color: theme.colors.text }]}>
+                    Vergi No
+                  </Text>
+                  <Text
+                    style={[
+                      styles.detailValue,
+                      { color: theme.colors.textSecondary },
+                    ]}
+                  >
+                    {selectedLead.tax_no}
+                  </Text>
+                </View>
+              )}
+
+              {selectedLead.address && (
+                <View style={styles.formGroup}>
+                  <Text style={[styles.label, { color: theme.colors.text }]}>
+                    Adres
+                  </Text>
+                  <Text
+                    style={[
+                      styles.detailValue,
+                      { color: theme.colors.textSecondary },
+                    ]}
+                  >
+                    {selectedLead.address}
+                  </Text>
+                </View>
+              )}
+
+              <View style={styles.formGroup}>
+                <Text style={[styles.label, { color: theme.colors.text }]}>
+                  Durum
+                </Text>
+                <View
+                  style={[
+                    styles.leadStatusBadge,
+                    {
+                      backgroundColor: getLeadStatusColor(selectedLead.status) + "20",
+                      borderColor: getLeadStatusColor(selectedLead.status) + "40",
+                      alignSelf: "flex-start",
+                    },
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.leadStatusText,
+                      { color: getLeadStatusColor(selectedLead.status) },
+                    ]}
+                  >
+                    {selectedLead.status}
+                  </Text>
+                </View>
+              </View>
+
+              {selectedLead.notes && (
+                <View style={styles.formGroup}>
+                  <Text style={[styles.label, { color: theme.colors.text }]}>
+                    Notlar
+                  </Text>
+                  <Text
+                    style={[
+                      styles.detailValue,
+                      { color: theme.colors.textSecondary },
+                    ]}
+                  >
+                    {selectedLead.notes}
+                  </Text>
+                </View>
+              )}
+
+              {selectedLead.follow_up_date && (
+                <View style={styles.formGroup}>
+                  <Text style={[styles.label, { color: theme.colors.text }]}>
+                    Takip Tarihi
+                  </Text>
+                  <Text
+                    style={[
+                      styles.detailValue,
+                      { color: theme.colors.textSecondary },
+                    ]}
+                  >
+                    {new Date(selectedLead.follow_up_date).toLocaleDateString(
+                      "tr-TR",
+                      {
+                        year: "numeric",
+                        month: "long",
+                        day: "numeric",
+                      }
+                    )}
+                  </Text>
+                </View>
+              )}
+
+              {selectedLead.created_at && (
+                <View style={styles.formGroup}>
+                  <Text style={[styles.label, { color: theme.colors.text }]}>
+                    Oluşturulma Tarihi
+                  </Text>
+                  <Text
+                    style={[
+                      styles.detailValue,
+                      { color: theme.colors.textSecondary },
+                    ]}
+                  >
+                    {new Date(selectedLead.created_at).toLocaleDateString(
+                      "tr-TR",
+                      {
+                        year: "numeric",
+                        month: "long",
+                        day: "numeric",
+                      }
+                    )}
+                  </Text>
+                </View>
+              )}
+            </ScrollView>
+          )}
+        </View>
+          </Modal>
 
           {/* Task Detail Modal - Inside Employee Detail Modal */}
           <Modal
@@ -1004,8 +1413,249 @@ export default function RegionalEmployeesScreen() {
                       </Text>
                     </View>
                   )}
+
+                  {/* Checklist Items */}
+                  {(() => {
+                    let checklistItems = selectedTask.checklist_items || [];
+                    let checklistCompleted = selectedTask.checklist_completed || [];
+                    
+                    // Parse from JSON if string
+                    if (typeof checklistItems === 'string') {
+                      try {
+                        checklistItems = JSON.parse(checklistItems);
+                      } catch (e) {
+                        checklistItems = [];
+                      }
+                    }
+                    if (typeof checklistCompleted === 'string') {
+                      try {
+                        checklistCompleted = JSON.parse(checklistCompleted);
+                      } catch (e) {
+                        checklistCompleted = [];
+                      }
+                    }
+                    
+                    if (!Array.isArray(checklistItems) || checklistItems.length === 0) {
+                      return null;
+                    }
+                    
+                    return (
+                      <View style={styles.formGroup}>
+                        <Text style={[styles.label, { color: theme.colors.text }]}>
+                          Yapılacak İşlemler
+                        </Text>
+                        <View style={styles.checklistItems}>
+                          {checklistItems.map((item: string, index: number) => {
+                            const isCompleted = Array.isArray(checklistCompleted) && checklistCompleted.includes(item);
+                            return (
+                              <View key={index} style={styles.checklistItemRow}>
+                                <View
+                                  style={[
+                                    styles.checkbox,
+                                    {
+                                      borderColor: theme.colors.gray300,
+                                      backgroundColor: isCompleted
+                                        ? theme.colors.primary
+                                        : "transparent",
+                                    },
+                                  ]}
+                                >
+                                  {isCompleted && (
+                                    <Icon name="check" size={16} color="#FFFFFF" />
+                                  )}
+                                </View>
+                                <Text
+                                  style={[
+                                    styles.checklistItemText,
+                                    {
+                                      color: theme.colors.text,
+                                      textDecorationLine: isCompleted ? "line-through" : "none",
+                                      opacity: isCompleted ? 0.6 : 1,
+                                    },
+                                  ]}
+                                >
+                                  {item}
+                                </Text>
+                              </View>
+                            );
+                          })}
+                        </View>
+                      </View>
+                    );
+                  })()}
+
+                  {/* Address */}
+                  {selectedTask.address && (
+                    <View style={styles.formGroup}>
+                      <Text style={[styles.label, { color: theme.colors.text }]}>
+                        Adres
+                      </Text>
+                      <Text
+                        style={[
+                          styles.detailValue,
+                          { color: theme.colors.textSecondary },
+                        ]}
+                      >
+                        {selectedTask.address}
+                      </Text>
+                    </View>
+                  )}
+
+                  {/* Attachments */}
+                  {(() => {
+                    let attachments = selectedTask.attachments || [];
+                    
+                    // Parse from JSON if string
+                    if (typeof attachments === 'string') {
+                      try {
+                        attachments = JSON.parse(attachments);
+                      } catch (e) {
+                        attachments = [];
+                      }
+                    }
+                    
+                    if (!Array.isArray(attachments) || attachments.length === 0) {
+                      return null;
+                    }
+                    
+                    return (
+                      <View style={styles.formGroup}>
+                        <Text style={[styles.label, { color: theme.colors.text }]}>
+                          Dokümanlar
+                        </Text>
+                        <View style={styles.attachmentsContainer}>
+                          {attachments.map((attachment: string, index: number) => {
+                            const isImage = /\.(jpg|jpeg|png|gif|webp)$/i.test(attachment);
+                            const isUrl = attachment.startsWith('http://') || attachment.startsWith('https://');
+                            
+                            return (
+                              <TouchableOpacity
+                                key={index}
+                                style={styles.attachmentItem}
+                                onPress={async () => {
+                                  try {
+                                    // Check if it's a local URI (file://, content://, ph://)
+                                    const isLocalUri = attachment.startsWith('file://') || 
+                                                      attachment.startsWith('content://') || 
+                                                      attachment.startsWith('ph://');
+                                    
+                                    if (isLocalUri) {
+                                      // Local URI - try to display if it's an image
+                                      if (isImage) {
+                                        setViewingAttachment(attachment);
+                                      } else {
+                                        Alert.alert(
+                                          "Dosya",
+                                          "Bu dosya yerel bir dosyadır ve artık erişilebilir olmayabilir. Lütfen görevi yeniden kaydedin.",
+                                          [
+                                            { text: "Tamam", style: "default" }
+                                          ]
+                                        );
+                                      }
+                                    } else if (isUrl) {
+                                      // URL ise görüntüleme modalı aç veya tarayıcıda aç
+                                      if (isImage) {
+                                        setViewingAttachment(attachment);
+                                      } else {
+                                        const canOpen = await Linking.canOpenURL(attachment);
+                                        if (canOpen) {
+                                          await Linking.openURL(attachment);
+                                        } else {
+                                          Alert.alert("Hata", "Bu dosya açılamıyor");
+                                        }
+                                      }
+                                    } else if (isImage) {
+                                      // Assume it's a valid image path
+                                      setViewingAttachment(attachment);
+                                    } else {
+                                      // Diğer dosyalar için bilgi göster
+                                      Alert.alert(
+                                        "Dosya",
+                                        attachment.split("/").pop() || attachment,
+                                        [
+                                          { text: "Tamam", style: "default" }
+                                        ]
+                                      );
+                                    }
+                                  } catch (error) {
+                                    console.error("Error opening attachment:", error);
+                                    Alert.alert("Hata", "Dosya açılamadı");
+                                  }
+                                }}
+                                activeOpacity={0.7}
+                              >
+                                <Icon 
+                                  name={isImage ? "image" : "attach-file"} 
+                                  size={20} 
+                                  color={theme.colors.primary} 
+                                />
+                                <Text
+                                  style={[styles.attachmentText, { color: theme.colors.text }]}
+                                  numberOfLines={1}
+                                >
+                                  {attachment.split("/").pop() || attachment}
+                                </Text>
+                                <Icon name="open-in-new" size={18} color={theme.colors.gray500} />
+                              </TouchableOpacity>
+                            );
+                          })}
+                        </View>
+                      </View>
+                    );
+                  })()}
                 </ScrollView>
               )}
+
+              {/* Image Viewer Modal - Inside Task Detail Modal */}
+              {viewingAttachment !== null && (() => {
+                const isImage = /\.(jpg|jpeg|png|gif|webp)$/i.test(viewingAttachment || "");
+                return isImage ? (
+                  <View style={styles.imageViewerOverlay}>
+                    <TouchableOpacity
+                      style={styles.imageViewerBackdrop}
+                      activeOpacity={1}
+                      onPress={() => setViewingAttachment(null)}
+                    />
+                    <View style={styles.imageViewerContent}>
+                      <View style={styles.imageViewerHeader}>
+                        <Text style={[styles.imageViewerTitle, { color: "#FFFFFF" }]} numberOfLines={1}>
+                          {viewingAttachment?.split("/").pop() || "Görüntü"}
+                        </Text>
+                        <TouchableOpacity
+                          onPress={() => setViewingAttachment(null)}
+                          style={styles.imageViewerCloseButton}
+                        >
+                          <Icon name="close" size={24} color="#FFFFFF" />
+                        </TouchableOpacity>
+                      </View>
+                      <ScrollView
+                        contentContainerStyle={styles.imageViewerScrollContent}
+                        maximumZoomScale={5}
+                        minimumZoomScale={1}
+                        showsVerticalScrollIndicator={false}
+                        showsHorizontalScrollIndicator={false}
+                      >
+                        <Image
+                          source={{ 
+                            uri: viewingAttachment || "",
+                            cache: 'force-cache'
+                          }}
+                          style={styles.imageViewerImage}
+                          resizeMode="contain"
+                          onError={(error) => {
+                            console.error("Error loading image:", error.nativeEvent?.error || error);
+                            Alert.alert("Hata", "Görüntü yüklenemedi");
+                            setViewingAttachment(null);
+                          }}
+                          onLoad={() => {
+                            console.log("Image loaded successfully:", viewingAttachment);
+                          }}
+                        />
+                      </ScrollView>
+                    </View>
+                  </View>
+                ) : null;
+              })()}
             </View>
           </Modal>
         </View>
@@ -1300,5 +1950,151 @@ const styles = StyleSheet.create({
     fontWeight: "500",
     marginBottom: 8,
     color: "#6B7280",
+  },
+  checklistItems: {
+    marginBottom: 12,
+  },
+  checklistItemRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 8,
+    gap: 12,
+  },
+  checkbox: {
+    width: 24,
+    height: 24,
+    borderRadius: 4,
+    borderWidth: 2,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  checklistItemText: {
+    flex: 1,
+    fontSize: 14,
+  },
+  attachmentsContainer: {
+    marginBottom: 12,
+    gap: 8,
+  },
+  attachmentItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    padding: 12,
+    borderRadius: 8,
+    borderWidth: 1,
+    gap: 12,
+    marginBottom: 8,
+  },
+  attachmentText: {
+    flex: 1,
+    fontSize: 14,
+  },
+  imageViewerOverlay: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    zIndex: 1000,
+  },
+  imageViewerBackdrop: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: "rgba(0, 0, 0, 0.95)",
+  },
+  imageViewerContent: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  imageViewerHeader: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    zIndex: 1001,
+  },
+  imageViewerTitle: {
+    flex: 1,
+    fontSize: 16,
+    fontWeight: "600",
+    marginRight: 16,
+  },
+  imageViewerCloseButton: {
+    padding: 8,
+  },
+  imageViewerScrollContent: {
+    flexGrow: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 20,
+  },
+  imageViewerImage: {
+    width: "100%",
+    height: "100%",
+    minWidth: 300,
+    minHeight: 300,
+    maxWidth: "100%",
+    maxHeight: "100%",
+  },
+  leadCard: {
+    padding: 12,
+    borderRadius: 8,
+    borderWidth: 1,
+    marginBottom: 12,
+    position: "relative",
+  },
+  leadCardContent: {
+    position: "relative",
+  },
+  newBadge: {
+    position: "absolute",
+    top: -8,
+    right: -8,
+    backgroundColor: "#EF4444",
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+    zIndex: 10,
+  },
+  newBadgeText: {
+    color: "#FFFFFF",
+    fontSize: 10,
+    fontWeight: "600",
+  },
+  leadCardHeader: {
+    marginBottom: 8,
+    paddingRight: 40,
+  },
+  leadCardTitle: {
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  leadCardDescription: {
+    fontSize: 14,
+    marginBottom: 8,
+  },
+  leadCardFooter: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: 8,
+  },
+  leadStatusBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+    borderWidth: 1,
+  },
+  leadStatusText: {
+    fontSize: 12,
+    fontWeight: "600",
   },
 });

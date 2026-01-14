@@ -72,6 +72,7 @@ export default function RegionalCRMScreen() {
     email: "",
     tc_no: "",
     tax_no: "",
+    address: "",
     notes: "",
     follow_up_date: "",
     status: "Yeni",
@@ -118,6 +119,7 @@ export default function RegionalCRMScreen() {
       email: "",
       tc_no: "",
       tax_no: "",
+      address: "",
       notes: "",
       follow_up_date: "",
       status: "Yeni",
@@ -143,6 +145,7 @@ export default function RegionalCRMScreen() {
       email: lead.email || "",
       tc_no: lead.tc_no || "",
       tax_no: lead.tax_no || "",
+      address: lead.address || "",
       notes: lead.notes || "",
       follow_up_date: lead.follow_up_date || "",
       status: lead.status,
@@ -543,6 +546,22 @@ export default function RegionalCRMScreen() {
                   </View>
                 )}
 
+                {viewingLead.address && (
+                  <View style={styles.formGroup}>
+                    <Text style={[styles.label, { color: theme.colors.text }]}>
+                      Adres
+                    </Text>
+                    <Text
+                      style={[
+                        styles.detailText,
+                        { color: theme.colors.textSecondary },
+                      ]}
+                    >
+                      {viewingLead.address}
+                    </Text>
+                  </View>
+                )}
+
                 <View style={styles.formGroup}>
                   <Text style={[styles.label, { color: theme.colors.text }]}>
                     Durum
@@ -795,6 +814,30 @@ export default function RegionalCRMScreen() {
                   maxLength={11}
                 />
               </View>
+            </View>
+
+            <View style={styles.formGroup}>
+              <Text style={[styles.label, { color: theme.colors.text }]}>
+                Adres
+              </Text>
+              <TextInput
+                style={[
+                  styles.textArea,
+                  {
+                    color: theme.colors.text,
+                    borderColor: theme.colors.gray300,
+                  },
+                ]}
+                value={formData.address}
+                onChangeText={(text) =>
+                  setFormData({ ...formData, address: text })
+                }
+                placeholder="Müşteri adresi"
+                placeholderTextColor={theme.colors.gray500}
+                multiline
+                numberOfLines={3}
+                textAlignVertical="top"
+              />
             </View>
 
             <View style={styles.formGroup}>

@@ -35,7 +35,7 @@ const statusLabels: Record<TaskStatus, string> = {
   cancelled: "İptal",
 };
 
-export default function MarketingStaffTasksScreen() {
+export default function RegionalManagerMyTasksScreen() {
   const { user } = useAuth();
   const { theme } = useTheme();
   const insets = useSafeAreaInsets();
@@ -622,13 +622,7 @@ export default function MarketingStaffTasksScreen() {
                           return (
                             <TouchableOpacity
                               key={index}
-                              style={[
-                                styles.attachmentItem,
-                                {
-                                  backgroundColor: theme.colors.surface,
-                                  borderColor: theme.colors.gray200,
-                                },
-                              ]}
+                              style={styles.attachmentItem}
                               onPress={async () => {
                                 try {
                                   // Check if it's a local URI (file://, content://, ph://)
@@ -768,17 +762,7 @@ export default function MarketingStaffTasksScreen() {
                   onPress={() => setViewingAttachment(null)}
                 />
                 <View style={styles.imageViewerContent}>
-                  <View
-                    style={[
-                      styles.imageViewerHeader,
-                      {
-                        paddingTop:
-                          Platform.OS === "ios"
-                            ? Math.max(insets.top + 12, 44)
-                            : 12,
-                      },
-                    ]}
-                  >
+                  <View style={styles.imageViewerHeader}>
                     <Text style={[styles.imageViewerTitle, { color: "#FFFFFF" }]} numberOfLines={1}>
                       {viewingAttachment?.split("/").pop() || "Görüntü"}
                     </Text>
@@ -987,41 +971,40 @@ const styles = StyleSheet.create({
     color: "#FFFFFF",
   },
   checklistItems: {
-    marginTop: 8,
+    marginBottom: 12,
   },
   checklistItemRow: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 12,
-    paddingVertical: 8,
+    marginBottom: 8,
+    gap: 12,
   },
   checkbox: {
     width: 24,
     height: 24,
     borderRadius: 4,
     borderWidth: 2,
-    marginRight: 12,
     alignItems: "center",
     justifyContent: "center",
   },
   checklistItemText: {
-    fontSize: 16,
     flex: 1,
+    fontSize: 14,
   },
   attachmentsContainer: {
-    marginTop: 8,
+    marginBottom: 12,
+    gap: 8,
   },
   attachmentItem: {
     flexDirection: "row",
     alignItems: "center",
     padding: 12,
     borderRadius: 8,
-    marginBottom: 8,
-    borderWidth: 1,
+    backgroundColor: "#F3F4F6",
+    gap: 12,
   },
   attachmentText: {
     flex: 1,
-    marginLeft: 12,
     fontSize: 14,
   },
   imageViewerOverlay: {
@@ -1030,7 +1013,6 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: "rgba(0, 0, 0, 0.95)",
     zIndex: 1000,
   },
   imageViewerBackdrop: {
@@ -1039,6 +1021,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
+    backgroundColor: "rgba(0, 0, 0, 0.9)",
   },
   imageViewerContent: {
     flex: 1,
@@ -1054,27 +1037,31 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
     paddingHorizontal: 16,
-    paddingVertical: 12,
-    zIndex: 1001,
+    paddingTop: Platform.OS === "ios" ? 50 : 20,
+    paddingBottom: 16,
+    zIndex: 10,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
   },
   imageViewerTitle: {
     fontSize: 16,
     fontWeight: "600",
+    color: "#FFFFFF",
     flex: 1,
-    marginRight: 16,
   },
   imageViewerCloseButton: {
     padding: 8,
   },
   imageViewerScrollContent: {
-    flexGrow: 1,
+    flex: 1,
     justifyContent: "center",
     alignItems: "center",
+    width: "100%",
+    padding: 20,
   },
   imageViewerImage: {
     width: "100%",
-    height: "100%",
-    minWidth: 300,
+    aspectRatio: 1,
     minHeight: 300,
+    maxWidth: "100%",
   },
 });

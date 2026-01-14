@@ -12,8 +12,9 @@ import {
   TextInput,
   StatusBar,
   Image,
+  Platform,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import * as ImagePicker from "expo-image-picker";
 import { useAuth } from "../../contexts/AuthContext";
 import { useTheme } from "../../contexts/ThemeContext";
@@ -43,13 +44,16 @@ import {
 } from "../../services/appointmentService";
 import { getEmployeePublicUrl } from "../../utils/url";
 import QRCodeGenerator from "../../components/QRCodeGenerator";
-import type { Employee, Appointment } from "../../types";
+import type { Employee, Appointment, Task, CRMLead } from "../../types";
 import { MaterialIcons as Icon } from "@expo/vector-icons";
+import { getTasks } from "../../services/taskService";
+import { getLeads } from "../../services/crmService";
 
 export default function EmployeesScreen() {
   const { user, userType } = useAuth();
   const { theme, isDark } = useTheme();
   const { t } = useLanguage();
+  const insets = useSafeAreaInsets();
   const [companyId, setCompanyId] = useState<string | null>(null);
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [loading, setLoading] = useState(true);
@@ -107,6 +111,10 @@ export default function EmployeesScreen() {
   const [newRegionName, setNewRegionName] = useState("");
   const [newRegionDescription, setNewRegionDescription] = useState("");
   const [creatingRegion, setCreatingRegion] = useState(false);
+  const [employeeDetailModalVisible, setEmployeeDetailModalVisible] = useState(false);
+  const [employeeTasks, setEmployeeTasks] = useState<Task[]>([]);
+  const [employeeLeads, setEmployeeLeads] = useState<CRMLead[]>([]);
+  const [loadingEmployeeDetails, setLoadingEmployeeDetails] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -141,9 +149,26 @@ export default function EmployeesScreen() {
     }
   };
 
-  const handleEmployeePress = (employee: Employee) => {
+  const handleEmployeePress = async (employee: Employee) => {
     setSelectedEmployee(employee);
-    setActionSheetVisible(true);
+    setEmployeeDetailModalVisible(true);
+    setLoadingEmployeeDetails(true);
+    
+    // Load employee tasks and leads
+    try {
+      if (companyId) {
+        const [tasks, leads] = await Promise.all([
+          getTasks(companyId, employee.id),
+          getLeads(companyId, employee.id),
+        ]);
+        setEmployeeTasks(tasks);
+        setEmployeeLeads(leads);
+      }
+    } catch (error) {
+      console.error("Error loading employee details:", error);
+    } finally {
+      setLoadingEmployeeDetails(false);
+    }
   };
 
   const resetForm = () => {
@@ -2398,6 +2423,462 @@ export default function EmployeesScreen() {
         </SafeAreaView>
       </Modal>
 
+      {/* Employee Detail Modal */}
+      <Modal
+        visible={employeeDetailModalVisible}
+        animationType="slide"
+        onRequestClose={() => setEmployeeDetailModalVisible(false)}
+        presentationStyle="fullScreen"
+      >
+        <View
+          style={[
+            styles.modalContainer,
+            { backgroundColor: theme.colors.background },
+          ]}
+        >
+          <StatusBar barStyle="dark-content" />
+          <SafeAreaView
+            edges={["top"]}
+            style={{ backgroundColor: theme.colors.background }}
+          >
+            <View
+              style={[
+                styles.modalHeader,
+                {
+                  borderBottomColor: theme.colors.gray200,
+                  paddingTop: Platform.OS === "ios" ? Math.max(insets.top - 10, 12) : 0,
+                },
+              ]}
+            >
+              <TouchableOpacity
+                onPress={() => setEmployeeDetailModalVisible(false)}
+                style={styles.modalBackButton}
+              >
+                <Icon name="arrow-back" size={24} color={theme.colors.text} />
+              </TouchableOpacity>
+              <Text style={[styles.modalTitle, { color: theme.colors.text }]}>
+                Personel Detayı
+              </Text>
+              <TouchableOpacity
+                onPress={() => setEmployeeDetailModalVisible(false)}
+                style={styles.modalCloseButton}
+              >
+                <Icon name="close" size={24} color={theme.colors.text} />
+              </TouchableOpacity>
+            </View>
+          </SafeAreaView>
+
+          {loadingEmployeeDetails ? (
+            <View style={styles.loadingContainer}>
+              <Text style={{ color: theme.colors.textSecondary }}>
+                Detaylar yükleniyor...
+              </Text>
+            </View>
+          ) : selectedEmployee ? (
+            <ScrollView style={styles.modalContent} showsVerticalScrollIndicator={false}>
+              <View style={styles.modalEmployeeHeader}>
+                {selectedEmployee.profile_image_url ? (
+                  <Image
+                    source={{ uri: selectedEmployee.profile_image_url }}
+                    style={styles.modalEmployeePhoto}
+                  />
+                ) : (
+                  <View
+                    style={[
+                      styles.modalEmployeeAvatar,
+                      { backgroundColor: theme.colors.primary },
+                    ]}
+                  >
+                    <Text style={styles.modalEmployeeAvatarText}>
+                      {selectedEmployee.first_name?.charAt(0) || ""}
+                      {selectedEmployee.last_name?.charAt(0) || ""}
+                    </Text>
+                  </View>
+                )}
+                <View style={styles.modalEmployeeNameContainer}>
+                  <Text
+                    style={[styles.modalEmployeeName, { color: theme.colors.text }]}
+                  >
+                    {selectedEmployee.first_name || ""}{" "}
+                    {selectedEmployee.last_name || ""}
+                  </Text>
+                  {selectedEmployee.role && (
+                    <Text
+                      style={[
+                        styles.modalEmployeeRole,
+                        { color: theme.colors.textSecondary },
+                      ]}
+                    >
+                      {selectedEmployee.role}
+                    </Text>
+                  )}
+                </View>
+              </View>
+
+              <View style={styles.detailSection}>
+                {selectedEmployee.job_title && (
+                  <View style={styles.detailRow}>
+                    <Icon
+                      name="work"
+                      size={20}
+                      color={theme.colors.primary}
+                      style={styles.detailIcon}
+                    />
+                    <View style={styles.detailContent}>
+                      <Text
+                        style={[
+                          styles.detailLabel,
+                          { color: theme.colors.textSecondary },
+                        ]}
+                      >
+                        Pozisyon
+                      </Text>
+                      <Text
+                        style={[styles.detailValue, { color: theme.colors.text }]}
+                      >
+                        {selectedEmployee.job_title}
+                        {selectedEmployee.department &&
+                          ` • ${selectedEmployee.department}`}
+                      </Text>
+                    </View>
+                  </View>
+                )}
+
+                {selectedEmployee.phone && (
+                  <View style={styles.detailRow}>
+                    <Icon
+                      name="phone"
+                      size={20}
+                      color={theme.colors.primary}
+                      style={styles.detailIcon}
+                    />
+                    <View style={styles.detailContent}>
+                      <Text
+                        style={[
+                          styles.detailLabel,
+                          { color: theme.colors.textSecondary },
+                        ]}
+                      >
+                        Telefon
+                      </Text>
+                      <Text
+                        style={[styles.detailValue, { color: theme.colors.text }]}
+                      >
+                        {selectedEmployee.phone}
+                      </Text>
+                    </View>
+                  </View>
+                )}
+
+                {selectedEmployee.email && (
+                  <View style={styles.detailRow}>
+                    <Icon
+                      name="email"
+                      size={20}
+                      color={theme.colors.primary}
+                      style={styles.detailIcon}
+                    />
+                    <View style={styles.detailContent}>
+                      <Text
+                        style={[
+                          styles.detailLabel,
+                          { color: theme.colors.textSecondary },
+                        ]}
+                      >
+                        E-posta
+                      </Text>
+                      <Text
+                        style={[styles.detailValue, { color: theme.colors.text }]}
+                      >
+                        {selectedEmployee.email}
+                      </Text>
+                    </View>
+                  </View>
+                )}
+
+                {selectedEmployee.username && (
+                  <View style={styles.detailRow}>
+                    <Icon
+                      name="person"
+                      size={20}
+                      color={theme.colors.primary}
+                      style={styles.detailIcon}
+                    />
+                    <View style={styles.detailContent}>
+                      <Text
+                        style={[
+                          styles.detailLabel,
+                          { color: theme.colors.textSecondary },
+                        ]}
+                      >
+                        Kullanıcı Adı
+                      </Text>
+                      <Text
+                        style={[styles.detailValue, { color: theme.colors.text }]}
+                      >
+                        {selectedEmployee.username}
+                      </Text>
+                    </View>
+                  </View>
+                )}
+              </View>
+
+              {/* Tasks Section */}
+              <View style={styles.tasksSection}>
+                <View style={styles.tasksSectionHeader}>
+                  <Icon
+                    name="assignment"
+                    size={20}
+                    color={theme.colors.primary}
+                    style={styles.detailIcon}
+                  />
+                  <Text
+                    style={[
+                      styles.tasksSectionTitle,
+                      { color: theme.colors.text },
+                    ]}
+                  >
+                    Görevler ({employeeTasks.length})
+                  </Text>
+                </View>
+
+                {employeeTasks.length > 0 ? (
+                  <View style={styles.tasksList}>
+                    {employeeTasks.map((task) => {
+                      const statusColors: Record<string, string> = {
+                        pending: "#FF9800",
+                        in_progress: "#2196F3",
+                        completed: "#4CAF50",
+                        cancelled: "#F44336",
+                      };
+                      const statusLabels: Record<string, string> = {
+                        pending: "Beklemede",
+                        in_progress: "Devam Ediyor",
+                        completed: "Tamamlandı",
+                        cancelled: "İptal",
+                      };
+                      const statusColor = statusColors[task.status] || "#757575";
+                      const statusLabel = statusLabels[task.status] || task.status;
+                      
+                      return (
+                        <View
+                          key={task.id}
+                          style={[
+                            styles.taskItem,
+                            {
+                              backgroundColor: theme.colors.surface,
+                              borderColor: theme.colors.gray200,
+                            },
+                          ]}
+                        >
+                          <View style={styles.taskItemContent}>
+                            <Text
+                              style={[
+                                styles.taskTitle,
+                                { color: theme.colors.text },
+                              ]}
+                              numberOfLines={2}
+                            >
+                              {task.title}
+                            </Text>
+                            {task.description && (
+                              <Text
+                                style={[
+                                  styles.taskDescription,
+                                  { color: theme.colors.textSecondary },
+                                ]}
+                                numberOfLines={2}
+                              >
+                                {task.description}
+                              </Text>
+                            )}
+                            <View style={styles.taskItemFooter}>
+                              <View
+                                style={[
+                                  styles.taskStatusBadge,
+                                  {
+                                    backgroundColor: statusColor + "20",
+                                    borderColor: statusColor + "40",
+                                  },
+                                ]}
+                              >
+                                <Text
+                                  style={[
+                                    styles.taskStatusText,
+                                    { color: statusColor },
+                                  ]}
+                                >
+                                  {statusLabel}
+                                </Text>
+                              </View>
+                              {task.due_date && (
+                                <View style={styles.taskDueDate}>
+                                  <Icon
+                                    name="schedule"
+                                    size={12}
+                                    color={theme.colors.textSecondary}
+                                  />
+                                  <Text
+                                    style={[
+                                      styles.taskDueDateText,
+                                      { color: theme.colors.textSecondary },
+                                    ]}
+                                  >
+                                    {" "}
+                                    {new Date(task.due_date).toLocaleDateString(
+                                      "tr-TR",
+                                      {
+                                        day: "numeric",
+                                        month: "short",
+                                      }
+                                    )}
+                                  </Text>
+                                </View>
+                              )}
+                            </View>
+                          </View>
+                        </View>
+                      );
+                    })}
+                  </View>
+                ) : (
+                  <View style={styles.tasksEmptyContainer}>
+                    <Text
+                      style={[
+                        styles.tasksEmptyText,
+                        { color: theme.colors.textSecondary },
+                      ]}
+                    >
+                      Bu personelin henüz görevi bulunmuyor
+                    </Text>
+                  </View>
+                )}
+              </View>
+
+              {/* Customers Section */}
+              <View style={styles.tasksSection}>
+                <View style={styles.tasksSectionHeader}>
+                  <Icon
+                    name="people"
+                    size={20}
+                    color={theme.colors.primary}
+                    style={styles.detailIcon}
+                  />
+                  <Text
+                    style={[
+                      styles.tasksSectionTitle,
+                      { color: theme.colors.text },
+                    ]}
+                  >
+                    Müşteriler ({employeeLeads.length})
+                  </Text>
+                </View>
+
+                {employeeLeads.length > 0 ? (
+                  <View style={styles.tasksList}>
+                    {employeeLeads.map((lead) => {
+                      return (
+                        <View
+                          key={lead.id}
+                          style={[
+                            styles.taskItem,
+                            {
+                              backgroundColor: theme.colors.surface,
+                              borderColor: theme.colors.gray200,
+                            },
+                          ]}
+                        >
+                          <View style={styles.taskItemContent}>
+                            <Text
+                              style={[
+                                styles.taskTitle,
+                                { color: theme.colors.text },
+                              ]}
+                              numberOfLines={1}
+                            >
+                              {lead.customer_name || lead.contact_name || "İsimsiz Müşteri"}
+                            </Text>
+                            {lead.email && (
+                              <View style={styles.taskItemFooter}>
+                                <Icon
+                                  name="email"
+                                  size={12}
+                                  color={theme.colors.textSecondary}
+                                />
+                                <Text
+                                  style={[
+                                    styles.taskDueDateText,
+                                    { color: theme.colors.textSecondary },
+                                  ]}
+                                >
+                                  {" "}
+                                  {lead.email}
+                                </Text>
+                              </View>
+                            )}
+                            {lead.phone && (
+                              <View style={styles.taskItemFooter}>
+                                <Icon
+                                  name="phone"
+                                  size={12}
+                                  color={theme.colors.textSecondary}
+                                />
+                                <Text
+                                  style={[
+                                    styles.taskDueDateText,
+                                    { color: theme.colors.textSecondary },
+                                  ]}
+                                >
+                                  {" "}
+                                  {lead.phone}
+                                </Text>
+                              </View>
+                            )}
+                            {lead.status && (
+                              <View style={styles.taskItemFooter}>
+                                <View
+                                  style={[
+                                    styles.taskStatusBadge,
+                                    {
+                                      backgroundColor: theme.colors.primary + "20",
+                                      borderColor: theme.colors.primary + "40",
+                                    },
+                                  ]}
+                                >
+                                  <Text
+                                    style={[
+                                      styles.taskStatusText,
+                                      { color: theme.colors.primary },
+                                    ]}
+                                  >
+                                    {lead.status}
+                                  </Text>
+                                </View>
+                              </View>
+                            )}
+                          </View>
+                        </View>
+                      );
+                    })}
+                  </View>
+                ) : (
+                  <View style={styles.tasksEmptyContainer}>
+                    <Text
+                      style={[
+                        styles.tasksEmptyText,
+                        { color: theme.colors.textSecondary },
+                      ]}
+                    >
+                      Bu personelin henüz müşterisi bulunmuyor
+                    </Text>
+                  </View>
+                )}
+              </View>
+            </ScrollView>
+          ) : null}
+        </View>
+      </Modal>
+
     </SafeAreaView>
   );
 }
@@ -2903,5 +3384,132 @@ const styles = StyleSheet.create({
   emptyRegionsSubtext: {
     fontSize: 12,
     textAlign: "center",
+  },
+  modalEmployeeHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    padding: 20,
+    gap: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: "#E5E7EB",
+  },
+  modalEmployeePhoto: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: "#E5E7EB",
+  },
+  modalEmployeeAvatar: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  modalEmployeeAvatarText: {
+    color: "#FFFFFF",
+    fontSize: 32,
+    fontWeight: "bold",
+  },
+  modalEmployeeNameContainer: {
+    flex: 1,
+  },
+  modalEmployeeName: {
+    fontSize: 24,
+    fontWeight: "700",
+    marginBottom: 4,
+  },
+  modalEmployeeRole: {
+    fontSize: 16,
+  },
+  detailSection: {
+    padding: 20,
+    gap: 16,
+  },
+  detailRow: {
+    flexDirection: "row",
+    gap: 12,
+  },
+  detailIcon: {
+    marginTop: 2,
+  },
+  detailContent: {
+    flex: 1,
+  },
+  detailLabel: {
+    fontSize: 12,
+    marginBottom: 4,
+  },
+  detailValue: {
+    fontSize: 16,
+  },
+  tasksSection: {
+    padding: 20,
+    borderTopWidth: 1,
+    borderTopColor: "#E5E7EB",
+  },
+  tasksSectionHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    marginBottom: 16,
+  },
+  tasksSectionTitle: {
+    fontSize: 18,
+    fontWeight: "600",
+  },
+  tasksList: {
+    gap: 12,
+  },
+  taskItem: {
+    borderRadius: 12,
+    borderWidth: 1,
+    padding: 16,
+  },
+  taskItemContent: {
+    gap: 8,
+  },
+  taskTitle: {
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  taskDescription: {
+    fontSize: 14,
+    lineHeight: 20,
+  },
+  taskItemFooter: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    marginTop: 8,
+  },
+  taskStatusBadge: {
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 12,
+    borderWidth: 1,
+  },
+  taskStatusText: {
+    fontSize: 12,
+    fontWeight: "600",
+  },
+  taskDueDate: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+  },
+  taskDueDateText: {
+    fontSize: 12,
+  },
+  tasksEmptyContainer: {
+    padding: 20,
+    alignItems: "center",
+  },
+  tasksEmptyText: {
+    fontSize: 14,
+    textAlign: "center",
+  },
+  modalBackButton: {
+    padding: 8,
   },
 });

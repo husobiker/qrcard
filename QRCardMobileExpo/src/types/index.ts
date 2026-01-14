@@ -95,6 +95,7 @@ export interface CRMLead {
   email: string | null
   tc_no: string | null
   tax_no: string | null
+  address: string | null
   notes: string | null
   follow_up_date: string | null
   status: CRMLeadStatus

@@ -337,6 +337,11 @@ export default function RegionalManagerDashboardScreen({ navigation }: any) {
               onPress={() => navigation.navigate("RegionalTasks")}
             />
             <QuickAction
+              title="Görevlerim"
+              icon="assignment"
+              onPress={() => navigation.navigate("RegionalManagerMyTasks")}
+            />
+            <QuickAction
               title="Müşteri Kayıtları"
               icon="person-add"
               onPress={() => navigation.navigate("RegionalCRM")}
@@ -345,6 +350,11 @@ export default function RegionalManagerDashboardScreen({ navigation }: any) {
               title="Raporlar"
               icon="bar-chart"
               onPress={() => navigation.navigate("RegionalReports")}
+            />
+            <QuickAction
+              title="Personel Analizi"
+              icon="analytics"
+              onPress={() => navigation.navigate("RegionalManagerEmployeeReports")}
             />
           </View>
         </View>

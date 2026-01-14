@@ -8,6 +8,7 @@ export interface CRMLeadFormData {
   email?: string;
   tc_no?: string;
   tax_no?: string;
+  address?: string;
   notes?: string;
   follow_up_date?: string;
   status: CRMLeadStatus;
@@ -75,6 +76,7 @@ export async function createLead(
         email: leadData.email || null,
         tc_no: leadData.tc_no || null,
         tax_no: leadData.tax_no || null,
+        address: leadData.address || null,
         notes: leadData.notes || null,
         follow_up_date: leadData.follow_up_date || null,
         status: leadData.status,
