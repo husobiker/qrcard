@@ -37,8 +37,14 @@ function DashboardStack() {
       <Stack.Screen name="Transactions" component={TransactionsScreen} />
       <Stack.Screen name="Communications" component={CommunicationsScreen} />
       <Stack.Screen name="Commissions" component={CommissionsScreen} />
-      <Stack.Screen name="CallLogs" component={CallLogsScreen} />
-      <Stack.Screen name="CRM" component={CRMScreen} />
+      <Stack.Screen 
+        name="CRM" 
+        component={CRMScreen}
+        options={{
+          headerShown: false,
+          title: 'Satış Takibi',
+        }}
+      />
       <Stack.Screen
         name="Customers"
         component={CustomersScreen}

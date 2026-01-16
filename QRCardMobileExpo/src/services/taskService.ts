@@ -428,21 +428,35 @@ export async function getTaskStats(
 
     const {data, error} = await query;
 
-    if (error) throw error;
+    if (error) {
+      console.error('Error fetching task stats:', error);
+      throw error;
+    }
 
     const tasks = data || [];
     const now = new Date();
 
-    return {
+    // Debug: Log task statuses to see what we're getting
+    console.log('Task stats - Total tasks:', tasks.length);
+    console.log('Task stats - Task statuses:', tasks.map((t: any) => t.status));
+    console.log('Task stats - Employee ID:', employeeId);
+    console.log('Task stats - Company ID:', companyId);
+
+    const stats = {
       total: tasks.length,
-      pending: tasks.filter((t: any) => t.status === 'pending').length,
-      in_progress: tasks.filter((t: any) => t.status === 'in_progress').length,
-      completed: tasks.filter((t: any) => t.status === 'completed').length,
+      pending: tasks.filter((t: any) => (t.status || '').toLowerCase() === 'pending').length,
+      in_progress: tasks.filter((t: any) => (t.status || '').toLowerCase() === 'in_progress').length,
+      completed: tasks.filter((t: any) => (t.status || '').toLowerCase() === 'completed').length,
       overdue: tasks.filter((t: any) => {
-        if (!t.due_date || t.status === 'completed') return false;
+        const status = (t.status || '').toLowerCase();
+        if (!t.due_date || status === 'completed') return false;
         return new Date(t.due_date) < now;
       }).length,
     };
+
+    console.log('Task stats result:', stats);
+
+    return stats;
   } catch (error) {
     console.error('Error fetching task stats:', error);
     return {

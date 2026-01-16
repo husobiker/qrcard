@@ -6,38 +6,37 @@ import {useTheme} from '../contexts/ThemeContext';
 import {useLanguage} from '../contexts/LanguageContext';
 
 // Screens
-import MarketingStaffDashboardScreen from '../screens/marketingStaff/DashboardScreen';
-import MarketingStaffCustomersScreen from '../screens/marketingStaff/CustomersScreen';
-import MarketingStaffQuotesScreen from '../screens/marketingStaff/QuotesScreen';
-import MarketingStaffTasksScreen from '../screens/marketingStaff/TasksScreen';
-import MarketingStaffMeetingsScreen from '../screens/marketingStaff/MeetingsScreen';
+import CallCenterDashboardScreen from '../screens/callCenter/DashboardScreen';
+import CallCenterSearchCallScreen from '../screens/callCenter/SearchCallScreen';
+import CallCenterCRMScreen from '../screens/callCenter/CRMScreen';
+import CallCenterPerformanceScreen from '../screens/callCenter/PerformanceScreen';
 import ProfileScreen from '../screens/profile/ProfileScreen';
 
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
 
-function MarketingStaffDashboardStack() {
+function CallCenterDashboardStack() {
   return (
     <Stack.Navigator>
       <Stack.Screen
-        name="MarketingStaffDashboardMain"
-        component={MarketingStaffDashboardScreen}
+        name="CallCenterDashboardMain"
+        component={CallCenterDashboardScreen}
         options={{headerShown: false}}
       />
       <Stack.Screen
-        name="MarketingStaffCustomers"
-        component={MarketingStaffCustomersScreen}
+        name="CallCenterPerformance"
+        component={CallCenterPerformanceScreen}
         options={{headerShown: false}}
       />
     </Stack.Navigator>
   );
 }
 
-function MarketingStaffProfileStack() {
+function CallCenterProfileStack() {
   return (
     <Stack.Navigator>
       <Stack.Screen
-        name="MarketingStaffProfileMain"
+        name="CallCenterProfileMain"
         component={ProfileScreen}
         options={{headerShown: false}}
       />
@@ -45,7 +44,7 @@ function MarketingStaffProfileStack() {
   );
 }
 
-export default function MarketingStaffNavigator() {
+export default function CallCenterNavigator() {
   const {theme} = useTheme();
   const {t} = useLanguage();
 
@@ -73,8 +72,8 @@ export default function MarketingStaffNavigator() {
         headerTintColor: theme.colors.text,
       }}>
       <Tab.Screen
-        name="MarketingStaffDashboardTab"
-        component={MarketingStaffDashboardStack}
+        name="CallCenterDashboardTab"
+        component={CallCenterDashboardStack}
         options={{
           title: 'Anasayfa',
           headerShown: false,
@@ -84,41 +83,30 @@ export default function MarketingStaffNavigator() {
         }}
       />
       <Tab.Screen
-        name="MarketingStaffQuotes"
-        component={MarketingStaffQuotesScreen}
+        name="CallCenterSearchCall"
+        component={CallCenterSearchCallScreen}
         options={{
-          title: 'Teklifler',
+          title: 'Müşteri Ara',
           headerShown: false,
           tabBarIcon: ({color, size}) => (
-            <Icon name="description" size={size} color={color} />
+            <Icon name="phone" size={size} color={color} />
           ),
         }}
       />
       <Tab.Screen
-        name="MarketingStaffTasks"
-        component={MarketingStaffTasksScreen}
+        name="CallCenterCRM"
+        component={CallCenterCRMScreen}
         options={{
-          title: 'Görevler',
+          title: 'Müşteri Kayıtları',
           headerShown: false,
           tabBarIcon: ({color, size}) => (
-            <Icon name="check-circle" size={size} color={color} />
+            <Icon name="people" size={size} color={color} />
           ),
         }}
       />
       <Tab.Screen
-        name="MarketingStaffMeetings"
-        component={MarketingStaffMeetingsScreen}
-        options={{
-          title: 'Görüşmeler',
-          headerShown: false,
-          tabBarIcon: ({color, size}) => (
-            <Icon name="event" size={size} color={color} />
-          ),
-        }}
-      />
-      <Tab.Screen
-        name="MarketingStaffProfileTab"
-        component={MarketingStaffProfileStack}
+        name="CallCenterProfileTab"
+        component={CallCenterProfileStack}
         options={{
           title: 'Profil',
           headerShown: false,

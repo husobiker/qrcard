@@ -52,7 +52,7 @@ export default function MarketingStaffReportsScreen() {
 
     setLoading(true);
     try {
-      // Load employee reports
+      // Load employee reports (includes task_stats)
       const reports = await getEmployeeReports(employee.id, employee.company_id);
       setReportsData(reports);
 
@@ -60,16 +60,27 @@ export default function MarketingStaffReportsScreen() {
       const quotes = await getQuoteStats(employee.company_id, employee.id);
       setQuoteStats(quotes);
 
-      // Load task stats
-      const tasks = await getTaskStats(employee.company_id, employee.id);
-      setTaskStats(tasks);
+      // Use task_stats from reports data, or load separately if not available
+      if (reports.task_stats) {
+        setTaskStats(reports.task_stats);
+      } else {
+        const tasks = await getTaskStats(employee.company_id, employee.id);
+        setTaskStats(tasks);
+      }
 
-      // Load meeting stats
-      const meetings = await getCommunicationStats(employee.company_id, employee.id);
-      setMeetingStats({
-        total: meetings.total,
-        meeting: meetings.meeting,
-      });
+      // Use communication_stats from reports data, or load separately if not available
+      if (reports.communication_stats) {
+        setMeetingStats({
+          total: reports.communication_stats.total,
+          meeting: reports.communication_stats.meeting,
+        });
+      } else {
+        const meetings = await getCommunicationStats(employee.company_id, employee.id);
+        setMeetingStats({
+          total: meetings.total,
+          meeting: meetings.meeting,
+        });
+      }
     } catch (error) {
       console.error("Error loading reports:", error);
     } finally {
@@ -90,7 +101,7 @@ export default function MarketingStaffReportsScreen() {
     color,
   }: {
     title: string;
-    value: number;
+    value: number | string;
     icon: string;
     color: string;
   }) => (
@@ -144,6 +155,13 @@ export default function MarketingStaffReportsScreen() {
       thisWeek: 0,
     },
     analytics_stats: { total_views: 0, total_clicks: 0, employees_with_views: 0 },
+    transaction_stats: {
+      total_income: 0,
+      total_expense: 0,
+      net_amount: 0,
+      income_count: 0,
+      expense_count: 0,
+    },
   };
 
   return (
@@ -251,20 +269,14 @@ export default function MarketingStaffReportsScreen() {
         {/* CRM Statistics */}
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>
-            CRM İstatistikleri
+            Satış İstatistikleri
           </Text>
           <View style={styles.statsGrid}>
             <StatCard
-              title="Toplam Müşteri"
+              title="Toplam Lead"
               value={displayReports.crm_stats.total}
               icon="person"
               color="#3B82F6"
-            />
-            <StatCard
-              title="Takip Edilecek"
-              value={displayReports.crm_stats.in_follow_up}
-              icon="schedule"
-              color="#F59E0B"
             />
             <StatCard
               title="Satış Yapılan"
@@ -272,8 +284,73 @@ export default function MarketingStaffReportsScreen() {
               icon="check-circle"
               color="#10B981"
             />
+            <StatCard
+              title="Takipte"
+              value={displayReports.crm_stats.in_follow_up}
+              icon="schedule"
+              color="#8B5CF6"
+            />
+            <StatCard
+              title="Bugün Görüşülecek"
+              value={displayReports.crm_stats.today_follow_ups}
+              icon="event"
+              color="#3B82F6"
+            />
           </View>
         </View>
+
+        {/* Income/Expense Summary */}
+        {displayReports.transaction_stats && (
+          <View style={styles.section}>
+            <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>
+              Gelir/Gider Özeti
+            </Text>
+            <View style={styles.statsGrid}>
+              <StatCard
+                title="Toplam Gelir"
+                value={`₺${(displayReports.transaction_stats.total_income || 0).toFixed(0)}`}
+                icon="trending-up"
+                color="#10B981"
+              />
+              <StatCard
+                title="Toplam Gider"
+                value={`₺${(displayReports.transaction_stats.total_expense || 0).toFixed(0)}`}
+                icon="trending-down"
+                color="#EF4444"
+              />
+            </View>
+            <View style={styles.fullWidthCard}>
+              <View
+                style={[
+                  styles.netAmountCard,
+                  {
+                    backgroundColor: theme.colors.surface,
+                    borderColor: theme.colors.gray200,
+                  },
+                ]}
+              >
+                <View style={styles.netAmountRow}>
+                  <Text style={[styles.netAmountLabel, { color: theme.colors.text }]}>
+                    Net Tutar
+                  </Text>
+                  <Text
+                    style={[
+                      styles.netAmountValue,
+                      {
+                        color:
+                          (displayReports.transaction_stats.net_amount || 0) >= 0
+                            ? "#10B981"
+                            : "#EF4444",
+                      },
+                    ]}
+                  >
+                    ₺{(displayReports.transaction_stats.net_amount || 0).toFixed(0)}
+                  </Text>
+                </View>
+              </View>
+            </View>
+          </View>
+        )}
       </ScrollView>
     </SafeAreaView>
   );
@@ -340,5 +417,27 @@ const styles = StyleSheet.create({
   statTitle: {
     fontSize: 12,
     textAlign: "center",
+  },
+  fullWidthCard: {
+    width: "100%",
+    marginTop: 12,
+  },
+  netAmountCard: {
+    padding: 16,
+    borderRadius: 12,
+    borderWidth: 1,
+  },
+  netAmountRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  netAmountLabel: {
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  netAmountValue: {
+    fontSize: 24,
+    fontWeight: "700",
   },
 });

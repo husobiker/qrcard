@@ -106,7 +106,12 @@ export default function MarketingStaffQuotesScreen() {
       setQuotes(quotesData);
 
       // Load CRM leads for customer selection
-      const leadsData = await getLeads(employee.company_id, employee.id);
+      // For regional managers, load all leads in their region
+      // For other employees, load only their assigned leads
+      const regionId = (employee as any).region_id;
+      const leadsData = regionId 
+        ? await getLeads(employee.company_id, undefined, regionId)
+        : await getLeads(employee.company_id, employee.id);
       setLeads(leadsData);
     } catch (error) {
       console.error("Error loading data:", error);
@@ -256,8 +261,20 @@ export default function MarketingStaffQuotesScreen() {
           Alert.alert("Başarılı", "Teklif güncellendi");
         }
       } else {
+        console.log('handleSaveQuote - Creating quote with formData:', {
+          employee_id: formData.employee_id,
+          customer_id: formData.customer_id,
+          customer_name: formData.customer_name,
+          price: formData.price,
+          status: formData.status
+        });
         const newQuote = await createQuote(employee.company_id, formData);
         if (newQuote) {
+          console.log('handleSaveQuote - Quote created:', {
+            id: newQuote.id,
+            customer_id: newQuote.customer_id,
+            customer_name: newQuote.customer_name
+          });
           await loadData();
           setModalVisible(false);
           setViewingQuote(null);
@@ -1201,6 +1218,257 @@ export default function MarketingStaffQuotesScreen() {
                     </View>
                   }
                 />
+              </View>
+            </View>
+          )}
+
+          {/* Date Picker Modal */}
+          {showDatePicker && (
+            <View style={styles.employeeModalWrapper}>
+              <View
+                style={[
+                  styles.employeeModal,
+                  {
+                    backgroundColor: theme.colors.surface,
+                    maxHeight: 400,
+                  },
+                ]}
+              >
+                <View
+                  style={[
+                    styles.employeeModalHeader,
+                    { borderBottomColor: theme.colors.gray200 },
+                  ]}
+                >
+                  <Text style={[styles.employeeModalTitle, { color: theme.colors.text }]}>
+                    Tarih Seç
+                  </Text>
+                  <TouchableOpacity
+                    onPress={() => setShowDatePicker(false)}
+                  >
+                    <Icon name="close" size={24} color={theme.colors.text} />
+                  </TouchableOpacity>
+                </View>
+
+                <View
+                  style={[
+                    styles.datePickerContent,
+                    { borderTopColor: theme.colors.gray200 },
+                  ]}
+                >
+                  {/* Year Picker */}
+                  <View style={styles.pickerColumn}>
+                    <Text
+                      style={[
+                        styles.pickerLabel,
+                        { color: theme.colors.textSecondary },
+                      ]}
+                    >
+                      Yıl
+                    </Text>
+                    <ScrollView
+                      ref={yearScrollRef}
+                      style={styles.pickerScroll}
+                      showsVerticalScrollIndicator={false}
+                    >
+                      {Array.from({ length: 50 }, (_, i) => {
+                        const year = new Date().getFullYear() - 5 + i;
+                        const isSelected = year === tempYear;
+                        return (
+                          <TouchableOpacity
+                            key={year}
+                            style={[
+                              styles.pickerItem,
+                              {
+                                backgroundColor: isSelected
+                                  ? theme.colors.primary + "20"
+                                  : "transparent",
+                              },
+                            ]}
+                            onPress={() => {
+                              setTempYear(year);
+                              const daysInMonth = getDaysInMonth(year, tempMonth);
+                              if (tempDay > daysInMonth) {
+                                setTempDay(daysInMonth);
+                              }
+                            }}
+                          >
+                            <Text
+                              style={[
+                                styles.pickerItemText,
+                                {
+                                  color: isSelected
+                                    ? theme.colors.primary
+                                    : theme.colors.text,
+                                  fontWeight: isSelected ? "600" : "400",
+                                },
+                              ]}
+                            >
+                              {year}
+                            </Text>
+                          </TouchableOpacity>
+                        );
+                      })}
+                    </ScrollView>
+                  </View>
+
+                  {/* Month Picker */}
+                  <View style={styles.pickerColumn}>
+                    <Text
+                      style={[
+                        styles.pickerLabel,
+                        { color: theme.colors.textSecondary },
+                      ]}
+                    >
+                      Ay
+                    </Text>
+                    <ScrollView
+                      ref={monthScrollRef}
+                      style={styles.pickerScroll}
+                      showsVerticalScrollIndicator={false}
+                    >
+                      {Array.from({ length: 12 }, (_, i) => {
+                        const month = i + 1;
+                        const isSelected = month === tempMonth;
+                        const monthNames = [
+                          "Ocak",
+                          "Şubat",
+                          "Mart",
+                          "Nisan",
+                          "Mayıs",
+                          "Haziran",
+                          "Temmuz",
+                          "Ağustos",
+                          "Eylül",
+                          "Ekim",
+                          "Kasım",
+                          "Aralık",
+                        ];
+                        return (
+                          <TouchableOpacity
+                            key={month}
+                            style={[
+                              styles.pickerItem,
+                              {
+                                backgroundColor: isSelected
+                                  ? theme.colors.primary + "20"
+                                  : "transparent",
+                              },
+                            ]}
+                            onPress={() => {
+                              setTempMonth(month);
+                              const daysInMonth = getDaysInMonth(tempYear, month);
+                              if (tempDay > daysInMonth) {
+                                setTempDay(daysInMonth);
+                              }
+                            }}
+                          >
+                            <Text
+                              style={[
+                                styles.pickerItemText,
+                                {
+                                  color: isSelected
+                                    ? theme.colors.primary
+                                    : theme.colors.text,
+                                  fontWeight: isSelected ? "600" : "400",
+                                },
+                              ]}
+                            >
+                              {monthNames[i]}
+                            </Text>
+                          </TouchableOpacity>
+                        );
+                      })}
+                    </ScrollView>
+                  </View>
+
+                  {/* Day Picker */}
+                  <View style={styles.pickerColumn}>
+                    <Text
+                      style={[
+                        styles.pickerLabel,
+                        { color: theme.colors.textSecondary },
+                      ]}
+                    >
+                      Gün
+                    </Text>
+                    <ScrollView
+                      ref={dayScrollRef}
+                      style={styles.pickerScroll}
+                      showsVerticalScrollIndicator={false}
+                    >
+                      {Array.from(
+                        { length: getDaysInMonth(tempYear, tempMonth) },
+                        (_, i) => {
+                          const day = i + 1;
+                          const isSelected = day === tempDay;
+                          return (
+                            <TouchableOpacity
+                              key={day}
+                              style={[
+                                styles.pickerItem,
+                                {
+                                  backgroundColor: isSelected
+                                    ? theme.colors.primary + "20"
+                                    : "transparent",
+                                },
+                              ]}
+                              onPress={() => setTempDay(day)}
+                            >
+                              <Text
+                                style={[
+                                  styles.pickerItemText,
+                                  {
+                                    color: isSelected
+                                      ? theme.colors.primary
+                                      : theme.colors.text,
+                                    fontWeight: isSelected ? "600" : "400",
+                                  },
+                                ]}
+                              >
+                                {day}
+                              </Text>
+                            </TouchableOpacity>
+                          );
+                        }
+                      )}
+                    </ScrollView>
+                  </View>
+                </View>
+
+                <View
+                  style={[
+                    styles.modalFooter,
+                    {
+                      borderTopColor: theme.colors.gray200,
+                      marginTop: 0,
+                      paddingTop: 12,
+                    },
+                  ]}
+                >
+                  <TouchableOpacity
+                    style={[
+                      styles.modalButton,
+                      { backgroundColor: theme.colors.gray200 },
+                    ]}
+                    onPress={() => setShowDatePicker(false)}
+                  >
+                    <Text
+                      style={[styles.modalButtonText, { color: theme.colors.text }]}
+                    >
+                      İptal
+                    </Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[
+                      styles.modalButton,
+                      { backgroundColor: theme.colors.primary },
+                    ]}
+                    onPress={handleDateConfirm}
+                  >
+                    <Text style={styles.modalButtonTextWhite}>Tamam</Text>
+                  </TouchableOpacity>
+                </View>
               </View>
             </View>
           )}

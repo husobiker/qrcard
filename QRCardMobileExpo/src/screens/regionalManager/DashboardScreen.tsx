@@ -8,6 +8,7 @@ import {
   RefreshControl,
   StatusBar,
   Alert,
+  Share,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useAuth } from "../../contexts/AuthContext";
@@ -17,7 +18,10 @@ import { getEmployeesByRegion } from "../../services/employeeService";
 import { getTasks } from "../../services/taskService";
 import { getLeads } from "../../services/crmService";
 import { getRegionById } from "../../services/regionService";
-import type { Employee, Task, CRMLead, Region } from "../../types";
+import { getCompanyById } from "../../services/companyService";
+import { getEmployeePublicUrl } from "../../utils/url";
+import QRCodeGenerator from "../../components/QRCodeGenerator";
+import type { Employee, Task, CRMLead, Region, Company } from "../../types";
 import { FIXED_ROLES } from "../../types";
 
 export default function RegionalManagerDashboardScreen({ navigation }: any) {
@@ -29,6 +33,7 @@ export default function RegionalManagerDashboardScreen({ navigation }: any) {
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [leads, setLeads] = useState<CRMLead[]>([]);
+  const [company, setCompany] = useState<Company | null>(null);
   const [stats, setStats] = useState({
     totalEmployees: 0,
     totalTasks: 0,
@@ -104,8 +109,12 @@ export default function RegionalManagerDashboardScreen({ navigation }: any) {
       }
       
       setRegion(regionData);
-      
-      setRegion(regionData);
+
+      // Load company data
+      const companyData = await getCompanyById(employee.company_id);
+      if (companyData) {
+        setCompany(companyData);
+      }
 
       // Load employees in region
       const employeesData = await getEmployeesByRegion(employee.region_id);
@@ -146,6 +155,23 @@ export default function RegionalManagerDashboardScreen({ navigation }: any) {
       console.error("Error loading data:", error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const getPublicUrl = () => {
+    if (!employee || !company) return "";
+    return getEmployeePublicUrl(company.id, employee.id);
+  };
+
+  const handleShare = async () => {
+    const url = getPublicUrl();
+    try {
+      await Share.share({
+        message: `${employee?.first_name} ${employee?.last_name} - ${company?.name}\n${url}`,
+        url: url,
+      });
+    } catch (error) {
+      console.error("Error sharing:", error);
     }
   };
 
@@ -356,8 +382,39 @@ export default function RegionalManagerDashboardScreen({ navigation }: any) {
               icon="analytics"
               onPress={() => navigation.navigate("RegionalManagerEmployeeReports")}
             />
+            <QuickAction
+              title="Teklifler"
+              icon="description"
+              onPress={() => navigation.navigate("RegionalQuotes")}
+            />
           </View>
         </View>
+
+        {/* QR Code Section */}
+        {employee && company && (
+          <View style={styles.section}>
+            <View
+              style={[
+                styles.qrSection,
+                { backgroundColor: theme.colors.surface, borderColor: theme.colors.gray200 },
+              ]}
+            >
+              <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>QR Kodum</Text>
+              <QRCodeGenerator
+                url={getPublicUrl()}
+                employeeName={`${employee?.first_name || ""} ${employee?.last_name || ""}`}
+                employeeId={employee.id}
+              />
+              <TouchableOpacity
+                style={[styles.shareButton, { backgroundColor: theme.colors.primaryDark }]}
+                onPress={handleShare}
+              >
+                <Icon name="share" size={20} color="#FFFFFF" />
+                <Text style={styles.shareButtonText}>Paylaş</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        )}
       </ScrollView>
     </SafeAreaView>
   );
@@ -471,5 +528,25 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "600",
     textAlign: "center",
+  },
+  qrSection: {
+    padding: 16,
+    borderRadius: 12,
+    borderWidth: 1,
+    marginBottom: 24,
+  },
+  shareButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 12,
+    borderRadius: 8,
+    gap: 8,
+    marginTop: 16,
+  },
+  shareButtonText: {
+    color: "#FFFFFF",
+    fontSize: 16,
+    fontWeight: "600",
   },
 });

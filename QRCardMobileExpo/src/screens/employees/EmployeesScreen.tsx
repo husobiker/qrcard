@@ -115,6 +115,10 @@ export default function EmployeesScreen() {
   const [employeeTasks, setEmployeeTasks] = useState<Task[]>([]);
   const [employeeLeads, setEmployeeLeads] = useState<CRMLead[]>([]);
   const [loadingEmployeeDetails, setLoadingEmployeeDetails] = useState(false);
+  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+  const [selectedLead, setSelectedLead] = useState<CRMLead | null>(null);
+  const [taskModalVisible, setTaskModalVisible] = useState(false);
+  const [leadModalVisible, setLeadModalVisible] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -161,8 +165,16 @@ export default function EmployeesScreen() {
           getTasks(companyId, employee.id),
           getLeads(companyId, employee.id),
         ]);
-        setEmployeeTasks(tasks);
-        setEmployeeLeads(leads);
+        // Filter out completed and cancelled tasks
+        const filteredTasks = tasks.filter(
+          (task) => task.status !== "completed" && task.status !== "cancelled"
+        );
+        // Filter out "Satış Yapıldı" and "Reddedildi" leads
+        const filteredLeads = leads.filter(
+          (lead) => lead.status !== "Satış Yapıldı" && lead.status !== "Reddedildi"
+        );
+        setEmployeeTasks(filteredTasks);
+        setEmployeeLeads(filteredLeads);
       }
     } catch (error) {
       console.error("Error loading employee details:", error);
@@ -2661,7 +2673,7 @@ export default function EmployeesScreen() {
                       const statusLabel = statusLabels[task.status] || task.status;
                       
                       return (
-                        <View
+                        <TouchableOpacity
                           key={task.id}
                           style={[
                             styles.taskItem,
@@ -2670,6 +2682,11 @@ export default function EmployeesScreen() {
                               borderColor: theme.colors.gray200,
                             },
                           ]}
+                          onPress={() => {
+                            setSelectedTask(task);
+                            setTaskModalVisible(true);
+                          }}
+                          activeOpacity={0.7}
                         >
                           <View style={styles.taskItemContent}>
                             <Text
@@ -2737,7 +2754,7 @@ export default function EmployeesScreen() {
                               )}
                             </View>
                           </View>
-                        </View>
+                        </TouchableOpacity>
                       );
                     })}
                   </View>
@@ -2778,7 +2795,7 @@ export default function EmployeesScreen() {
                   <View style={styles.tasksList}>
                     {employeeLeads.map((lead) => {
                       return (
-                        <View
+                        <TouchableOpacity
                           key={lead.id}
                           style={[
                             styles.taskItem,
@@ -2787,6 +2804,11 @@ export default function EmployeesScreen() {
                               borderColor: theme.colors.gray200,
                             },
                           ]}
+                          onPress={() => {
+                            setSelectedLead(lead);
+                            setLeadModalVisible(true);
+                          }}
+                          activeOpacity={0.7}
                         >
                           <View style={styles.taskItemContent}>
                             <Text
@@ -2857,7 +2879,7 @@ export default function EmployeesScreen() {
                               </View>
                             )}
                           </View>
-                        </View>
+                        </TouchableOpacity>
                       );
                     })}
                   </View>
@@ -2876,6 +2898,459 @@ export default function EmployeesScreen() {
               </View>
             </ScrollView>
           ) : null}
+
+          {/* Task Detail Modal - Inside Employee Detail Modal */}
+          <Modal
+            visible={taskModalVisible}
+            animationType="slide"
+            onRequestClose={() => {
+              setTaskModalVisible(false);
+              setSelectedTask(null);
+            }}
+            presentationStyle="fullScreen"
+          >
+        <View
+          style={[
+            styles.modalContainer,
+            { backgroundColor: theme.colors.background },
+          ]}
+        >
+          <StatusBar barStyle="dark-content" />
+          <SafeAreaView
+            edges={["top"]}
+            style={{ backgroundColor: theme.colors.background }}
+          >
+            <View
+              style={[
+                styles.modalHeader,
+                {
+                  borderBottomColor: theme.colors.gray200,
+                  paddingTop: Platform.OS === "ios" ? Math.max(insets.top - 10, 12) : 0,
+                },
+              ]}
+            >
+              <TouchableOpacity
+                onPress={() => {
+                  setTaskModalVisible(false);
+                  setSelectedTask(null);
+                }}
+                style={styles.modalBackButton}
+              >
+                <Icon name="arrow-back" size={24} color={theme.colors.text} />
+              </TouchableOpacity>
+              <Text style={[styles.modalTitle, { color: theme.colors.text }]}>
+                Görev Detayı
+              </Text>
+              <TouchableOpacity
+                onPress={() => {
+                  setTaskModalVisible(false);
+                  setSelectedTask(null);
+                }}
+                style={styles.modalCloseButton}
+              >
+                <Icon name="close" size={24} color={theme.colors.text} />
+              </TouchableOpacity>
+            </View>
+          </SafeAreaView>
+
+          {selectedTask && (() => {
+            const statusColors: Record<string, string> = {
+              pending: "#F59E0B",
+              in_progress: "#3B82F6",
+              completed: "#10B981",
+              cancelled: "#EF4444",
+            };
+            const statusLabels: Record<string, string> = {
+              pending: "Beklemede",
+              in_progress: "Devam Ediyor",
+              completed: "Tamamlandı",
+              cancelled: "İptal",
+            };
+            const statusColor = statusColors[selectedTask.status] || "#757575";
+            const statusLabel = statusLabels[selectedTask.status] || selectedTask.status;
+            
+            return (
+              <ScrollView style={styles.modalContent} showsVerticalScrollIndicator={false}>
+                <View style={styles.formGroup}>
+                  <Text style={[styles.label, { color: theme.colors.text }]}>
+                    Başlık
+                  </Text>
+                  <Text style={[styles.detailValue, { color: theme.colors.text }]}>
+                    {selectedTask.title}
+                  </Text>
+                </View>
+
+                {selectedTask.description && (
+                  <View style={styles.formGroup}>
+                    <Text style={[styles.label, { color: theme.colors.text }]}>
+                      Açıklama
+                    </Text>
+                    <Text
+                      style={[
+                        styles.detailValue,
+                        { color: theme.colors.textSecondary },
+                      ]}
+                    >
+                      {selectedTask.description}
+                    </Text>
+                  </View>
+                )}
+
+                <View style={styles.formGroup}>
+                  <Text style={[styles.label, { color: theme.colors.text }]}>
+                    Durum
+                  </Text>
+                  <View
+                    style={[
+                      styles.taskStatusBadge,
+                      {
+                        backgroundColor: statusColor + "20",
+                        borderColor: statusColor + "40",
+                        alignSelf: "flex-start",
+                      },
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        styles.taskStatusText,
+                        { color: statusColor },
+                      ]}
+                    >
+                      {statusLabel}
+                    </Text>
+                  </View>
+                </View>
+
+              {selectedTask.due_date && (
+                <View style={styles.formGroup}>
+                  <Text style={[styles.label, { color: theme.colors.text }]}>
+                    Bitiş Tarihi
+                  </Text>
+                  <Text
+                    style={[
+                      styles.detailValue,
+                      { color: theme.colors.textSecondary },
+                    ]}
+                  >
+                    {new Date(selectedTask.due_date).toLocaleDateString("tr-TR", {
+                      day: "numeric",
+                      month: "long",
+                      year: "numeric",
+                    })}
+                  </Text>
+                </View>
+              )}
+
+              {selectedTask.address && (
+                <View style={styles.formGroup}>
+                  <Text style={[styles.label, { color: theme.colors.text }]}>
+                    Adres
+                  </Text>
+                  <Text
+                    style={[
+                      styles.detailValue,
+                      { color: theme.colors.textSecondary },
+                    ]}
+                  >
+                    {selectedTask.address}
+                  </Text>
+                </View>
+              )}
+
+              {(() => {
+                let checklistItems = selectedTask.checklist_items || [];
+                let checklistCompleted = selectedTask.checklist_completed || [];
+                
+                // Parse from JSON if string
+                if (typeof checklistItems === 'string') {
+                  try {
+                    checklistItems = JSON.parse(checklistItems);
+                  } catch (e) {
+                    checklistItems = [];
+                  }
+                }
+                if (typeof checklistCompleted === 'string') {
+                  try {
+                    checklistCompleted = JSON.parse(checklistCompleted);
+                  } catch (e) {
+                    checklistCompleted = [];
+                  }
+                }
+                
+                if (Array.isArray(checklistItems) && checklistItems.length > 0) {
+                  return (
+                    <View style={styles.formGroup}>
+                      <Text style={[styles.label, { color: theme.colors.text }]}>
+                        Kontrol Listesi
+                      </Text>
+                      {checklistItems.map((item: string, index: number) => {
+                        const isCompleted = Array.isArray(checklistCompleted) && checklistCompleted.includes(index);
+                        return (
+                          <View
+                            key={index}
+                            style={[
+                              styles.checklistItem,
+                              {
+                                backgroundColor: theme.colors.surface,
+                                borderColor: theme.colors.gray200,
+                              },
+                            ]}
+                          >
+                            <Icon
+                              name={isCompleted ? "check-circle" : "radio-button-unchecked"}
+                              size={20}
+                              color={isCompleted ? "#10B981" : theme.colors.gray400}
+                            />
+                            <Text
+                              style={[
+                                styles.checklistText,
+                                {
+                                  color: isCompleted
+                                    ? theme.colors.textSecondary
+                                    : theme.colors.text,
+                                  textDecorationLine: isCompleted ? "line-through" : "none",
+                                },
+                              ]}
+                            >
+                              {item}
+                            </Text>
+                          </View>
+                        );
+                      })}
+                    </View>
+                  );
+                }
+                return null;
+              })()}
+
+              {(() => {
+                let attachments = selectedTask.attachments || [];
+                
+                // Parse from JSON if string
+                if (typeof attachments === 'string') {
+                  try {
+                    attachments = JSON.parse(attachments);
+                  } catch (e) {
+                    attachments = [];
+                  }
+                }
+                
+                if (Array.isArray(attachments) && attachments.length > 0) {
+                  return (
+                    <View style={styles.formGroup}>
+                      <Text style={[styles.label, { color: theme.colors.text }]}>
+                        Ekler
+                      </Text>
+                      {attachments.map((attachment: string, index: number) => (
+                        <TouchableOpacity
+                          key={index}
+                          style={[
+                            styles.attachmentItem,
+                            {
+                              backgroundColor: theme.colors.surface,
+                              borderColor: theme.colors.gray200,
+                            },
+                          ]}
+                          onPress={() => {
+                            // Handle attachment view
+                            if (attachment.startsWith("http")) {
+                              // Open URL
+                            }
+                          }}
+                        >
+                          <Icon name="attach-file" size={20} color={theme.colors.primary} />
+                          <Text
+                            style={[styles.attachmentText, { color: theme.colors.text }]}
+                            numberOfLines={1}
+                          >
+                            {attachment.split("/").pop() || `Ek ${index + 1}`}
+                          </Text>
+                        </TouchableOpacity>
+                      ))}
+                    </View>
+                  );
+                }
+                return null;
+              })()}
+              </ScrollView>
+            );
+              })()}
+        </View>
+          </Modal>
+
+          {/* Lead Detail Modal - Inside Employee Detail Modal */}
+          <Modal
+            visible={leadModalVisible}
+            animationType="slide"
+            onRequestClose={() => {
+              setLeadModalVisible(false);
+              setSelectedLead(null);
+            }}
+            presentationStyle="fullScreen"
+          >
+        <View
+          style={[
+            styles.modalContainer,
+            { backgroundColor: theme.colors.background },
+          ]}
+        >
+          <StatusBar barStyle="dark-content" />
+          <SafeAreaView
+            edges={["top"]}
+            style={{ backgroundColor: theme.colors.background }}
+          >
+            <View
+              style={[
+                styles.modalHeader,
+                {
+                  borderBottomColor: theme.colors.gray200,
+                  paddingTop: Platform.OS === "ios" ? Math.max(insets.top - 10, 12) : 0,
+                },
+              ]}
+            >
+              <TouchableOpacity
+                onPress={() => {
+                  setLeadModalVisible(false);
+                  setSelectedLead(null);
+                }}
+                style={styles.modalBackButton}
+              >
+                <Icon name="arrow-back" size={24} color={theme.colors.text} />
+              </TouchableOpacity>
+              <Text style={[styles.modalTitle, { color: theme.colors.text }]}>
+                Müşteri Detayı
+              </Text>
+              <TouchableOpacity
+                onPress={() => {
+                  setLeadModalVisible(false);
+                  setSelectedLead(null);
+                }}
+                style={styles.modalCloseButton}
+              >
+                <Icon name="close" size={24} color={theme.colors.text} />
+              </TouchableOpacity>
+            </View>
+          </SafeAreaView>
+
+          {selectedLead && (
+            <ScrollView style={styles.modalContent} showsVerticalScrollIndicator={false}>
+              <View style={styles.formGroup}>
+                <Text style={[styles.label, { color: theme.colors.text }]}>
+                  Müşteri Adı
+                </Text>
+                <Text style={[styles.detailValue, { color: theme.colors.text }]}>
+                  {selectedLead.customer_name}
+                </Text>
+              </View>
+
+              {selectedLead.contact_name && (
+                <View style={styles.formGroup}>
+                  <Text style={[styles.label, { color: theme.colors.text }]}>
+                    İletişim Kişisi
+                  </Text>
+                  <Text
+                    style={[
+                      styles.detailValue,
+                      { color: theme.colors.textSecondary },
+                    ]}
+                  >
+                    {selectedLead.contact_name}
+                  </Text>
+                </View>
+              )}
+
+              {selectedLead.phone && (
+                <View style={styles.formGroup}>
+                  <Text style={[styles.label, { color: theme.colors.text }]}>
+                    Telefon
+                  </Text>
+                  <Text
+                    style={[
+                      styles.detailValue,
+                      { color: theme.colors.textSecondary },
+                    ]}
+                  >
+                    {selectedLead.phone}
+                  </Text>
+                </View>
+              )}
+
+              {selectedLead.email && (
+                <View style={styles.formGroup}>
+                  <Text style={[styles.label, { color: theme.colors.text }]}>
+                    E-posta
+                  </Text>
+                  <Text
+                    style={[
+                      styles.detailValue,
+                      { color: theme.colors.textSecondary },
+                    ]}
+                  >
+                    {selectedLead.email}
+                  </Text>
+                </View>
+              )}
+
+              {selectedLead.address && (
+                <View style={styles.formGroup}>
+                  <Text style={[styles.label, { color: theme.colors.text }]}>
+                    Adres
+                  </Text>
+                  <Text
+                    style={[
+                      styles.detailValue,
+                      { color: theme.colors.textSecondary },
+                    ]}
+                  >
+                    {selectedLead.address}
+                  </Text>
+                </View>
+              )}
+
+              <View style={styles.formGroup}>
+                <Text style={[styles.label, { color: theme.colors.text }]}>
+                  Durum
+                </Text>
+                <View
+                  style={[
+                    styles.taskStatusBadge,
+                    {
+                      backgroundColor: theme.colors.primary + "20",
+                      borderColor: theme.colors.primary + "40",
+                      alignSelf: "flex-start",
+                    },
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.taskStatusText,
+                      { color: theme.colors.primary },
+                    ]}
+                  >
+                    {selectedLead.status}
+                  </Text>
+                </View>
+              </View>
+
+              {selectedLead.notes && (
+                <View style={styles.formGroup}>
+                  <Text style={[styles.label, { color: theme.colors.text }]}>
+                    Notlar
+                  </Text>
+                  <Text
+                    style={[
+                      styles.detailValue,
+                      { color: theme.colors.textSecondary },
+                    ]}
+                  >
+                    {selectedLead.notes}
+                  </Text>
+                </View>
+              )}
+            </ScrollView>
+          )}
+        </View>
+          </Modal>
         </View>
       </Modal>
 
@@ -3511,5 +3986,31 @@ const styles = StyleSheet.create({
   },
   modalBackButton: {
     padding: 8,
+  },
+  checklistItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    padding: 12,
+    borderRadius: 8,
+    borderWidth: 1,
+    marginBottom: 8,
+  },
+  checklistText: {
+    fontSize: 14,
+    flex: 1,
+  },
+  attachmentItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    padding: 12,
+    borderRadius: 8,
+    borderWidth: 1,
+    marginBottom: 8,
+  },
+  attachmentText: {
+    fontSize: 14,
+    flex: 1,
   },
 });

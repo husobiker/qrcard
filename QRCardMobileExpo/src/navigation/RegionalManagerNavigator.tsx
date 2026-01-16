@@ -13,6 +13,7 @@ import RegionalManagerMyTasksScreen from '../screens/regionalManager/MyTasksScre
 import RegionalCRMScreen from '../screens/regionalManager/CRMScreen';
 import RegionalReportsScreen from '../screens/regionalManager/ReportsScreen';
 import RegionalManagerEmployeeReportsScreen from '../screens/regionalManager/EmployeeReportsScreen';
+import MarketingStaffQuotesScreen from '../screens/marketingStaff/QuotesScreen';
 import ProfileScreen from '../screens/profile/ProfileScreen';
 
 const Tab = createBottomTabNavigator();
@@ -36,7 +37,11 @@ function RegionalManagerDashboardStack() {
         component={RegionalManagerEmployeeReportsScreen}
         options={{headerShown: false}}
       />
-      <Stack.Screen name="RegionalReports" component={RegionalReportsScreen} />
+      <Stack.Screen 
+        name="RegionalReports" 
+        component={RegionalReportsScreen}
+        options={{headerShown: false}}
+      />
     </Stack.Navigator>
   );
 }
@@ -121,6 +126,17 @@ export default function RegionalManagerNavigator() {
           headerShown: false,
           tabBarIcon: ({color, size}) => (
             <Icon name="person-add" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tab.Screen
+        name="RegionalQuotes"
+        component={MarketingStaffQuotesScreen}
+        options={{
+          title: 'Teklifler',
+          headerShown: false,
+          tabBarIcon: ({color, size}) => (
+            <Icon name="description" size={size} color={color} />
           ),
         }}
       />

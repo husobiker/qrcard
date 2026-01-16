@@ -28,6 +28,11 @@ interface EmployeeStats {
     pending: number;
     in_progress: number;
   };
+  sales: {
+    total_amount: number;
+    accepted_quotes: number;
+    sold_customers: number;
+  };
   quotes: {
     total: number;
     sent: number;
@@ -76,6 +81,16 @@ export default function RegionalManagerEmployeeReportsScreen({ navigation }: any
           getLeads(employee.company_id, emp.id),
         ]);
 
+        // Calculate sales from accepted quotes
+        const acceptedQuotes = quotes.filter((q) => q.status === "accepted");
+        const totalSalesAmount = acceptedQuotes.reduce(
+          (sum, q) => sum + (q.total_amount || 0),
+          0
+        );
+
+        // Count sold customers
+        const soldCustomers = leads.filter((l) => l.status === "Satış Yapıldı").length;
+
         return {
           employee: emp,
           tasks: {
@@ -84,17 +99,22 @@ export default function RegionalManagerEmployeeReportsScreen({ navigation }: any
             pending: taskStats.pending,
             in_progress: taskStats.in_progress,
           },
+          sales: {
+            total_amount: totalSalesAmount,
+            accepted_quotes: acceptedQuotes.length,
+            sold_customers: soldCustomers,
+          },
           quotes: {
             total: quotes.length,
             sent: quotes.filter((q) => q.status === "sent").length,
-            accepted: quotes.filter((q) => q.status === "accepted").length,
+            accepted: acceptedQuotes.length,
             rejected: quotes.filter((q) => q.status === "rejected").length,
           },
           customers: {
             total: leads.length,
             new: leads.filter((l) => l.status === "Yeni").length,
             in_follow_up: leads.filter((l) => l.status === "Takipte").length,
-            sold: leads.filter((l) => l.status === "Satış Yapıldı").length,
+            sold: soldCustomers,
           },
         };
       });
@@ -219,6 +239,31 @@ export default function RegionalManagerEmployeeReportsScreen({ navigation }: any
                   <Text style={[styles.detailLabel, { color: theme.colors.textSecondary }]}>Devam Eden:</Text>
                   <Text style={[styles.detailValue, { color: theme.colors.text }]}>
                     {selectedEmployee.tasks.in_progress}
+                  </Text>
+                </View>
+              </View>
+            </View>
+
+            {/* Sales Section */}
+            <View style={styles.detailSection}>
+              <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>Satışlar</Text>
+              <View style={[styles.detailCard, { backgroundColor: theme.colors.surface }]}>
+                <View style={styles.detailRow}>
+                  <Text style={[styles.detailLabel, { color: theme.colors.textSecondary }]}>Toplam Satış Tutarı:</Text>
+                  <Text style={[styles.detailValue, { color: theme.colors.success || "#10B981" }]}>
+                    {selectedEmployee.sales.total_amount.toFixed(2)} ₺
+                  </Text>
+                </View>
+                <View style={styles.detailRow}>
+                  <Text style={[styles.detailLabel, { color: theme.colors.textSecondary }]}>Kabul Edilen Teklif:</Text>
+                  <Text style={[styles.detailValue, { color: theme.colors.success || "#10B981" }]}>
+                    {selectedEmployee.sales.accepted_quotes}
+                  </Text>
+                </View>
+                <View style={styles.detailRow}>
+                  <Text style={[styles.detailLabel, { color: theme.colors.textSecondary }]}>Satış Yapılan Müşteri:</Text>
+                  <Text style={[styles.detailValue, { color: theme.colors.success || "#10B981" }]}>
+                    {selectedEmployee.sales.sold_customers}
                   </Text>
                 </View>
               </View>

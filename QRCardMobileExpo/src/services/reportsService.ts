@@ -6,6 +6,7 @@ import { getTaskStats } from "./taskService";
 import { getTransactionStats } from "./transactionService";
 import { getCommunicationStats } from "./communicationService";
 import { getCommissionStats } from "./commissionService";
+import { getQuotes } from "./quoteService";
 
 export interface AppointmentStats {
   total: number;
@@ -109,8 +110,8 @@ async function getCRMStats(
         followUpDate.setHours(0, 0, 0, 0);
         return followUpDate.getTime() === today.getTime();
       }).length,
-      sales_completed: leads.filter((lead: any) => lead.status === "sold").length,
-      in_follow_up: leads.filter((lead: any) => lead.status === "follow_up").length,
+      sales_completed: leads.filter((lead: any) => lead.status === "Satış Yapıldı").length,
+      in_follow_up: leads.filter((lead: any) => lead.status === "Takipte").length,
     };
   } catch (error) {
     console.error("Error getting CRM stats:", error);
@@ -191,9 +192,59 @@ export async function getCompanyReports(companyId: string): Promise<ReportsData>
 
     // Get additional stats
     const task_stats = await getTaskStats(companyId);
-    const transaction_stats = await getTransactionStats(companyId);
+    let transaction_stats = await getTransactionStats(companyId);
     const communication_stats = await getCommunicationStats(companyId);
     const commission_stats = await getCommissionStats(companyId);
+
+    // Get all accepted quotes for the company and add to transaction stats
+    const quotes = await getQuotes(companyId);
+    console.log("getCompanyReports - All quotes:", {
+      companyId,
+      totalQuotes: quotes.length,
+      quotes: quotes.map(q => ({
+        id: q.id,
+        status: q.status,
+        total_amount: q.total_amount,
+        customer_name: q.customer_name,
+        employee_id: q.employee_id
+      }))
+    });
+    
+    const acceptedQuotes = quotes.filter((q) => {
+      const status = (q.status || '').toLowerCase();
+      return status === "accepted";
+    });
+    
+    console.log("getCompanyReports - Accepted quotes:", {
+      count: acceptedQuotes.length,
+      quotes: acceptedQuotes.map(q => ({
+        id: q.id,
+        status: q.status,
+        total_amount: q.total_amount,
+        customer_name: q.customer_name
+      }))
+    });
+    
+    const totalSalesFromQuotes = acceptedQuotes.reduce(
+      (sum, quote) => {
+        const amount = quote.total_amount || 0;
+        console.log("Adding quote amount:", { quoteId: quote.id, amount, currentSum: sum });
+        return sum + amount;
+      },
+      0
+    );
+
+    console.log("getCompanyReports - Total sales from quotes:", totalSalesFromQuotes);
+    console.log("getCompanyReports - Transaction stats before:", transaction_stats);
+
+    // Add sales from accepted quotes to transaction stats
+    transaction_stats = {
+      ...transaction_stats,
+      total_income: (transaction_stats?.total_income || 0) + totalSalesFromQuotes,
+      net_amount: (transaction_stats?.net_amount || 0) + totalSalesFromQuotes,
+    };
+
+    console.log("getCompanyReports - Transaction stats after:", transaction_stats);
 
     return {
       crm_stats,
@@ -275,12 +326,60 @@ export async function getEmployeeReports(
     const communication_stats = await getCommunicationStats(companyId, employeeId);
     const commission_stats = await getCommissionStats(companyId, employeeId);
 
+    // Get accepted quotes and calculate total sales amount
+    const quotes = await getQuotes(companyId, employeeId);
+    console.log("getEmployeeReports - All quotes:", {
+      totalQuotes: quotes.length,
+      quotes: quotes.map(q => ({
+        id: q.id,
+        status: q.status,
+        total_amount: q.total_amount,
+        customer_name: q.customer_name
+      }))
+    });
+    
+    const acceptedQuotes = quotes.filter((q) => {
+      const status = (q.status || '').toLowerCase();
+      return status === "accepted";
+    });
+    
+    console.log("getEmployeeReports - Accepted quotes:", {
+      count: acceptedQuotes.length,
+      quotes: acceptedQuotes.map(q => ({
+        id: q.id,
+        status: q.status,
+        total_amount: q.total_amount,
+        customer_name: q.customer_name
+      }))
+    });
+    
+    const totalSalesFromQuotes = acceptedQuotes.reduce(
+      (sum, quote) => {
+        const amount = quote.total_amount || 0;
+        console.log("Adding quote amount:", { quoteId: quote.id, amount, currentSum: sum });
+        return sum + amount;
+      },
+      0
+    );
+
+    console.log("getEmployeeReports - Total sales from quotes:", totalSalesFromQuotes);
+    console.log("getEmployeeReports - Transaction stats before:", transaction_stats);
+
+    // Add sales from accepted quotes to transaction stats
+    const updatedTransactionStats = {
+      ...transaction_stats,
+      total_income: (transaction_stats?.total_income || 0) + totalSalesFromQuotes,
+      net_amount: (transaction_stats?.net_amount || 0) + totalSalesFromQuotes,
+    };
+
+    console.log("getEmployeeReports - Transaction stats after:", updatedTransactionStats);
+
     return {
       crm_stats,
       appointment_stats,
       analytics_stats,
       task_stats,
-      transaction_stats,
+      transaction_stats: updatedTransactionStats,
       communication_stats,
       commission_stats,
     };
@@ -299,7 +398,13 @@ export async function getEmployeeReports(
       },
       analytics_stats: { total_views: 0, total_clicks: 0, employees_with_views: 0 },
       task_stats: { total: 0, pending: 0, in_progress: 0, completed: 0, overdue: 0 },
-      transaction_stats: { total_income: 0, total_expense: 0, net_amount: 0, income_count: 0, expense_count: 0 },
+      transaction_stats: { 
+        total_income: 0, 
+        total_expense: 0, 
+        net_amount: 0, 
+        income_count: 0, 
+        expense_count: 0 
+      },
       communication_stats: { total: 0, email: 0, phone: 0, meeting: 0, sms: 0 },
       commission_stats: { total_commission: 0, paid_commission: 0, pending_commission: 0, payment_count: 0 },
     };

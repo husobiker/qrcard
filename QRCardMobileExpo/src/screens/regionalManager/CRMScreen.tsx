@@ -24,7 +24,8 @@ import {
   type CRMLeadFormData,
 } from "../../services/crmService";
 import { getEmployeesByRegion } from "../../services/employeeService";
-import type { CRMLead, Employee, CRMLeadStatus } from "../../types";
+import { getQuotes } from "../../services/quoteService";
+import type { CRMLead, Employee, CRMLeadStatus, Quote } from "../../types";
 import { MaterialIcons as Icon } from "@expo/vector-icons";
 
 const statusOptions: CRMLeadStatus[] = [
@@ -50,6 +51,29 @@ const getStatusColor = (status: CRMLeadStatus) => {
   }
 };
 
+const quoteStatusLabels: Record<string, string> = {
+  draft: "Taslak",
+  sent: "Gönderildi",
+  accepted: "Kabul Edildi",
+  rejected: "Reddedildi",
+  expired: "Süresi Doldu",
+};
+
+const getQuoteStatusColor = (status: string) => {
+  switch (status) {
+    case "accepted":
+      return "#10B981";
+    case "sent":
+      return "#3B82F6";
+    case "rejected":
+      return "#EF4444";
+    case "expired":
+      return "#F59E0B";
+    default:
+      return "#6B7280";
+  }
+};
+
 export default function RegionalCRMScreen() {
   const { user } = useAuth();
   const { theme } = useTheme();
@@ -64,6 +88,36 @@ export default function RegionalCRMScreen() {
   const [searchQuery, setSearchQuery] = useState("");
   const [employeeModalVisible, setEmployeeModalVisible] = useState(false);
   const [employeeSearchQuery, setEmployeeSearchQuery] = useState("");
+  const [customerQuotes, setCustomerQuotes] = useState<Quote[]>([]);
+  const [loadingQuotes, setLoadingQuotes] = useState(false);
+  const [viewingQuote, setViewingQuote] = useState<Quote | null>(null);
+  const [previousViewingLead, setPreviousViewingLead] = useState<CRMLead | null>(null);
+  const [wasModalVisible, setWasModalVisible] = useState(false);
+
+  // Debug: Log when viewingQuote changes
+  useEffect(() => {
+    if (viewingQuote) {
+      console.log('viewingQuote set to:', viewingQuote.id, viewingQuote.customer_name);
+      // When quote modal opens, save the current viewing lead and close customer modal
+      if (viewingLead && modalVisible) {
+        setPreviousViewingLead(viewingLead);
+        setWasModalVisible(true);
+        setModalVisible(false);
+      }
+    } else {
+      console.log('viewingQuote cleared');
+      // When quote modal closes, reopen customer modal if we had one open
+      if (previousViewingLead && wasModalVisible) {
+        // Small delay to ensure smooth transition
+        setTimeout(() => {
+          setViewingLead(previousViewingLead);
+          setModalVisible(true);
+          setPreviousViewingLead(null);
+          setWasModalVisible(false);
+        }, 100);
+      }
+    }
+  }, [viewingQuote]);
 
   const [formData, setFormData] = useState<CRMLeadFormData>({
     customer_name: "",
@@ -129,10 +183,83 @@ export default function RegionalCRMScreen() {
     setModalVisible(true);
   };
 
-  const handleViewLead = (lead: CRMLead) => {
+  const handleViewLead = async (lead: CRMLead) => {
     setViewingLead(lead);
     setEditingLead(null);
     setModalVisible(true);
+    
+    // Load quotes for this customer
+    if (employee?.company_id) {
+      setLoadingQuotes(true);
+      try {
+        // Get quotes by both customer_id and customer_name
+        // This ensures we find quotes even if customer_id doesn't match
+        const quotes = await getQuotes(
+          employee.company_id, 
+          undefined, 
+          lead.id, 
+          lead.customer_name
+        );
+        
+        console.log("Loaded quotes for customer:", {
+          customerId: lead.id,
+          customerName: lead.customer_name,
+          quotesCount: quotes.length,
+          quotes: quotes.map(q => ({ 
+            id: q.id, 
+            customer_id: q.customer_id, 
+            customer_name: q.customer_name,
+            status: q.status 
+          }))
+        });
+        
+        setCustomerQuotes(quotes);
+        
+        // Eğer "accepted" durumunda bir teklif varsa ve müşteri durumu "Satış Yapıldı" değilse, güncelle
+        const acceptedQuotes = quotes.filter(quote => quote.status === 'accepted');
+        const hasAcceptedQuote = acceptedQuotes.length > 0;
+        
+        console.log("Checking customer status for accepted quotes:", {
+          customerId: lead.id,
+          customerName: lead.customer_name,
+          hasAcceptedQuote,
+          acceptedQuotesCount: acceptedQuotes.length,
+          currentStatus: lead.status
+        });
+        
+        if (hasAcceptedQuote && lead.status !== 'Satış Yapıldı') {
+          console.log("Updating customer status to 'Satış Yapıldı' for customer:", lead.id, lead.customer_name);
+          try {
+            const updated = await updateLead(lead.id, { status: 'Satış Yapıldı' });
+            if (updated) {
+              console.log("Customer status updated successfully:", updated.id, updated.status);
+              setViewingLead({ ...updated });
+              // Liste de güncellensin
+              await loadData();
+            } else {
+              console.error("Failed to update customer status - updateLead returned null");
+              // updateLead başarısız oldu, direkt olarak state'i güncelle
+              setViewingLead({ ...lead, status: 'Satış Yapıldı' });
+            }
+          } catch (error) {
+            console.error("Error updating customer status:", error);
+            // Hata durumunda da state'i güncelle
+            setViewingLead({ ...lead, status: 'Satış Yapıldı' });
+          }
+        } else if (hasAcceptedQuote && lead.status === 'Satış Yapıldı') {
+          console.log("Customer already has 'Satış Yapıldı' status");
+        } else {
+          console.log("No accepted quote found for customer");
+        }
+      } catch (error) {
+        console.error("Error loading customer quotes:", error);
+        setCustomerQuotes([]);
+      } finally {
+        setLoadingQuotes(false);
+      }
+    } else {
+      setCustomerQuotes([]);
+    }
   };
 
   const handleEditLead = (lead: CRMLead) => {
@@ -398,9 +525,13 @@ export default function RegionalCRMScreen() {
 
       {/* Lead Form Modal */}
       <Modal
-        visible={modalVisible}
+        visible={modalVisible && !viewingQuote}
         animationType="slide"
-        onRequestClose={() => setModalVisible(false)}
+        onRequestClose={() => {
+          setModalVisible(false);
+          setViewingLead(null);
+          setEditingLead(null);
+        }}
         presentationStyle="fullScreen"
       >
         <View
@@ -670,6 +801,152 @@ export default function RegionalCRMScreen() {
                     </Text>
                   </View>
                 )}
+
+                {/* Quotes Section */}
+                <View style={styles.formGroup}>
+                  <View style={styles.sectionHeader}>
+                    <Icon
+                      name="description"
+                      size={20}
+                      color={theme.colors.primary}
+                      style={styles.sectionIcon}
+                    />
+                    <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>
+                      Teklifler ({customerQuotes.length})
+                    </Text>
+                  </View>
+
+                  {loadingQuotes ? (
+                    <View style={styles.quotesLoadingContainer}>
+                      <Text style={[styles.quotesLoadingText, { color: theme.colors.textSecondary }]}>
+                        Yükleniyor...
+                      </Text>
+                    </View>
+                  ) : customerQuotes.length > 0 ? (
+                    <View style={styles.quotesList}>
+                      {customerQuotes.map((quote) => {
+                        const assignedEmployee = employees.find((e) => e.id === quote.employee_id);
+                        return (
+                          <TouchableOpacity
+                            key={quote.id}
+                            style={[
+                              styles.quoteCard,
+                              {
+                                backgroundColor: theme.colors.surface,
+                                borderColor: theme.colors.gray200,
+                              },
+                            ]}
+                            onPress={() => {
+                              console.log('Quote card pressed:', quote.id);
+                              setViewingQuote(quote);
+                            }}
+                            activeOpacity={0.7}
+                          >
+                            <View style={styles.quoteCardHeader}>
+                              <View style={styles.quoteCardHeaderLeft}>
+                                <Text
+                                  style={[styles.quoteCardTitle, { color: theme.colors.text }]}
+                                  numberOfLines={1}
+                                >
+                                  {quote.product_service || "Teklif"}
+                                </Text>
+                                {assignedEmployee && (
+                                  <Text
+                                    style={[
+                                      styles.quoteCardEmployee,
+                                      { color: theme.colors.textSecondary },
+                                    ]}
+                                  >
+                                    {assignedEmployee.first_name} {assignedEmployee.last_name}
+                                  </Text>
+                                )}
+                              </View>
+                              <View
+                                style={[
+                                  styles.quoteStatusBadge,
+                                  {
+                                    backgroundColor: getQuoteStatusColor(quote.status) + "20",
+                                  },
+                                ]}
+                              >
+                                <Text
+                                  style={[
+                                    styles.quoteStatusText,
+                                    { color: getQuoteStatusColor(quote.status) },
+                                  ]}
+                                >
+                                  {quoteStatusLabels[quote.status] || quote.status}
+                                </Text>
+                              </View>
+                            </View>
+                            <View style={styles.quoteCardDetails}>
+                              <View style={styles.quoteCardDetailRow}>
+                                <Icon
+                                  name="attach-money"
+                                  size={16}
+                                  color={theme.colors.gray500}
+                                />
+                                <Text
+                                  style={[
+                                    styles.quoteCardDetailText,
+                                    { color: theme.colors.text },
+                                  ]}
+                                >
+                                  {quote.total_amount.toFixed(2)} ₺
+                                </Text>
+                              </View>
+                              {quote.validity_date && (
+                                <View style={styles.quoteCardDetailRow}>
+                                  <Icon
+                                    name="event"
+                                    size={16}
+                                    color={theme.colors.gray500}
+                                  />
+                                  <Text
+                                    style={[
+                                      styles.quoteCardDetailText,
+                                      { color: theme.colors.textSecondary },
+                                    ]}
+                                  >
+                                    {new Date(quote.validity_date).toLocaleDateString("tr-TR")}
+                                  </Text>
+                                </View>
+                              )}
+                              {quote.created_at && (
+                                <View style={styles.quoteCardDetailRow}>
+                                  <Icon
+                                    name="schedule"
+                                    size={16}
+                                    color={theme.colors.gray500}
+                                  />
+                                  <Text
+                                    style={[
+                                      styles.quoteCardDetailText,
+                                      { color: theme.colors.textSecondary },
+                                    ]}
+                                  >
+                                    {new Date(quote.created_at).toLocaleDateString("tr-TR")}
+                                  </Text>
+                                </View>
+                              )}
+                            </View>
+                          </TouchableOpacity>
+                        );
+                      })}
+                    </View>
+                  ) : (
+                    <View style={styles.emptyQuotesContainer}>
+                      <Text
+                        style={[
+                          styles.emptyQuotesText,
+                          { color: theme.colors.textSecondary },
+                        ]}
+                      >
+                        Bu müşteri için henüz teklif bulunmuyor
+                      </Text>
+                    </View>
+                  )}
+                </View>
               </>
             ) : (
               // Edit/Create Mode - Show form
@@ -1162,6 +1439,182 @@ export default function RegionalCRMScreen() {
             </View>
           )}
         </View>
+
+      </Modal>
+
+      {/* Quote Detail Modal */}
+      <Modal
+        visible={!!viewingQuote}
+        animationType="slide"
+        onRequestClose={() => {
+          console.log('Quote modal close requested');
+          setViewingQuote(null);
+        }}
+        presentationStyle="fullScreen"
+        transparent={false}
+      >
+        <View style={{ flex: 1, backgroundColor: theme.colors.background }}>
+          <SafeAreaView
+            style={[styles.modalContainer, { backgroundColor: theme.colors.background }]}
+            edges={['top']}
+          >
+            <View 
+              style={[
+                styles.modalHeader, 
+                { 
+                  borderBottomColor: theme.colors.gray200,
+                }
+              ]}
+            >
+              <TouchableOpacity
+                style={styles.modalBackButton}
+                onPress={() => setViewingQuote(null)}
+              >
+                <Icon name="arrow-back" size={24} color={theme.colors.text} />
+              </TouchableOpacity>
+              <Text style={[styles.modalTitle, { color: theme.colors.text }]}>
+                Teklif Detayı
+              </Text>
+              <TouchableOpacity
+                style={styles.modalCloseButton}
+                onPress={() => setViewingQuote(null)}
+              >
+                <Icon name="close" size={24} color={theme.colors.text} />
+              </TouchableOpacity>
+            </View>
+
+            {viewingQuote && (
+              <ScrollView
+                style={styles.modalContent}
+                contentContainerStyle={{ paddingBottom: 32 }}
+              >
+              <View style={styles.formGroup}>
+                <Text style={[styles.label, { color: theme.colors.text }]}>Müşteri Adı</Text>
+                <Text style={[styles.detailText, { color: theme.colors.text }]}>
+                  {viewingQuote.customer_name}
+                </Text>
+              </View>
+
+              {viewingQuote.product_service && (
+                <View style={styles.formGroup}>
+                  <Text style={[styles.label, { color: theme.colors.text }]}>
+                    Ürün/Hizmet
+                  </Text>
+                  <Text style={[styles.detailText, { color: theme.colors.text }]}>
+                    {viewingQuote.product_service}
+                  </Text>
+                </View>
+              )}
+
+              {viewingQuote.description && (
+                <View style={styles.formGroup}>
+                  <Text style={[styles.label, { color: theme.colors.text }]}>Açıklama</Text>
+                  <Text style={[styles.detailText, { color: theme.colors.text }]}>
+                    {viewingQuote.description}
+                  </Text>
+                </View>
+              )}
+
+              <View style={styles.formGroup}>
+                <Text style={[styles.label, { color: theme.colors.text }]}>Fiyat</Text>
+                <Text style={[styles.detailText, { color: theme.colors.text }]}>
+                  {viewingQuote.price.toFixed(2)} ₺
+                </Text>
+              </View>
+
+              <View style={styles.formGroup}>
+                <Text style={[styles.label, { color: theme.colors.text }]}>KDV Oranı</Text>
+                <Text style={[styles.detailText, { color: theme.colors.text }]}>
+                  %{viewingQuote.tax_rate}
+                </Text>
+              </View>
+
+              <View style={styles.formGroup}>
+                <Text style={[styles.label, { color: theme.colors.text }]}>KDV Tutarı</Text>
+                <Text style={[styles.detailText, { color: theme.colors.text }]}>
+                  {viewingQuote.tax_amount.toFixed(2)} ₺
+                </Text>
+              </View>
+
+              <View style={styles.formGroup}>
+                <Text style={[styles.label, { color: theme.colors.text }]}>Toplam Tutar</Text>
+                <Text style={[styles.detailText, { color: theme.colors.text }]}>
+                  {viewingQuote.total_amount.toFixed(2)} ₺
+                </Text>
+              </View>
+
+              {viewingQuote.validity_date && (
+                <View style={styles.formGroup}>
+                  <Text style={[styles.label, { color: theme.colors.text }]}>
+                    Geçerlilik Tarihi
+                  </Text>
+                  <Text style={[styles.detailText, { color: theme.colors.text }]}>
+                    {new Date(viewingQuote.validity_date).toLocaleDateString("tr-TR")}
+                  </Text>
+                </View>
+              )}
+
+              <View style={styles.formGroup}>
+                <Text style={[styles.label, { color: theme.colors.text }]}>Durum</Text>
+                <View
+                  style={[
+                    styles.statusBadge,
+                    {
+                      backgroundColor: getQuoteStatusColor(viewingQuote.status) + "20",
+                      alignSelf: "flex-start",
+                    },
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.statusText,
+                      { color: getQuoteStatusColor(viewingQuote.status) },
+                    ]}
+                  >
+                    {quoteStatusLabels[viewingQuote.status] || viewingQuote.status}
+                  </Text>
+                </View>
+              </View>
+
+              {viewingQuote.notes && (
+                <View style={styles.formGroup}>
+                  <Text style={[styles.label, { color: theme.colors.text }]}>Notlar</Text>
+                  <Text style={[styles.detailText, { color: theme.colors.text }]}>
+                    {viewingQuote.notes}
+                  </Text>
+                </View>
+              )}
+
+              {viewingQuote.created_at && (
+                <View style={styles.formGroup}>
+                  <Text style={[styles.label, { color: theme.colors.text }]}>
+                    Oluşturulma Tarihi
+                  </Text>
+                  <Text style={[styles.detailText, { color: theme.colors.text }]}>
+                    {new Date(viewingQuote.created_at).toLocaleDateString("tr-TR", {
+                      year: "numeric",
+                      month: "long",
+                      day: "numeric",
+                    })}
+                  </Text>
+                </View>
+              )}
+
+              {employees.find((e) => e.id === viewingQuote.employee_id) && (
+                <View style={styles.formGroup}>
+                  <Text style={[styles.label, { color: theme.colors.text }]}>
+                    Oluşturan Personel
+                  </Text>
+                  <Text style={[styles.detailText, { color: theme.colors.text }]}>
+                    {employees.find((e) => e.id === viewingQuote.employee_id)?.first_name}{" "}
+                    {employees.find((e) => e.id === viewingQuote.employee_id)?.last_name}
+                  </Text>
+                </View>
+              )}
+            </ScrollView>
+          )}
+          </SafeAreaView>
+        </View>
       </Modal>
     </SafeAreaView>
   );
@@ -1444,5 +1897,103 @@ const styles = StyleSheet.create({
   },
   employeeOptionJob: {
     fontSize: 14,
+  },
+  sectionHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 12,
+    gap: 8,
+  },
+  sectionIcon: {
+    marginRight: 4,
+  },
+  sectionTitle: {
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  quotesLoadingContainer: {
+    padding: 16,
+    alignItems: "center",
+  },
+  quotesLoadingText: {
+    fontSize: 14,
+  },
+  quotesList: {
+    gap: 12,
+    marginTop: 8,
+  },
+  quoteCard: {
+    padding: 12,
+    borderRadius: 8,
+    borderWidth: 1,
+  },
+  quoteCardHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+    marginBottom: 8,
+  },
+  quoteCardHeaderLeft: {
+    flex: 1,
+    marginRight: 8,
+  },
+  quoteCardTitle: {
+    fontSize: 14,
+    fontWeight: "600",
+    marginBottom: 4,
+  },
+  quoteCardEmployee: {
+    fontSize: 12,
+  },
+  quoteStatusBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  quoteStatusText: {
+    fontSize: 11,
+    fontWeight: "600",
+  },
+  quoteCardDetails: {
+    gap: 6,
+  },
+  quoteCardDetailRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+  },
+  quoteCardDetailText: {
+    fontSize: 13,
+  },
+  emptyQuotesContainer: {
+    padding: 16,
+    alignItems: "center",
+  },
+  emptyQuotesText: {
+    fontSize: 14,
+    fontStyle: "italic",
+  },
+  quoteDetailSection: {
+    marginTop: 16,
+    borderRadius: 12,
+    borderWidth: 1,
+    maxHeight: 500,
+  },
+  quoteDetailHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    padding: 16,
+    borderBottomWidth: 1,
+  },
+  quoteDetailTitle: {
+    fontSize: 18,
+    fontWeight: "600",
+  },
+  quoteDetailCloseButton: {
+    padding: 4,
+  },
+  quoteDetailContent: {
+    padding: 16,
   },
 });

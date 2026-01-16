@@ -7,6 +7,7 @@ import MainNavigator from './MainNavigator';
 import EmployeeNavigator from './EmployeeNavigator';
 import RegionalManagerNavigator from './RegionalManagerNavigator';
 import MarketingStaffNavigator from './MarketingStaffNavigator';
+import CallCenterNavigator from './CallCenterNavigator';
 import LoadingScreen from '../screens/auth/LoadingScreen';
 import {FIXED_ROLES} from '../types';
 import type {Employee} from '../types';
@@ -24,7 +25,7 @@ export default function AppNavigator() {
     return <LoadingScreen />;
   }
 
-  // Check if employee is Regional Manager or Marketing Staff
+  // Check if employee is Regional Manager, Marketing Staff, or Call Center
   const isRegionalManager =
     userType === 'employee' &&
     (user as Employee)?.role === FIXED_ROLES.REGIONAL_MANAGER;
@@ -32,6 +33,10 @@ export default function AppNavigator() {
   const isMarketingStaff =
     userType === 'employee' &&
     (user as Employee)?.role === FIXED_ROLES.MARKETING_STAFF;
+
+  const isCallCenter =
+    userType === 'employee' &&
+    (user as Employee)?.role === FIXED_ROLES.CALL_CENTER;
 
   return (
     <NavigationContainer>
@@ -47,6 +52,11 @@ export default function AppNavigator() {
               <Stack.Screen
                 name="MarketingStaffMain"
                 component={MarketingStaffNavigator}
+              />
+            ) : isCallCenter ? (
+              <Stack.Screen
+                name="CallCenterMain"
+                component={CallCenterNavigator}
               />
             ) : (
               <Stack.Screen name="EmployeeMain" component={EmployeeNavigator} />

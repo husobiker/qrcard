@@ -15,8 +15,9 @@ import {
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { useAuth } from "../../contexts/AuthContext";
 import { useTheme } from "../../contexts/ThemeContext";
-import { getLeads } from "../../services/crmService";
+import { getLeads, updateLead } from "../../services/crmService";
 import { getQuotes } from "../../services/quoteService";
+import { supabase } from "../../services/supabase";
 import type { CRMLead, Quote } from "../../types";
 import { MaterialIcons as Icon } from "@expo/vector-icons";
 
@@ -35,6 +36,32 @@ export default function CustomersScreen({ navigation }: any) {
     loadCustomers();
   }, [user]);
 
+  // Müşteri detay sayfası açıldığında ve teklifler yüklendiğinde kontrol yap
+  useEffect(() => {
+    if (detailModalVisible && selectedCustomer && customerQuotes.length > 0) {
+      const hasAcceptedQuote = customerQuotes.some(quote => quote.status === 'accepted');
+      if (hasAcceptedQuote && selectedCustomer.status !== 'Satış Yapıldı') {
+        console.log('useEffect: Found accepted quote, updating customer status');
+        // Direkt olarak güncelleme yap, loadCustomerQuotes'u tekrar çağırma
+        const updateCustomerStatus = async () => {
+          try {
+            const updated = await updateLead(selectedCustomer.id, { status: 'Satış Yapıldı' });
+            if (updated) {
+              console.log('useEffect: Customer status updated successfully:', updated.id, updated.status);
+              setSelectedCustomer(updated);
+              await loadCustomers();
+            }
+          } catch (error) {
+            console.error('useEffect: Error updating customer status:', error);
+            // Hata durumunda da state'i güncelle
+            setSelectedCustomer({ ...selectedCustomer, status: 'Satış Yapıldı' });
+          }
+        };
+        updateCustomerStatus();
+      }
+    }
+  }, [detailModalVisible, selectedCustomer?.id, customerQuotes.length]);
+
   const loadCustomers = async () => {
     if (!user) return;
 
@@ -42,6 +69,41 @@ export default function CustomersScreen({ navigation }: any) {
     try {
       const companyId = userType === "company" ? user.id : (user as any).company_id;
       const data = await getLeads(companyId);
+      
+      // Tüm "accepted" durumundaki teklifleri yükle
+      const allQuotes = await getQuotes(companyId);
+      const acceptedQuotes = allQuotes.filter(quote => quote.status === 'accepted');
+      
+      // "accepted" durumunda teklifi olan müşterileri bul ve durumlarını güncelle
+      const customersToUpdate: string[] = [];
+      for (const customer of data) {
+        if (customer.status !== 'Satış Yapıldı') {
+          const hasAcceptedQuote = acceptedQuotes.some(quote => 
+            (quote.customer_id === customer.id) || 
+            (quote.customer_name && customer.customer_name && 
+             quote.customer_name.toLowerCase().trim() === customer.customer_name.toLowerCase().trim())
+          );
+          
+          if (hasAcceptedQuote) {
+            customersToUpdate.push(customer.id);
+          }
+        }
+      }
+      
+      // Müşteri durumlarını toplu olarak güncelle
+      for (const customerId of customersToUpdate) {
+        try {
+          await updateLead(customerId, { status: 'Satış Yapıldı' });
+          // Local state'i güncelle
+          const customerIndex = data.findIndex(c => c.id === customerId);
+          if (customerIndex !== -1) {
+            data[customerIndex].status = 'Satış Yapıldı';
+          }
+        } catch (error) {
+          console.error(`Error updating customer ${customerId}:`, error);
+        }
+      }
+      
       setCustomers(data);
     } catch (error) {
       console.error("Error loading customers:", error);
@@ -51,17 +113,116 @@ export default function CustomersScreen({ navigation }: any) {
     }
   };
 
-  const loadCustomerQuotes = async (customerId: string) => {
+  const loadCustomerQuotes = async (customerId: string, customerName?: string, customer?: CRMLead) => {
     if (!user) return;
 
     try {
       const companyId = userType === "company" ? user.id : (user as any).company_id;
-      const quotes = await getQuotes(companyId, undefined, customerId);
+      // Hem customer_id hem de customer_name ile teklifleri getir
+      const quotesById = await getQuotes(companyId, undefined, customerId);
+      const customerNameToMatch = customerName || customer?.customer_name || selectedCustomer?.customer_name;
+      const quotesByName = customerNameToMatch ? await getQuotes(companyId, undefined, undefined, customerNameToMatch) : [];
+      // İki sonucu birleştir ve tekrarları kaldır
+      const allQuotes = [...quotesById, ...quotesByName];
+      const uniqueQuotes = allQuotes.filter((quote, index, self) => 
+        index === self.findIndex(q => q.id === quote.id)
+      );
+      const quotes = uniqueQuotes;
       // Also filter by customer_name in case customer_id doesn't match
       const filteredQuotes = quotes.filter(
-        (quote) => quote.customer_id === customerId || quote.customer_name === selectedCustomer?.customer_name
+        (quote) => {
+          const customerIdMatch = quote.customer_id === customerId;
+          const customerNameMatch = customerNameToMatch && quote.customer_name && 
+            quote.customer_name.toLowerCase().trim() === customerNameToMatch.toLowerCase().trim();
+          return customerIdMatch || customerNameMatch;
+        }
       );
       setCustomerQuotes(filteredQuotes);
+
+      // Eğer "accepted" durumunda bir teklif varsa ve müşteri durumu "Satış Yapıldı" değilse, güncelle
+      const acceptedQuotes = filteredQuotes.filter(quote => quote.status === 'accepted');
+      const hasAcceptedQuote = acceptedQuotes.length > 0;
+      const currentCustomer = customer || selectedCustomer || customers.find(c => c.id === customerId);
+      
+      console.log('Checking customer quotes:', {
+        customerId,
+        customerName: customerNameToMatch,
+        hasAcceptedQuote,
+        acceptedQuotesCount: acceptedQuotes.length,
+        currentCustomerStatus: currentCustomer?.status,
+        filteredQuotesCount: filteredQuotes.length,
+        acceptedQuotes: acceptedQuotes.map(q => ({ 
+          id: q.id, 
+          status: q.status,
+          customer_id: q.customer_id,
+          customer_name: q.customer_name
+        }))
+      });
+      
+      if (hasAcceptedQuote) {
+        // Her "accepted" teklif için müşteri durumunu güncelle
+        for (const acceptedQuote of acceptedQuotes) {
+          console.log('Processing accepted quote:', acceptedQuote.id, 'for customer:', customerId, customerNameToMatch);
+          
+          if (currentCustomer && currentCustomer.status !== 'Satış Yapıldı') {
+            console.log('Updating customer status to "Satış Yapıldı" for customer:', customerId, customerNameToMatch);
+            
+            // Önce customer_id ile dene
+            let updateSuccess = false;
+            if (acceptedQuote.customer_id) {
+              try {
+                const updated = await updateLead(acceptedQuote.customer_id, { status: 'Satış Yapıldı' });
+                if (updated) {
+                  console.log('Customer status updated successfully by customer_id:', updated.id, updated.status);
+                  setSelectedCustomer(updated);
+                  updateSuccess = true;
+                }
+              } catch (error) {
+                console.error('Error updating by customer_id:', error);
+              }
+            }
+            
+            // Eğer customer_id ile güncelleme başarısız oldu veya customer_id yoksa, customer_name ile dene
+            if (!updateSuccess && acceptedQuote.customer_name && customerNameToMatch) {
+              try {
+                // customer_name ile müşteriyi bul
+                const { data: customers } = await supabase
+                  .from('crm_leads')
+                  .select('id')
+                  .eq('company_id', companyId)
+                  .eq('customer_name', customerNameToMatch)
+                  .limit(1);
+                
+                if (customers && customers.length > 0) {
+                  const customerToUpdate = customers[0];
+                  const updated = await updateLead(customerToUpdate.id, { status: 'Satış Yapıldı' });
+                  if (updated) {
+                    console.log('Customer status updated successfully by customer_name:', updated.id, updated.status);
+                    setSelectedCustomer(updated);
+                    updateSuccess = true;
+                  }
+                }
+              } catch (error) {
+                console.error('Error updating by customer_name:', error);
+              }
+            }
+            
+            // Eğer hala başarısız oldu, direkt state'i güncelle
+            if (!updateSuccess && currentCustomer) {
+              console.log('Directly updating state for customer:', customerId);
+              setSelectedCustomer({ ...currentCustomer, status: 'Satış Yapıldı' });
+            }
+            
+            // Liste de güncellensin
+            await loadCustomers();
+            break; // İlk başarılı güncellemeden sonra çık
+          } else if (currentCustomer && currentCustomer.status === 'Satış Yapıldı') {
+            console.log('Customer already has "Satış Yapıldı" status');
+          }
+        }
+      } else {
+        console.log('No accepted quote found for customer');
+      }
     } catch (error) {
       console.error("Error loading customer quotes:", error);
     }
@@ -71,7 +232,8 @@ export default function CustomersScreen({ navigation }: any) {
     setSelectedCustomer(customer);
     setDetailModalVisible(true);
     if (customer.id) {
-      await loadCustomerQuotes(customer.id);
+      // Customer parametresini de geçir ki state güncellemesi beklensin
+      await loadCustomerQuotes(customer.id, customer.customer_name, customer);
     }
   };
 

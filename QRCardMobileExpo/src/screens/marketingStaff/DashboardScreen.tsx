@@ -8,6 +8,7 @@ import {
   RefreshControl,
   StatusBar,
   Alert,
+  Share,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useAuth } from "../../contexts/AuthContext";
@@ -16,7 +17,10 @@ import { MaterialIcons as Icon } from "@expo/vector-icons";
 import { getTasks, getTaskStats } from "../../services/taskService";
 import { getQuotes, getQuoteStats } from "../../services/quoteService";
 import { getCustomerMeetings } from "../../services/communicationService";
-import type { Employee, Task } from "../../types";
+import { getCompanyById } from "../../services/companyService";
+import { getEmployeePublicUrl } from "../../utils/url";
+import QRCodeGenerator from "../../components/QRCodeGenerator";
+import type { Employee, Task, Company } from "../../types";
 
 export default function MarketingStaffDashboardScreen({ navigation }: any) {
   const { user } = useAuth();
@@ -24,6 +28,7 @@ export default function MarketingStaffDashboardScreen({ navigation }: any) {
   const employee = user as Employee;
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [company, setCompany] = useState<Company | null>(null);
   const [stats, setStats] = useState({
     totalQuotes: 0,
     draftQuotes: 0,
@@ -50,6 +55,12 @@ export default function MarketingStaffDashboardScreen({ navigation }: any) {
 
     setLoading(true);
     try {
+      // Load company data
+      const companyData = await getCompanyById(employee.company_id);
+      if (companyData) {
+        setCompany(companyData);
+      }
+
       // Load quote stats
       const quoteStats = await getQuoteStats(employee.company_id, employee.id);
       
@@ -87,6 +98,23 @@ export default function MarketingStaffDashboardScreen({ navigation }: any) {
     setRefreshing(true);
     await loadData();
     setRefreshing(false);
+  };
+
+  const getPublicUrl = () => {
+    if (!employee || !company) return "";
+    return getEmployeePublicUrl(company.id, employee.id);
+  };
+
+  const handleShare = async () => {
+    const url = getPublicUrl();
+    try {
+      await Share.share({
+        message: `${employee?.first_name} ${employee?.last_name} - ${company?.name}\n${url}`,
+        url: url,
+      });
+    } catch (error) {
+      console.error("Error sharing:", error);
+    }
   };
 
   const StatCard = ({
@@ -288,6 +316,11 @@ export default function MarketingStaffDashboardScreen({ navigation }: any) {
               onPress={() => navigation.navigate("MarketingStaffQuotes")}
             />
             <QuickActionButton
+              title="Müşterilerim"
+              icon="people"
+              onPress={() => navigation.navigate("MarketingStaffCustomers")}
+            />
+            <QuickActionButton
               title="Görevlerim"
               icon="check-circle"
               onPress={() => navigation.navigate("MarketingStaffTasks")}
@@ -299,6 +332,32 @@ export default function MarketingStaffDashboardScreen({ navigation }: any) {
             />
           </View>
         </View>
+
+        {/* QR Code Section */}
+        {employee && company && (
+          <View style={styles.section}>
+            <View
+              style={[
+                styles.qrSection,
+                { backgroundColor: theme.colors.surface, borderColor: theme.colors.gray200 },
+              ]}
+            >
+              <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>QR Kodum</Text>
+              <QRCodeGenerator
+                url={getPublicUrl()}
+                employeeName={`${employee?.first_name || ""} ${employee?.last_name || ""}`}
+                employeeId={employee.id}
+              />
+              <TouchableOpacity
+                style={[styles.shareButton, { backgroundColor: theme.colors.primaryDark }]}
+                onPress={handleShare}
+              >
+                <Icon name="share" size={20} color="#FFFFFF" />
+                <Text style={styles.shareButtonText}>Paylaş</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        )}
       </ScrollView>
     </SafeAreaView>
   );
@@ -386,5 +445,25 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "500",
     textAlign: "center",
+  },
+  qrSection: {
+    padding: 16,
+    borderRadius: 12,
+    borderWidth: 1,
+    marginBottom: 24,
+  },
+  shareButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 12,
+    borderRadius: 8,
+    gap: 8,
+    marginTop: 16,
+  },
+  shareButtonText: {
+    color: "#FFFFFF",
+    fontSize: 16,
+    fontWeight: "600",
   },
 });

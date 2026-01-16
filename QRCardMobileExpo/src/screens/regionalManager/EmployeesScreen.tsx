@@ -764,7 +764,10 @@ export default function RegionalEmployeesScreen() {
                       { color: theme.colors.text },
                     ]}
                   >
-                    Görevler ({employeeTasks.length})
+                    Görevler ({employeeTasks.filter((task) => {
+                      const status = task.status?.toLowerCase();
+                      return status !== "completed" && status !== "cancelled";
+                    }).length})
                   </Text>
                 </View>
 
@@ -781,7 +784,13 @@ export default function RegionalEmployeesScreen() {
                   </View>
                 ) : employeeTasks.length > 0 ? (
                   <View style={styles.tasksList}>
-                    {employeeTasks.map((task) => {
+                    {employeeTasks
+                      .filter((task) => {
+                        // Hide completed and cancelled tasks
+                        const status = task.status?.toLowerCase();
+                        return status !== "completed" && status !== "cancelled";
+                      })
+                      .map((task) => {
                       const statusColor = getTaskStatusColor(task.status);
                       const statusLabel = getTaskStatusLabel(task.status);
                       return (
@@ -899,7 +908,9 @@ export default function RegionalEmployeesScreen() {
                       { color: theme.colors.text },
                     ]}
                   >
-                    Müşteriler ({employeeLeads.length})
+                    Müşteriler ({employeeLeads.filter((lead) => {
+                      return lead.status !== "Reddedildi" && lead.status !== "Satış Yapıldı";
+                    }).length})
                   </Text>
                 </View>
 
@@ -914,9 +925,17 @@ export default function RegionalEmployeesScreen() {
                       Müşteriler yükleniyor...
                     </Text>
                   </View>
-                ) : employeeLeads.length > 0 ? (
+                ) : employeeLeads.filter((lead) => {
+                      // Hide "Reddedildi" and "Satış Yapıldı" status
+                      return lead.status !== "Reddedildi" && lead.status !== "Satış Yapıldı";
+                    }).length > 0 ? (
                   <View style={styles.tasksList}>
-                    {employeeLeads.map((lead) => {
+                    {employeeLeads
+                      .filter((lead) => {
+                        // Hide "Reddedildi" and "Satış Yapıldı" status
+                        return lead.status !== "Reddedildi" && lead.status !== "Satış Yapıldı";
+                      })
+                      .map((lead) => {
                       const statusColor = getLeadStatusColor(lead.status);
                       const statusLabel = lead.status;
                       const isNewStatus = lead.status === "Yeni";

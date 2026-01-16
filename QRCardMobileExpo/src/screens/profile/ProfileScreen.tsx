@@ -11,6 +11,7 @@ import {
   StatusBar,
   Modal,
   Image,
+  Share,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -19,6 +20,8 @@ import { useTheme } from "../../contexts/ThemeContext";
 import { getCompanyByUserId, updateCompany, getCompanyById, uploadCompanyLogo, uploadCompanyBackgroundImage } from "../../services/companyService";
 import { getCompanyReports, getEmployeeReports } from "../../services/reportsService";
 import { getEmployeeById } from "../../services/employeeService";
+import { getEmployeePublicUrl } from "../../utils/url";
+import QRCodeGenerator from "../../components/QRCodeGenerator";
 import type { Company, Employee } from "../../types";
 import type { ReportsData } from "../../services/reportsService";
 import { MaterialIcons as Icon } from "@expo/vector-icons";
@@ -154,6 +157,23 @@ export default function ProfileScreen({ navigation }: any) {
       }
     } catch (error) {
       console.error("Error loading employee:", error);
+    }
+  };
+
+  const getPublicUrl = () => {
+    if (!employee || !company) return "";
+    return getEmployeePublicUrl(company.id, employee.id);
+  };
+
+  const handleShare = async () => {
+    const url = getPublicUrl();
+    try {
+      await Share.share({
+        message: `${employee?.first_name} ${employee?.last_name} - ${company?.name}\n${url}`,
+        url: url,
+      });
+    } catch (error) {
+      console.error("Error sharing:", error);
     }
   };
 
@@ -1268,6 +1288,32 @@ export default function ProfileScreen({ navigation }: any) {
             </View>
           )}
 
+          {/* QR Code Section - Employee Only */}
+          {userType === "employee" && employee && company && (
+            <View style={styles.section}>
+              <View
+                style={[
+                  styles.qrSection,
+                  { backgroundColor: theme.colors.surface, borderColor: theme.colors.gray200 },
+                ]}
+              >
+                <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>QR Kodum</Text>
+                <QRCodeGenerator
+                  url={getPublicUrl()}
+                  employeeName={`${employee?.first_name || ""} ${employee?.last_name || ""}`}
+                  employeeId={employee.id}
+                />
+                <TouchableOpacity
+                  style={[styles.shareButton, { backgroundColor: theme.colors.primaryDark }]}
+                  onPress={handleShare}
+                >
+                  <Icon name="share" size={20} color="#FFFFFF" />
+                  <Text style={styles.shareButtonText}>Paylaş</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          )}
+
           {/* Profile Info - Employee */}
           {userType === "employee" && employee && (
             <View
@@ -1805,5 +1851,25 @@ const styles = StyleSheet.create({
   },
   roleManagementSubtitle: {
     fontSize: 14,
+  },
+  qrSection: {
+    padding: 16,
+    borderRadius: 12,
+    borderWidth: 1,
+    marginBottom: 24,
+  },
+  shareButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 12,
+    borderRadius: 8,
+    gap: 8,
+    marginTop: 16,
+  },
+  shareButtonText: {
+    color: "#FFFFFF",
+    fontSize: 16,
+    fontWeight: "600",
   },
 });

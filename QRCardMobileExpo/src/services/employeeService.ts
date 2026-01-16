@@ -56,6 +56,30 @@ export async function getEmployeesByRegion(regionId: string): Promise<Employee[]
   }
 }
 
+export async function getEmployeesByRole(
+  companyId: string,
+  role: string,
+): Promise<Employee[]> {
+  try {
+    const {data, error} = await supabase
+      .from('employees')
+      .select('*')
+      .eq('company_id', companyId)
+      .eq('role', role)
+      .order('created_at', {ascending: false});
+
+    if (error) {
+      console.error('Error fetching employees by role:', error);
+      return [];
+    }
+
+    return data || [];
+  } catch (error) {
+    console.error('Error fetching employees by role:', error);
+    return [];
+  }
+}
+
 export async function getEmployeeById(id: string): Promise<Employee | null> {
   const {data, error} = await supabase
     .from('employees')
